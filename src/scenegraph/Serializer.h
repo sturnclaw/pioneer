@@ -22,15 +22,17 @@
 // It is intended only for the efficient (de)serialization of model binary data;
 // where possible, prefer serializing state information via JSON instead.
 namespace Serializer {
+	// We use <= 8 to account for 32-bit platforms where doubles are 4-byte aligned.
+	// This should cause no issues due to the limited use of the class.
 	static_assert((sizeof(Uint32) == 4 && alignof(Uint32) == 4), "Int32 is sized differently on this platform and will not serialize properly.");
-	static_assert((sizeof(Uint64) == 8 && alignof(Uint64) == 8), "Int64 is sized differently on this platform and will not serialize properly.");
+	static_assert((sizeof(Uint64) == 8 && alignof(Uint64) <= 8), "Int64 is sized differently on this platform and will not serialize properly.");
 	static_assert((sizeof(Color) == 4 && alignof(Color) == 1), "Color is padded differently on this platform and will not serialize properly.");
 	static_assert((sizeof(vector2f) == 8 && alignof(vector2f) == 4), "Vector2f is padded differently on this platform and will not serialize properly.");
-	static_assert((sizeof(vector2d) == 16 && alignof(vector2d) == 8), "Vector2d is padded differently on this platform and will not serialize properly.");
+	static_assert((sizeof(vector2d) == 16 && alignof(vector2d) <= 8), "Vector2d is padded differently on this platform and will not serialize properly.");
 	static_assert((sizeof(vector3f) == 12 && alignof(vector3f) == 4), "Vector3f is padded differently on this platform and will not serialize properly.");
-	static_assert((sizeof(vector3d) == 24 && alignof(vector3d) == 8), "Vector3d is padded differently on this platform and will not serialize properly.");
+	static_assert((sizeof(vector3d) == 24 && alignof(vector3d) <= 8), "Vector3d is padded differently on this platform and will not serialize properly.");
 	static_assert((sizeof(Quaternionf) == 16 && alignof(Quaternionf) == 4), "Quaternionf is padded differently on this platform and will not serialize properly.");
-	static_assert((sizeof(Aabb) == 56 && alignof(Aabb) == 8), "Aabb is padded differently on this platform and will not serialize properly.");
+	static_assert((sizeof(Aabb) == 56 && alignof(Aabb) <= 8), "Aabb is padded differently on this platform and will not serialize properly.");
 
 	class Writer {
 	public:
