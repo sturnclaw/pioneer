@@ -11,13 +11,13 @@
  * serialize their internals
  */
 
-#include "BaseLoader.h"
-#include "Billboard.h"
-#include "CollisionGeometry.h"
-#include "FileSystem.h"
-#include "LOD.h"
-#include "StaticGeometry.h"
-#include "Thruster.h"
+#include "../SceneGraph.h"
+// #include "Billboard.h"
+// #include "CollisionGeometry.h"
+// #include "FileSystem.h"
+// #include "LOD.h"
+// #include "StaticGeometry.h"
+// #include "Thruster.h"
 #include <functional>
 
 namespace Serializer {
