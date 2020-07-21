@@ -49,7 +49,9 @@ namespace SceneGraph {
 			pixelSize(size)
 		{}
 		float pixelSize;
-		std::vector<std::string> meshNames;
+		bool usesLODFile;
+		std::vector<std::string> nodeNames;
+		std::string lodFilePath;
 	};
 
 	struct AnimDefinition {
@@ -68,9 +70,14 @@ namespace SceneGraph {
 
 	struct ModelDefinition {
 		std::string name;
+		std::vector<std::string> meshFiles;
+
 		std::vector<LodDefinition> lodDefs;
 		std::vector<MaterialDefinition> matDefs;
-		std::vector<std::string> collisionDefs;
+		
+		std::vector<std::string> collisionFiles;
+		std::vector<std::string> collisionNodes;
+		
 		AnimList animDefs;
 	};
 

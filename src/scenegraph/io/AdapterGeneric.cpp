@@ -1,19 +1,29 @@
 // Copyright © 2008-2019 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "BinaryConverter.h"
-#include "CollisionGeometry.h"
+#include "AdapterGeneric.h"
 #include "FileSystem.h"
-#include "LOD.h"
-#include "Loader.h"
-#include "Parser.h"
-#include "SceneGraph.h"
+#include "../LOD.h"
+#include "../SceneGraph.h"
 #include "StringF.h"
 #include "graphics/RenderState.h"
 #include "graphics/Renderer.h"
 #include "graphics/TextureBuilder.h"
 #include "scenegraph/Animation.h"
 #include "utils.h"
+
+// Disable some GCC diagnostics errors.
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#include <assimp/types.h>
+#pragma GCC diagnostic pop
+#else
+#include <assimp/types.h>
+#endif
+
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -115,92 +125,14 @@ namespace {
 } // anonymous namespace
 
 namespace SceneGraph {
-	Loader::Loader(Graphics::Renderer *r, bool logWarnings, bool loadSGMfiles) :
-		BaseLoader(r),
+	AdapterGeneric::AdapterGeneric(Graphics::Renderer *r, bool logWarnings) :
+		IOAdapter(r),
 		m_doLog(logWarnings),
-		m_loadSGMs(loadSGMfiles),
 		m_mostDetailedLod(false)
 	{
 	}
 
-	Model *Loader::LoadModel(const std::string &filename)
-	{
-		PROFILE_SCOPED()
-		Model *m = LoadModel(filename, "models");
-		return m;
-	}
-
-	Model *Loader::LoadModel(const std::string &shortname, const std::string &basepath)
-	{
-		PROFILE_SCOPED()
-		m_logMessages.clear();
-
-		std::vector<std::string> list_model;
-		std::vector<std::string> list_sgm;
-		FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
-		for (FileSystem::FileEnumerator files(fileSource, basepath, FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next()) {
-			const FileSystem::FileInfo &info = files.Current();
-			const std::string &fpath = info.GetPath();
-
-			//check it's the expected type
-			if (info.IsFile()) {
-				if (ends_with_ci(fpath, ".model")) { // store the path for ".model" files
-					list_model.push_back(fpath);
-				} else if (m_loadSGMs & ends_with_ci(fpath, ".sgm")) { // store only the shortname for ".sgm" files.
-					list_sgm.push_back(info.GetName().substr(0, info.GetName().size() - 4));
-				}
-			}
-		}
-
-		if (m_loadSGMs) {
-			for (auto &sgmname : list_sgm) {
-				if (sgmname == shortname) {
-					//binary loader expects extension-less name. Might want to change this.
-					SceneGraph::BinaryConverter bc(m_renderer);
-					m_model = bc.Load(shortname);
-					if (m_model)
-						return m_model;
-					else
-						break; // we'll have to load the non-sgm file
-				}
-			}
-		}
-
-		for (auto &fpath : list_model) {
-			RefCountedPtr<FileSystem::FileData> filedata = FileSystem::gameDataFiles.ReadFile(fpath);
-			if (!filedata) {
-				Output("LoadModel: %s: could not read file\n", fpath.c_str());
-				return nullptr;
-			}
-
-			//check it's the wanted name & load it
-			const FileSystem::FileInfo &info = filedata->GetInfo();
-			const std::string name = info.GetName();
-			if (name.substr(0, name.length() - 6) == shortname) {
-				ModelDefinition modelDefinition;
-				try {
-					//curPath is used to find textures, patterns,
-					//possibly other data files for this model.
-					//Strip trailing slash
-					m_curPath = info.GetDir();
-					assert(!m_curPath.empty());
-					if (m_curPath[m_curPath.length() - 1] == '/')
-						m_curPath = m_curPath.substr(0, m_curPath.length() - 1);
-
-					Parser p(fileSource, fpath, m_curPath);
-					p.Parse(&modelDefinition);
-				} catch (ParseError &err) {
-					Output("%s\n", err.what());
-					throw LoadingError(err.what());
-				}
-				modelDefinition.name = shortname;
-				return CreateModel(modelDefinition);
-			}
-		}
-		throw(LoadingError("File not found"));
-	}
-
-	Model *Loader::CreateModel(ModelDefinition &def)
+	Model *AdapterGeneric::CreateModel(ModelDefinition &def)
 	{
 		PROFILE_SCOPED()
 		using Graphics::Material;
@@ -288,12 +220,11 @@ namespace SceneGraph {
 
 		// Load collision meshes
 		// They are added at the top level of the model root as CollisionGeometry nodes
-		for (std::vector<std::string>::const_iterator it = def.collisionDefs.begin();
-			 it != def.collisionDefs.end(); ++it) {
+		for (const std::string &colMesh : def.collisionDefs) {
 			try {
-				LoadCollision(*it);
+				LoadCollision(colMesh);
 			} catch (LoadingError &err) {
-				throw(LoadingError(stringf("%0:\n%1", *it, err.what())));
+				throw(LoadingError(stringf("%0:\n%1", colMesh, err.what())));
 			}
 		}
 
@@ -312,7 +243,7 @@ namespace SceneGraph {
 		return model;
 	}
 
-	RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const AnimList &animDefs)
+	RefCountedPtr<Node> AdapterGeneric::LoadMesh(const std::string &filename, const AnimList &animDefs)
 	{
 		PROFILE_SCOPED()
 		//remove path from filename for nicer logging
@@ -369,7 +300,7 @@ namespace SceneGraph {
 	}
 
 	// check animation channel has a key within time range
-	bool Loader::CheckKeysInRange(const aiNodeAnim *chan, double start, double end)
+	bool AdapterGeneric::CheckKeysInRange(const aiNodeAnim *chan, double start, double end)
 	{
 		int posKeysInRange = 0;
 		int rotKeysInRange = 0;
@@ -393,12 +324,12 @@ namespace SceneGraph {
 		return (posKeysInRange > 0 || rotKeysInRange > 0 || sclKeysInRange > 0);
 	}
 
-	void Loader::AddLog(const std::string &msg)
+	void AdapterGeneric::AddLog(const std::string &msg)
 	{
 		if (m_doLog) m_logMessages.push_back(msg);
 	}
 
-	void Loader::CheckAnimationConflicts(const Animation *anim, const std::vector<Animation *> &otherAnims)
+	void AdapterGeneric::CheckAnimationConflicts(const Animation *anim, const std::vector<Animation *> &otherAnims)
 	{
 		typedef std::vector<AnimationChannel>::const_iterator ChannelIterator;
 		typedef std::vector<Animation *>::const_iterator AnimIterator;
@@ -436,7 +367,7 @@ namespace SceneGraph {
 	};
 #pragma pack(pop)
 
-	void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry>> &geoms, const aiScene *scene)
+	void AdapterGeneric::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry>> &geoms, const aiScene *scene)
 	{
 		PROFILE_SCOPED()
 		//XXX sigh, workaround for obj loader
@@ -577,7 +508,7 @@ namespace SceneGraph {
 		}
 	}
 
-	void Loader::ConvertAnimations(const aiScene *scene, const AnimList &animDefs, Node *meshRoot)
+	void AdapterGeneric::ConvertAnimations(const aiScene *scene, const AnimList &animDefs, Node *meshRoot)
 	{
 		PROFILE_SCOPED()
 		//Split convert assimp animations according to anim defs
@@ -712,7 +643,7 @@ namespace SceneGraph {
 		}
 	}
 
-	matrix4x4f Loader::ConvertMatrix(const aiMatrix4x4 &trans) const
+	matrix4x4f AdapterGeneric::ConvertMatrix(const aiMatrix4x4 &trans) const
 	{
 		matrix4x4f m;
 		m[0] = trans.a1;
@@ -737,7 +668,7 @@ namespace SceneGraph {
 		return m;
 	}
 
-	void Loader::CreateLabel(Group *parent, const matrix4x4f &m)
+	void AdapterGeneric::CreateLabel(Group *parent, const matrix4x4f &m)
 	{
 		PROFILE_SCOPED()
 		MatrixTransform *trans = new MatrixTransform(m_renderer, m);
@@ -747,7 +678,7 @@ namespace SceneGraph {
 		parent->AddChild(trans);
 	}
 
-	void Loader::CreateThruster(const std::string &name, const matrix4x4f &m)
+	void AdapterGeneric::CreateThruster(const std::string &name, const matrix4x4f &m)
 	{
 		PROFILE_SCOPED()
 		if (!m_mostDetailedLod) return AddLog("Thruster outside highest LOD, ignored");
@@ -772,7 +703,7 @@ namespace SceneGraph {
 		m_thrustersRoot->AddChild(trans);
 	}
 
-	void Loader::CreateNavlight(const std::string &name, const matrix4x4f &m)
+	void AdapterGeneric::CreateNavlight(const std::string &name, const matrix4x4f &m)
 	{
 		PROFILE_SCOPED()
 		if (!m_mostDetailedLod) return AddLog("Navlight outside highest LOD, ignored");
@@ -788,7 +719,7 @@ namespace SceneGraph {
 		m_billboardsRoot->AddChild(lightPoint);
 	}
 
-	RefCountedPtr<CollisionGeometry> Loader::CreateCollisionGeometry(RefCountedPtr<StaticGeometry> geom, unsigned int collFlag)
+	RefCountedPtr<CollisionGeometry> AdapterGeneric::CreateCollisionGeometry(RefCountedPtr<StaticGeometry> geom, unsigned int collFlag)
 	{
 		PROFILE_SCOPED()
 		//Convert StaticMesh points & indices into cgeom
@@ -823,7 +754,7 @@ namespace SceneGraph {
 		return cgeom;
 	}
 
-	void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPtr<StaticGeometry>> &geoms, const matrix4x4f &accum)
+	void AdapterGeneric::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPtr<StaticGeometry>> &geoms, const matrix4x4f &accum)
 	{
 		PROFILE_SCOPED()
 		Group *parent = _parent;
@@ -904,7 +835,7 @@ namespace SceneGraph {
 		}
 	}
 
-	void Loader::LoadCollision(const std::string &filename)
+	void AdapterGeneric::LoadCollision(const std::string &filename)
 	{
 		PROFILE_SCOPED()
 		//Convert all found aiMeshes into a geomtree. Materials,
@@ -964,7 +895,7 @@ namespace SceneGraph {
 		m_model->GetRoot()->AddChild(new CollisionGeometry(m_renderer, vertices, indices, 0));
 	}
 
-	unsigned int Loader::GetGeomFlagForNodeName(const std::string &nodename)
+	unsigned int AdapterGeneric::GetGeomFlagForNodeName(const std::string &nodename)
 	{
 		PROFILE_SCOPED()
 		//special names after collision_

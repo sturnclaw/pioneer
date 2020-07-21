@@ -14,7 +14,7 @@ namespace SceneGraph {
 		return a.pixelSize < b.pixelSize;
 	}
 
-	Parser::Parser(FileSystem::FileSource &fs, const std::string &filename, const std::string &path) :
+	ModelParser::ModelParser(FileSystem::FileSource &fs, const std::string &filename, const std::string &path) :
 		m_isMaterial(false),
 		m_curMat(0),
 		m_model(0),
@@ -25,7 +25,7 @@ namespace SceneGraph {
 		m_file = data;
 	}
 
-	void Parser::Parse(ModelDefinition *m)
+	void ModelParser::Parse(ModelDefinition *m)
 	{
 		PROFILE_SCOPED()
 		StringRange buffer = m_file->AsStringRange();
@@ -59,27 +59,27 @@ namespace SceneGraph {
 		std::sort(m->lodDefs.begin(), m->lodDefs.end(), LodSortPredicate);
 	}
 
-	bool Parser::isComment(const std::string &s)
+	bool ModelParser::isComment(const std::string &s)
 	{
 		assert(!s.empty());
 		return (s[0] == '#');
 	}
 
 	//check if string matches completely
-	bool Parser::match(const std::string &s, const std::string &what)
+	bool ModelParser::match(const std::string &s, const std::string &what)
 	{
 		return (s.compare(what) == 0);
 	}
 
 	//check for a string, but don't accept comments
-	bool Parser::checkString(std::stringstream &ss, std::string &out, const std::string &what)
+	bool ModelParser::checkString(std::stringstream &ss, std::string &out, const std::string &what)
 	{
 		if (!(ss >> out)) throw ParseError(stringf("Expected %0, got nothing", what));
 		if (isComment(out)) throw ParseError(stringf("Expected %0, got comment", what));
 		return true;
 	}
 
-	bool Parser::checkTexture(std::stringstream &ss, std::string &out)
+	bool ModelParser::checkTexture(std::stringstream &ss, std::string &out)
 	{
 		checkString(ss, out, "file name");
 		//add newmodels/some_model/ to path
@@ -87,17 +87,17 @@ namespace SceneGraph {
 		return true;
 	}
 
-	inline bool Parser::checkMesh(std::stringstream &ss, std::string &out)
+	inline bool ModelParser::checkMesh(std::stringstream &ss, std::string &out)
 	{
 		return checkTexture(ss, out);
 	}
 
-	inline bool Parser::checkMaterialName(std::stringstream &ss, std::string &out)
+	inline bool ModelParser::checkMaterialName(std::stringstream &ss, std::string &out)
 	{
 		return checkString(ss, out, "material name");
 	}
 
-	bool Parser::checkColor(std::stringstream &ss, Color &color)
+	bool ModelParser::checkColor(std::stringstream &ss, Color &color)
 	{
 		float r, g, b;
 		ss >> r >> g >> b;
@@ -108,7 +108,7 @@ namespace SceneGraph {
 		return true;
 	}
 
-	bool Parser::parseLine(const std::string &line)
+	bool ModelParser::parseLine(const std::string &line)
 	{
 		PROFILE_SCOPED()
 		using std::string;
@@ -228,7 +228,7 @@ namespace SceneGraph {
 		}
 	}
 
-	void Parser::endMaterial()
+	void ModelParser::endMaterial()
 	{
 		m_isMaterial = false;
 		m_curMat = 0;

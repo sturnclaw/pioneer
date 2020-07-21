@@ -6,7 +6,7 @@
 #define _SCENEGRAPH_H
 #include "Billboard.h"
 #include "Label3D.h"
-#include "Loader.h"
+#include "io/ModelLoader.h"
 #include "MatrixTransform.h"
 #include "Model.h"
 #include "ModelNode.h"

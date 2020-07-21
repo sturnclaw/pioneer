@@ -1,13 +1,16 @@
 // Copyright © 2008-2019 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
 #include "../NodeVisitor.h"
-#include "BinaryConverter.h"
+#include "AdapterSGM.h"
 #include "FileSystem.h"
 #include "GameSaveError.h"
 #include "LZ4Format.h"
 #include "Parser.h"
 #include "StringF.h"
 #include "scenegraph/Animation.h"
+#include "scenegraph/CollisionGeometry.h"
+#include "scenegraph/LOD.h"
 #include "scenegraph/Label3D.h"
 #include "scenegraph/MatrixTransform.h"
 #include "scenegraph/Serializer.h"
@@ -67,7 +70,7 @@ public:
 	NodeDatabase db;
 };
 
-BinaryConverter::BinaryConverter(Graphics::Renderer *r) :
+AdapterSGM::AdapterSGM(Graphics::Renderer *r) :
 	BaseLoader(r),
 	m_patternsUsed(false)
 {
@@ -81,19 +84,19 @@ BinaryConverter::BinaryConverter(Graphics::Renderer *r) :
 	RegisterLoader("Label3D", &LoadLabel3D);
 }
 
-void BinaryConverter::RegisterLoader(const std::string &typeName, std::function<Node *(NodeDatabase &)> func)
+void AdapterSGM::RegisterLoader(const std::string &typeName, std::function<Node *(NodeDatabase &)> func)
 {
 	m_loaders[typeName] = func;
 }
 
-void BinaryConverter::Save(const std::string &filename, Model *m)
+void AdapterSGM::Save(const std::string &filename, Model *m)
 {
 	PROFILE_SCOPED()
 	static const std::string s_EmptyString;
 	Save(filename, s_EmptyString, m, false);
 }
 
-void BinaryConverter::Save(const std::string &filename, const std::string &savepath, Model *m, const bool bInPlace)
+void AdapterSGM::Save(const std::string &filename, const std::string &savepath, Model *m, const bool bInPlace)
 {
 	PROFILE_SCOPED()
 	printf("Saving file (%s)\n", filename.c_str());
@@ -159,14 +162,14 @@ void BinaryConverter::Save(const std::string &filename, const std::string &savep
 	}
 }
 
-Model *BinaryConverter::Load(const std::string &filename)
+Model *AdapterSGM::Load(const std::string &filename)
 {
 	PROFILE_SCOPED()
 	Model *m = Load(filename, "models");
 	return m;
 }
 
-Model *BinaryConverter::Load(const std::string &name, RefCountedPtr<FileSystem::FileData> binfile)
+Model *AdapterSGM::Load(const std::string &name, RefCountedPtr<FileSystem::FileData> binfile)
 {
 	PROFILE_SCOPED()
 	Model *model(nullptr);
@@ -195,14 +198,14 @@ Model *BinaryConverter::Load(const std::string &name, RefCountedPtr<FileSystem::
 			model = CreateModel(name, rd);
 			mz_free(pDecompressedData);
 		} else {
-			Error("BinaryConverter failed to load old-style SGM called: %s", name.c_str());
+			Error("AdapterSGM failed to load old-style SGM called: %s", name.c_str());
 		}
 	}
 
 	return model;
 }
 
-Model *BinaryConverter::Load(const std::string &shortname, const std::string &basepath)
+Model *AdapterSGM::Load(const std::string &shortname, const std::string &basepath)
 {
 	PROFILE_SCOPED()
 	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
@@ -233,7 +236,7 @@ Model *BinaryConverter::Load(const std::string &shortname, const std::string &ba
 	return nullptr;
 }
 
-Model *BinaryConverter::CreateModel(const std::string &filename, Serializer::Reader &rd)
+Model *AdapterSGM::CreateModel(const std::string &filename, Serializer::Reader &rd)
 {
 	PROFILE_SCOPED()
 	//verify signature
@@ -274,7 +277,7 @@ Model *BinaryConverter::CreateModel(const std::string &filename, Serializer::Rea
 	return m_model;
 }
 
-void BinaryConverter::SaveMaterials(Serializer::Writer &wr, Model *model)
+void AdapterSGM::SaveMaterials(Serializer::Writer &wr, Model *model)
 {
 	PROFILE_SCOPED()
 	//Look for the .model definition and parse it
@@ -302,7 +305,7 @@ void BinaryConverter::SaveMaterials(Serializer::Writer &wr, Model *model)
 	}
 }
 
-void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
+void AdapterSGM::LoadMaterials(Serializer::Reader &rd)
 {
 	PROFILE_SCOPED()
 	for (Uint32 numMats = rd.Int32(); numMats > 0; numMats--) {
@@ -329,7 +332,7 @@ void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
 	}
 }
 
-void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
+void AdapterSGM::SaveAnimations(Serializer::Writer &wr, Model *m)
 {
 	PROFILE_SCOPED()
 	const auto &anims = m->GetAnimations();
@@ -360,7 +363,7 @@ void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
 	}
 }
 
-void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
+void AdapterSGM::LoadAnimations(Serializer::Reader &rd)
 {
 	PROFILE_SCOPED()
 	//load channels and PRS keys
@@ -395,7 +398,7 @@ void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
 	}
 }
 
-ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortname)
+ModelDefinition AdapterSGM::FindModelDefinition(const std::string &shortname)
 {
 	PROFILE_SCOPED()
 	const std::string basepath = "models";
@@ -434,7 +437,7 @@ ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortnam
 	throw(LoadingError("File not found"));
 }
 
-Node *BinaryConverter::LoadNode(Serializer::Reader &rd)
+Node *AdapterSGM::LoadNode(Serializer::Reader &rd)
 {
 	PROFILE_SCOPED()
 	const std::string ntype = rd.String();
@@ -470,7 +473,7 @@ Node *BinaryConverter::LoadNode(Serializer::Reader &rd)
 	return node;
 }
 
-void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
+void AdapterSGM::LoadChildren(Serializer::Reader &rd, Group *parent)
 {
 	PROFILE_SCOPED()
 	const Uint32 numChildren = rd.Int32();
@@ -478,7 +481,7 @@ void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
 		parent->AddChild(LoadNode(rd));
 }
 
-Label3D *BinaryConverter::LoadLabel3D(NodeDatabase &db)
+Label3D *AdapterSGM::LoadLabel3D(NodeDatabase &db)
 {
 	PROFILE_SCOPED()
 	Label3D *lbl = new Label3D(db.loader->GetRenderer(), db.loader->GetLabel3DFont());

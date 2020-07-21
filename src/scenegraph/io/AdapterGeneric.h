@@ -1,27 +1,18 @@
 // Copyright © 2008-2019 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#ifndef _SCENEGRAPH_ASSIMPLOADER_H
-#define _SCENEGRAPH_ASSIMPLOADER_H
+#pragma once
+
 /**
  * Model loader using Assimp
+ * This loader handles loading OBJ and Collada meshes from disk.
  */
-#include "BaseLoader.h"
-#include "CollisionGeometry.h"
+#include "Adapter.h"
+#include "../CollisionGeometry.h"
+#include "../StaticGeometry.h"
 #include "graphics/Material.h"
 
-// Disable some GCC diagnostics errors.
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#include <assimp/types.h>
-#pragma GCC diagnostic pop
-#else
-#include <assimp/types.h>
-#endif
-
+struct aiMatrix4x4;
 struct aiNode;
 struct aiMesh;
 struct aiScene;
@@ -29,19 +20,21 @@ struct aiNodeAnim;
 
 namespace SceneGraph {
 
-	class Loader : public BaseLoader {
+	class AdapterGeneric : public IOAdapter {
 	public:
-		Loader(Graphics::Renderer *r, bool logWarnings = false, bool loadSGMfiles = true);
+		AdapterGeneric(Graphics::Renderer *r, bool logWarnings = false);
 
-		//find & attempt to load a model, based on filename (without path or .model suffix)
-		Model *LoadModel(const std::string &name);
-		Model *LoadModel(const std::string &name, const std::string &basepath);
+		Model *LoadFile(std::string filename) override;
 
-		const std::vector<std::string> &GetLogMessages() const { return m_logMessages; }
+		// The adapter could load more, but for now we only handle OBJ and Collada.
+		bool CanLoadFile(std::string path) const override {
+			size_t pos = path.find_last_of('.');
+			std::string extension = path.substr(pos, path.size() - pos);
+			return extension == ".dae" || extension == ".obj";
+		}
 
 	protected:
 		bool m_doLog;
-		bool m_loadSGMs;
 		bool m_mostDetailedLod;
 		std::vector<std::string> m_logMessages;
 		std::string m_curMeshDef; //for logging
@@ -52,9 +45,11 @@ namespace SceneGraph {
 		bool CheckKeysInRange(const aiNodeAnim *, double start, double end);
 		matrix4x4f ConvertMatrix(const aiMatrix4x4 &) const;
 		Model *CreateModel(ModelDefinition &def);
-		RefCountedPtr<Node> LoadMesh(const std::string &filename, const AnimList &animDefs); //load one mesh file so it can be added to the model scenegraph. Materials should be created before this!
+		//load one mesh file so it can be added to the model scenegraph. Materials should be created before this!
+		RefCountedPtr<Node> LoadMesh(const std::string &filename, const AnimList &animDefs);
 		void AddLog(const std::string &);
-		void CheckAnimationConflicts(const Animation *, const std::vector<Animation *> &); //detect animation overlap
+		//detect animation overlap
+		void CheckAnimationConflicts(const Animation *, const std::vector<Animation *> &);
 		void ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry>> &, const aiScene *); //model is only for material lookup
 		void ConvertAnimations(const aiScene *, const AnimList &, Node *meshRoot);
 		void ConvertNodes(aiNode *node, Group *parent, std::vector<RefCountedPtr<StaticGeometry>> &meshes, const matrix4x4f &);
@@ -68,4 +63,3 @@ namespace SceneGraph {
 	};
 
 } // namespace SceneGraph
-#endif

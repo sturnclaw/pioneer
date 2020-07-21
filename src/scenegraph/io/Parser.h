@@ -8,7 +8,7 @@
  * It's pretty bad, someone please redesign.
  */
 #include "FileSystem.h"
-#include "Loader.h"
+#include "ModelLoader.h"
 #include <stdexcept>
 
 namespace SceneGraph {
@@ -18,9 +18,9 @@ namespace SceneGraph {
 			std::runtime_error(str.c_str()) {}
 	};
 
-	class Parser {
+	class ModelParser {
 	public:
-		Parser(FileSystem::FileSource &, const std::string &filename, const std::string &path);
+		ModelParser(FileSystem::FileSource &, const std::string &filename, const std::string &path);
 
 		void Parse(ModelDefinition *m);
 

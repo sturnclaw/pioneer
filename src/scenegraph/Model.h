@@ -96,7 +96,7 @@ namespace SceneGraph {
 		friend class BaseLoader;
 		friend class Loader;
 		friend class ModelBinarizer;
-		friend class BinaryConverter;
+		friend class IOAdapter;
 		Model(Graphics::Renderer *r, const std::string &name);
 		~Model();
 

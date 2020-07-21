@@ -7,25 +7,32 @@
 #include "LoaderDefinitions.h"
 
 namespace SceneGraph {
+    class ModelLoader;
+
     class IOAdapter {
     public:
-		IOAdapter(Graphics::Renderer *renderer, bool doLog, std::vector<std::string> &logFile) :
-			m_renderer(renderer), m_doLog(doLog), m_logFile(logFile)
+		IOAdapter(Graphics::Renderer *renderer) :
+			m_renderer(renderer)
 		{ }
 
-        // Given a ModelDefinition, load the model from disk.
-		virtual Model *LoadModel(ModelDefinition &def) = 0;
+        // Given the path to a .model file, load the model from disk.
+        virtual Model *LoadFile(const std::string &modelPath) = 0;
 
-        // Take the given Model and save it to disk in the appropriate format.
-        virtual bool SaveModel(Model *model, std::string path) = 0;
+		// Take the given Model and save it to disk.
+        virtual bool SaveModel(const Model *model, std::string path) { return false; }
 
-        // Returns true if the format is appropriate for saving models (includes collision, mesh data, etc.)
-        // Otherwise, the adapter can only be used for loading models.
-        virtual bool CanSaveModels() = 0;
+        // Returns true if the format is appropriate for saving models with the
+        // specified extension (includes collision, mesh data, etc.)
+        virtual bool CanSaveFile(std::string path) const { return false; }
+
+        // Return true if this is an extension that we know how to parse.
+        virtual bool CanLoadFile(std::string path) const = 0;
 
     protected:
+        friend class ModelLoader;
         Graphics::Renderer *m_renderer;
-        std::vector<std::string> &m_logFile;
-        bool m_doLog;
+
+		Model *m_model;
+		std::string m_curPath; //path of current model file
 	};
 }

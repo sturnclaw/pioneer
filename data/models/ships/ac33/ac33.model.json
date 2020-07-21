@@ -1,0 +1,43 @@
+{
+	"animations": {
+		"gear_down": [ 0, 72 ]
+	},
+	"collision": {
+		"file": "ac33_collision.obj"
+	},
+	"lods": [
+		{
+			"pixel_size": 350,
+			"nodes": [
+				"Venturestar_LOD1"
+			]
+		},
+		{
+			"pixel_size": 50,
+			"nodes": [
+				"Venturestar_LOD2"
+			]
+		},
+		{
+			"pixel_size": 5,
+			"nodes": [
+				"Venturestar_LOD3"
+			]
+		}
+	],
+	"meshes": [
+		"ac33_new.dae"
+	],
+	"materials": {
+		"Body_Hi": {
+			"color_diffuse": [ 1.0, 1.0, 1.0, 1.0 ],
+			"color_spec": [ 1.0, 1.0, 1.0, 1.0 ],
+			"color_glow": [ 1.0, 1.0, 1.0, 1.0 ],
+			"tex_diffuse": "ac33.dds",
+			"tex_spec": "ac33_spec.dds",
+			"tex_glow": "ac33_glow.dds",
+			"tex_norm": null
+		}
+	},
+	"uses_patterns": true
+}

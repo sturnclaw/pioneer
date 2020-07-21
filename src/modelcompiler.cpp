@@ -24,7 +24,8 @@
 #include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "graphics/dummy/RendererDummy.h"
-#include "scenegraph/BinaryConverter.h"
+#include "scenegraph/io/BinaryConverter.h"
+#include "scenegraph/io/Loader.h"
 #include "scenegraph/DumpVisitor.h"
 #include "scenegraph/FindNodeVisitor.h"
 #include <sstream>
