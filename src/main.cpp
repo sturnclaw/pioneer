@@ -7,6 +7,7 @@
 #include "buildopts.h"
 #include "galaxy/Galaxy.h"
 #include "galaxy/GalaxyGenerator.h"
+#include "layouttest.h"
 #include "libs.h"
 #include "utils.h"
 #include "versioningInfo.h"
@@ -20,7 +21,8 @@ enum RunMode {
 	MODE_START_AT,
 	MODE_VERSION,
 	MODE_USAGE,
-	MODE_USAGE_ERROR
+	MODE_USAGE_ERROR,
+	MODE_LAYOUTTEST
 };
 
 extern "C" int main(int argc, char **argv)
@@ -59,6 +61,11 @@ extern "C" int main(int argc, char **argv)
 		if (modeopt.find("startat", 0, 7) != std::string::npos ||
 			modeopt.find("sa", 0, 2) != std::string::npos) {
 			mode = MODE_START_AT;
+			goto start;
+		}
+
+		if (modeopt == "layouttest" || modeopt == "l") {
+			mode = MODE_LAYOUTTEST;
 			goto start;
 		}
 
@@ -208,6 +215,12 @@ start:
 		auto modelViewer = ModelViewerApp();
 		modelViewer.SetInitialModel(modelName);
 		modelViewer.Run();
+		break;
+	}
+
+	case MODE_LAYOUTTEST: {
+		auto layoutTestApp = LayoutTestApp();
+		layoutTestApp.Run();
 		break;
 	}
 

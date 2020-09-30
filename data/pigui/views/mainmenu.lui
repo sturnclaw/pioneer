@@ -1,0 +1,261 @@
+local Engine     = require 'Engine'
+local Equipment  = require 'Equipment'
+local ShipDef    = require 'ShipDef'
+local SystemPath = require 'SystemPath'
+
+local lc  = Lang.GetResource 'core'
+local lui = Lang.GetResource 'ui-core'
+local qlc = Lang.GetResource 'quitconfirmation-core'
+local elc = Lang.GetResource 'equipment-core'
+local clc = Lang.GetResource 'commodity'
+
+local orbiteer = ui.fonts.orbiteer
+local pionillium = ui.fonts.pionillium
+
+-- make the ui variable scope-local for performance
+local ui  = ui
+local max_flavours = 22
+
+local startLocations = {
+	{
+		['name']=lui.START_AT_MARS,
+		['desc']=lui.START_AT_MARS_DESC,
+		['location']=SystemPath.New(0,0,0,0,18),
+		['logmsg']=lui.START_LOG_ENTRY_1,
+		['shipType']='sinonatrix',
+		['money']=100,
+		['hyperdrive']=true,
+		['equipment']={
+			{laser.pulsecannon_1mw,1},
+			{misc.atmospheric_shielding,1},
+			{misc.autopilot,1},
+			{misc.radar,1},
+			{cargo.hydrogen,2}
+		}
+	}, {
+		['name']=lui.START_AT_NEW_HOPE,
+		['desc']=lui.START_AT_NEW_HOPE_DESC,
+		['location']=SystemPath.New(1,-1,-1,0,4),
+		['logmsg']=lui.START_LOG_ENTRY_2,
+		['shipType']='pumpkinseed',
+		['money']=100,
+		['hyperdrive']=true,
+		['equipment']={
+			{laser.pulsecannon_1mw,1},
+			{misc.atmospheric_shielding,1},
+			{misc.autopilot,1},
+			{misc.radar,1},
+			{cargo.hydrogen,2}
+		}
+	}, {
+		['name']=lui.START_AT_BARNARDS_STAR,
+		['desc']=lui.START_AT_BARNARDS_STAR_DESC,
+		['location']=SystemPath.New(-1,0,0,0,16),
+		['logmsg']=lui.START_LOG_ENTRY_3,
+		['shipType']='xylophis',
+		['money']=100,
+		['hyperdrive']=false,
+		['equipment']={
+			{misc.atmospheric_shielding,1},
+			{misc.autopilot,1},
+			{misc.radar,1},
+			{cargo.hydrogen,2}
+		}
+	}
+}
+
+local mainMenuButtonFont = {
+	name = "pionillium",
+	size = 24
+}
+
+local MenuButton = Button {
+	font = mainMenuButtonFont,
+	size = Vector2(0, 46),
+	anchor = "HFill",
+	enabled = true
+}
+
+local quitConfirmMsg
+local confirmQuitPopup
+
+local function quitGame()
+	if Engine.GetConfirmQuit() then
+		quitConfirmMsg = string.interp(qlc["MSG_" .. Engine.rand:Integer(1, max_flavours)],{yes = qlc.YES, no = qlc.NO})
+		confirmQuitPopup:Open()
+	else
+		Engine.Quit()
+	end
+end
+
+local function continueGame()
+	if Game.CanLoadGame('_exit') and ( Engine.GetAutosaveEnabled() or not Game.CanLoadGame('_quicksave') ) then
+		Game.LoadGame("_exit")
+	else
+		Game.LoadGame('_quicksave')
+	end
+end
+
+local function startAtLocation(location)
+	Game.StartGame(location.location)
+	Game.player:SetShipType(location.shipType)
+	Game.player:SetLabel(Ship.MakeRandomLabel())
+	if location.hyperdrive then
+		Game.player:AddEquip(hyperspace['hyperdrive_'..ShipDef[Game.player.shipId].hyperdriveClass])
+	end
+	Game.player:SetMoney(location.money)
+	for _,equip in pairs(location.equipment) do
+		Game.player:AddEquip(equip[1],equip[2])
+	end
+	FlightLog.MakeCustomEntry(location.logmsg)
+end
+
+local start_buttons = VBox {
+	margin = { 4, 4, 4, 4 },
+	MenuButton {
+		lui.CONTINUE_GAME,
+		enabled = canContinue,
+	},
+	MenuButton {
+		lui.LOAD_GAME,
+		onPressed = function()
+			ui.saveLoadWindow.mode = "LOAD",
+			ui.saveLoadWindow:open()
+		end
+	},
+	MenuButton {
+		lui.OPTIONS,
+		onPressed = function() ui.optionsWindow:open() end
+	},
+	MenuButton {
+		lui.QUIT,
+		onPressed = quitGame
+	}
+}
+
+for i, loc in ipairs(startLocations) do
+	local desc = loc.desc .. "\n"
+	local sd = ShipDef[loc.shipType]
+	local name = sd and sd.name or loc.shipType
+	desc = desc .. lc.SHIP .. ": " .. name .. "\n"
+	desc = desc .. lui.CREDITS .. ": "  .. Format.Money(loc.money) .. "\n"
+	desc = desc .. lui.HYPERDRIVE .. ": " .. (loc.hyperdrive and lui.YES or lui.NO) .. "\n"
+	desc = desc .. lui.EQUIPMENT .. ":\n"
+	for _,eq in pairs(loc.equipment) do
+		local equipname = rawget(elc, eq[1].l10n_key) or rawget(clc, eq[1].l10n_key)
+		desc = desc .. "  - " .. equipname
+		if eq[2] > 1 then
+			desc = desc .. " x" .. eq[2] .. "\n"
+		else
+			desc = desc .. "\n"
+		end
+	end
+
+	table.insert(start_buttons, i, MenuButton {
+		loc.name,
+
+		-- settings
+		tooltip = desc,
+		onPressed = function() startAtLocation(loc) end,
+	})
+end
+
+confirmQuitPopup = Popup {
+	background = colors.commsWindowBackground,
+	borderWidth = 1.0,
+
+	VBox {
+		Text {
+			qlc.QUIT,
+			font = mainMenuButtonFont,
+			anchor = "HFill"
+		},
+		TextWrapped {
+			function() return quitConfirmMsg end,
+			font = ui.fonts.pionillium.large
+		},
+		HBox {
+			margin = { 0, 15.0, 0, 0 },
+
+			MenuButton {
+				qlc.YES,
+				anchor = "HCenter",
+				onPressed = Engine.Quit
+			},
+			MenuButton {
+				qlc.NO,
+				anchor = "HCenter",
+				onPressed = function()
+					confirmQuitPopup:close()
+				end
+			}
+		}
+	}
+}
+
+make_ship_text = function()
+	if not Engine.IsIntroZooming() then return Base end
+	local mn = Engine.GetIntroCurrentModelName()
+	local sd = mn and ShipDef[mn] or nil
+	if not sd then return Base end
+
+	return VBox {
+		Text {
+			sd.name,
+			color = colors.white,
+			font = orbiteer.medlarge
+		},
+		Text {
+			lui[sd.shipClass:upper()],
+			color = colors.white,
+			font = orbiteer.medium
+		}
+	}
+end
+
+return Layout {
+	-- Pioneer text
+	Window {
+		id = "headingWindow",
+		anchor = "Top|Left",
+		margin = { 110, 65, 0, 0 },
+		flags = ui.WindowFlags { "NoDecoration", "NoMove" },
+
+		Text {
+			"Pioneer",
+			font = { name = "orbiteer", size = 36 }
+		}
+	},
+	-- Ship name
+	Window {
+		id = "shipInfoWindow",
+		anchor = "Top|Left",
+		margin = { ui.screenWidth / 3.0, ui.screenHeight / 5.0 * 4 },
+
+		make_ship_text
+	},
+	-- main menu buttons
+	Window {
+		-- settings
+		id = "MainMenuButtons",
+		margin = { 0, 0, 100, 0 },
+		flags = { "NoTitleBar", "NoResize", "NoFocusOnAppearing", "NoBringToFrontOnFocus" },
+
+		-- children
+		start_buttons
+	},
+	-- build number display
+	Window {
+		-- settings
+		id = "buildLabel",
+		flags = ui.WindowFlags { "NoDecoration", "NoMove" },
+		margin = { 0, 0, 50, 50 },
+		anchor = "Bottom|Right",
+
+		-- children
+		Text {
+			Engine.version,
+			font = { name = "orbiteer", size = 16 }
+		}
+	}
+}

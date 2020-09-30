@@ -1,0 +1,33 @@
+local pigui = require 'Engine'.pigui
+local widgets = require 'pigui.widgets.core'
+require 'pigui.widgets.window'
+require 'pigui.widgets.text'
+
+local layout = widgets.Window {
+	anchor = "Fill",
+	margin = { 40, 40, 40, 40 },
+	padding = Vector2(16, 16),
+	flags = pigui.WindowFlags { "NoDecoration", "NoMove", "NoFocusOnAppearing" },
+
+	widgets.Text {
+		"This is a test!",
+	},
+
+	widgets.HBox {
+		widgets.Text {
+			"This is a test! 2",
+		},
+		widgets.Base {
+			anchor = "VFill",
+			size = Vector2(4, 0)
+		},
+		widgets.Text {
+			"This is a test! 3",
+		}
+	}
+}
+
+return function(context)
+	layout:__layout(context)
+	context:insert(0, layout.__item)
+end
