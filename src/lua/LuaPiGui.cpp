@@ -300,6 +300,7 @@ static LuaFlags<ImGuiWindowFlags_> imguiWindowFlagsTable = {
 	{ "HorizontalScrollbar", ImGuiWindowFlags_HorizontalScrollbar },
 	{ "NoFocusOnAppearing", ImGuiWindowFlags_NoFocusOnAppearing },
 	{ "NoBringToFrontOnFocus", ImGuiWindowFlags_NoBringToFrontOnFocus },
+	{ "NoDecoration", ImGuiWindowFlags_NoDecoration },
 	{ "AlwaysVerticalScrollbar", ImGuiWindowFlags_AlwaysVerticalScrollbar },
 	{ "AlwaysHorizontalScrollbar", ImGuiWindowFlags_AlwaysHorizontalScrollbar },
 	{ "AlwaysUseWindowPadding", ImGuiWindowFlags_AlwaysUseWindowPadding }
@@ -1017,9 +1018,12 @@ static int l_pigui_text_wrapped(lua_State *l)
 static int l_pigui_text_colored(lua_State *l)
 {
 	PROFILE_SCOPED()
-	ImColor color = LuaPull<ImColor>(l, 1);
+	ImU32 color = LuaPull<ImColor>(l, 1);
 	std::string text = LuaPull<std::string>(l, 2);
-	ImGui::TextColored(color, "%s", text.c_str());
+	// instead of using a va-args function, just push+pop style color here
+	ImGui::PushStyleColor(ImGuiCol_Text, color);
+	ImGui::TextUnformatted(text.c_str());
+	ImGui::PopStyleColor();
 	return 0;
 }
 
@@ -1489,6 +1493,8 @@ static int l_pigui_pop_font(lua_State *l)
  * Parameters:
  *
  *   text - The text we want dimensions of
+ *   hide_hash - If true, ignores text beginning with '##' similar to ImGui's labels
+ *   wrap_width - If present, calculate the text including wrapping at this width.
  *
  * Returns:
  *
@@ -1499,7 +1505,9 @@ static int l_pigui_calc_text_size(lua_State *l)
 {
 	PROFILE_SCOPED()
 	std::string text = LuaPull<std::string>(l, 1);
-	ImVec2 size = ImGui::CalcTextSize(text.c_str());
+	bool hide_double_hash = LuaPull<bool>(l, 2, false);
+	float wrap_width = LuaPull<float>(l, 2, -1.0f);
+	ImVec2 size = ImGui::CalcTextSize(text.c_str(), nullptr, hide_double_hash, wrap_width);
 	LuaPush<vector2d>(l, vector2d(size.x, size.y));
 	return 1;
 }
