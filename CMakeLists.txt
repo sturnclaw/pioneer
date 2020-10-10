@@ -115,6 +115,7 @@ list(APPEND SRC_FOLDERS
 	src/scenegraph
 	src/ship
 	src/sound
+	src/space
 	src/terrain
 	src/text
 	src/ui
