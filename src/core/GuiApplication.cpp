@@ -195,7 +195,6 @@ Graphics::Renderer *GuiApplication::StartupRenderer(IniConfig *config, bool hidd
 void GuiApplication::ShutdownRenderer()
 {
 	m_renderTarget.reset();
-	m_renderState.reset();
 	m_renderer.reset();
 
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
