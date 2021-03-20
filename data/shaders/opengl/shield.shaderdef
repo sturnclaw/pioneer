@@ -5,5 +5,7 @@ Buffer LightData binding=0
 Buffer DrawData binding=1
 Buffer ShieldData binding=2
 
+PushConstant int NumHits binding=0
+
 Vertex "shield.vert"
 Fragment "shield.frag"
