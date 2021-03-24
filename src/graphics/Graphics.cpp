@@ -87,7 +87,7 @@ namespace Graphics {
 		};
 
 		// viewport coord * size + position
-		const Viewport &vp = r->GetViewport();
+		const ViewportExtents &vp = r->GetViewport();
 		return vector3d{
 			vVP.x * vp.w + vp.x,
 			vVP.y * vp.h + vp.y,
