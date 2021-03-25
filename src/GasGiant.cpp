@@ -716,8 +716,6 @@ void GasGiant::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView,
 		m_patches[i]->Render(renderer, campos, modelView, frustum);
 	}
 
-	m_surfaceMaterial->Unapply();
-
 	renderer->SetAmbientColor(oldAmbient);
 
 	renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_GASGIANTS, 1);
