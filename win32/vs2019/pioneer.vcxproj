@@ -187,10 +187,11 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <AdditionalOptions>-Zm137 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;gui.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x86/vs2019;$(SolutionDir)$(Configuration)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LargeAddressAware>true</LargeAddressAware>
@@ -208,10 +209,11 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <AdditionalOptions>-Zm137 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;gui.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x64/vs2019;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LargeAddressAware>true</LargeAddressAware>
@@ -225,7 +227,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;gui.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x86/vs2019;$(SolutionDir)$(Configuration)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -236,6 +238,7 @@
       <PreprocessorDefinitions>PSAPI_VERSION=1;_ITERATOR_DEBUG_LEVEL=0;IMGUI_IMPL_OPENGL_LOADER_GLEW;GLEW_NO_GLU;GLEW_STATIC;_SCL_SECURE_NO_WARNINGS;HAVE_M_PI;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x86\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -246,7 +249,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;gui.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;collider.lib;galaxy.lib;graphics.lib;jenkins.lib;lua.lib;terrain.lib;text.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x64/vs2019;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -258,6 +261,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x64\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -268,7 +272,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x86/vs2019;$(SolutionDir)$(Configuration)</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -282,6 +286,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <MinimalRebuild>false</MinimalRebuild>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x86\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -292,7 +297,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x64/vs2019;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -307,6 +312,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x64\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -317,7 +323,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x86/vs2019;$(SolutionDir)$(Configuration)</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -331,6 +337,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
       <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x86\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -341,7 +348,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmt.lib;Psapi.lib;glew.lib;profiler.lib;assimp-vc142-mt.lib;lua.lib;jenkins.lib;shlwapi.lib;ogg.lib;vorbis.lib;vorbisfile.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype.lib;sigc-vc140-2_0.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;scenegraph.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib/x64/vs2019;$(SolutionDir)\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -356,6 +363,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <MinimalRebuild>false</MinimalRebuild>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "..\..\..\pioneer-thirdparty\win32\bin\x64\vs2019\*.dll" "$(TargetDir)\*.dll" /Y /C</Command>
@@ -398,7 +406,6 @@
     <ClCompile Include="..\..\src\FileSourceZip.cpp" />
     <ClCompile Include="..\..\src\FileSystem.cpp" />
     <ClCompile Include="..\..\src\FixedGuns.cpp" />
-    <ClCompile Include="..\..\src\FontCache.cpp" />
     <ClCompile Include="..\..\src\Frame.cpp" />
     <ClCompile Include="..\..\src\Game.cpp" />
     <ClCompile Include="..\..\src\GameConfig.cpp" />
@@ -557,7 +564,6 @@
     <ClCompile Include="..\..\src\Sphere.cpp" />
     <ClCompile Include="..\..\src\Star.cpp" />
     <ClCompile Include="..\..\src\StringF.cpp" />
-    <ClCompile Include="..\..\src\SystemInfoView.cpp" />
     <ClCompile Include="..\..\src\SystemView.cpp" />
     <ClCompile Include="..\..\src\TerrainBody.cpp" />
     <ClCompile Include="..\..\src\Tombstone.cpp" />
@@ -620,7 +626,6 @@
     <ClInclude Include="..\..\src\FileSystem.h" />
     <ClInclude Include="..\..\src\fixed.h" />
     <ClInclude Include="..\..\src\FixedGuns.h" />
-    <ClInclude Include="..\..\src\FontCache.h" />
     <ClInclude Include="..\..\src\Frame.h" />
     <ClInclude Include="..\..\src\FrameId.h" />
     <ClInclude Include="..\..\src\Game.h" />
@@ -741,7 +746,6 @@
     <ClInclude Include="..\..\src\Star.h" />
     <ClInclude Include="..\..\src\StringF.h" />
     <ClInclude Include="..\..\src\StringRange.h" />
-    <ClInclude Include="..\..\src\SystemInfoView.h" />
     <ClInclude Include="..\..\src\SystemView.h" />
     <ClInclude Include="..\..\src\TerrainBody.h" />
     <ClInclude Include="..\..\src\Tombstone.h" />
