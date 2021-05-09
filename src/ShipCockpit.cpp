@@ -9,6 +9,9 @@
 #include "Player.h"
 #include "WorldView.h"
 #include "graphics/Renderer.h"
+#include "graphics/Texture.h"
+#include "imgui/examples/imgui_impl_opengl3.h"
+#include "imgui/imgui.h"
 #include "ship/CameraController.h"
 
 ShipCockpit::ShipCockpit(const std::string &modelName, Body *ship) :
@@ -30,6 +33,8 @@ ShipCockpit::ShipCockpit(const std::string &modelName, Body *ship) :
 	assert(GetModel());
 	SetColliding(false);
 	m_icc = nullptr;
+
+	m_drawList.reset(new ImDrawList(ImGui::GetDrawListSharedData()));
 }
 
 ShipCockpit::~ShipCockpit()
@@ -205,7 +210,41 @@ void ShipCockpit::Update(const Player *player, float timeStep)
 void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *camera, FrameId frameId)
 {
 	PROFILE_SCOPED()
+	if (!m_screenRT) {
+		Graphics::RenderTargetDesc rtDesc(256, 256,
+			Graphics::TextureFormat::TEXTURE_RGBA_8888,
+			Graphics::TextureFormat::TEXTURE_NONE);
+		m_screenRT.reset(renderer->CreateRenderTarget(rtDesc));
+		auto *mat = GetModel()->GetMaterialByName("screen_scanner").Get();
+
+		mat->SetTexture(Graphics::Renderer::GetName("texture0"),
+			m_screenRT->GetColorTexture());
+		mat->SetTexture(Graphics::Renderer::GetName("texture2"),
+			m_screenRT->GetColorTexture());
+	}
+
+	m_drawList->PushClipRectFullScreen();
+	ImFont *font = Pi::pigui->GetFont("orbiteer", 14);
+	if (!font) font = ImGui::GetFont();
+
+	m_drawList->PushTextureID(font->ContainerAtlas->TexID);
+
+	m_drawList->AddRect({ 10, 40 }, { 245, 245 }, IM_COL32(120, 1300, 240, 255), 10.0f, ImDrawCornerFlags_All, 4.0f);
+	m_drawList->AddText(font, font->FontSize, { 15, 45 },
+		IM_COL32(255, 255, 255, 255), "This is a test.");
+	m_drawList->AddText(font, font->FontSize, { 15, 65 },
+		IM_COL32(255, 255, 255, 255), "Test 2.");
+	m_drawList->AddText(font, font->FontSize, { 15, 85 },
+		IM_COL32(255, 255, 255, 255), "Test 3.");
+
+	float interp = abs(sin(Pi::game->GetTime()));
+	m_drawList->AddLine({ 15, 110 }, { 200.f * interp + 15, 110 }, IM_COL32(200, 210, 220, 255), 10.0f);
+
+	Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
+	m_drawList->Clear();
+
 	renderer->ClearDepthBuffer();
+
 	Body::SetFrame(frameId);
 	Render(renderer, camera, m_translate, m_transform);
 	Body::SetFrame(FrameId::Invalid);
