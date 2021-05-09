@@ -14,6 +14,7 @@
 namespace Graphics {
 	class Texture;
 	class Renderer;
+	class RenderTarget;
 } // namespace Graphics
 
 namespace PiGui {
@@ -115,6 +116,8 @@ namespace PiGui {
 		bool ProcessEvent(SDL_Event *event);
 
 		void RefreshFontsTexture();
+
+		void RenderToTexture(Graphics::RenderTarget *rt, std::vector<ImDrawList *> lists);
 
 	private:
 		Graphics::Renderer *m_renderer;

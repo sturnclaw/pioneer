@@ -446,6 +446,32 @@ void Instance::Render()
 	}
 }
 
+void Instance::RenderToTexture(Graphics::RenderTarget *rt, std::vector<ImDrawList *> lists)
+{
+	ImDrawData drawData{};
+	drawData.Valid = true;
+	drawData.CmdLists = lists.data();
+	drawData.CmdListsCount = lists.size();
+
+	for (const auto *list : lists) {
+		drawData.TotalVtxCount += list->VtxBuffer.size();
+		drawData.TotalIdxCount += list->IdxBuffer.size();
+	}
+
+	// Y-flip the display to match OpenGL texture coordinates
+	drawData.DisplayPos = ImVec2(0.0f, rt->GetDesc().height);
+	drawData.DisplaySize = ImVec2(rt->GetDesc().width, -rt->GetDesc().height);
+	drawData.FramebufferScale = ImVec2(1.0f, 1.0f);
+
+	m_renderer->SetRenderTarget(rt);
+	m_renderer->ClearScreen();
+	m_renderer->FlushCommandBuffers();
+
+	m_instanceRenderer->RenderDrawData(&drawData);
+
+	m_renderer->SetRenderTarget(nullptr);
+}
+
 void Instance::ClearFonts()
 {
 	PROFILE_SCOPED()
