@@ -15,6 +15,7 @@ union SDL_Event;
 namespace Graphics {
 	class Texture;
 	class Renderer;
+	class RenderTarget;
 } // namespace Graphics
 
 class GuiApplication;
@@ -165,6 +166,8 @@ namespace PiGui {
 		void AddGlyph(ImFont *font, unsigned short glyph);
 
 		bool ProcessEvent(SDL_Event *event);
+
+		void RenderToTexture(Graphics::RenderTarget *rt, std::vector<ImDrawList *> lists);
 
 	private:
 		GuiApplication *m_app;
