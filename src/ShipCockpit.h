@@ -16,6 +16,12 @@ class Player;
 class Camera;
 class InternalCameraController;
 
+struct ImDrawList;
+
+namespace Graphics {
+	class RenderTarget;
+};
+
 class ShipCockpit : public ModelBody {
 public:
 	explicit ShipCockpit(const std::string &modelName);
@@ -35,16 +41,19 @@ private:
 	ShipCockpit(const ShipCockpit &) = delete;
 	ShipCockpit &operator=(const ShipCockpit &) = delete;
 
-	vector3d m_shipDir; // current ship direction
-	vector3d m_shipYaw; // current ship yaw vector
-	vector3d m_dir; // cockpit direction
-	vector3d m_yaw; // cockpit yaw vector
-	float m_rotInterp; // for rotation interpolation
-	float m_transInterp; // for translation interpolation
-	float m_gForce; // current ship gforce
-	float m_offset; // current ship offset due to acceleration effect
-	float m_shipVel; // current ship velocity
-	vector3d m_translate; // cockpit translation
+	std::unique_ptr<ImDrawList> m_drawList;
+	std::unique_ptr<Graphics::RenderTarget> m_screenRT;
+
+	vector3d m_shipDir;		// current ship direction
+	vector3d m_shipYaw;		// current ship yaw vector
+	vector3d m_dir;			// cockpit direction
+	vector3d m_yaw;			// cockpit yaw vector
+	float m_rotInterp;		// for rotation interpolation
+	float m_transInterp;	// for translation interpolation
+	float m_gForce;			// current ship gforce
+	float m_offset;			// current ship offset due to acceleration effect
+	float m_shipVel;		// current ship velocity
+	vector3d m_translate;	// cockpit translation
 	matrix4x4d m_transform; // cockpit transformation
 	InternalCameraController *m_icc;
 };
