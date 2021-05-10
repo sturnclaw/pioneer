@@ -7,11 +7,14 @@
 #include "Game.h"
 #include "Pi.h"
 #include "Player.h"
+#include "Space.h"
 #include "WorldView.h"
 #include "graphics/Renderer.h"
 #include "graphics/Texture.h"
 #include "imgui/examples/imgui_impl_opengl3.h"
 #include "imgui/imgui.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui/imgui_internal.h"
 #include "ship/CameraController.h"
 
 ShipCockpit::ShipCockpit(const std::string &modelName, Body *ship) :
@@ -207,11 +210,13 @@ void ShipCockpit::Update(const Player *player, float timeStep)
 	}
 }
 
+#define RT_SIZE 300
+#define SCAN_RANGE 40000
 void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *camera, FrameId frameId)
 {
 	PROFILE_SCOPED()
 	if (!m_screenRT) {
-		Graphics::RenderTargetDesc rtDesc(256, 256,
+		Graphics::RenderTargetDesc rtDesc(RT_SIZE, RT_SIZE,
 			Graphics::TextureFormat::TEXTURE_RGBA_8888,
 			Graphics::TextureFormat::TEXTURE_NONE);
 		m_screenRT.reset(renderer->CreateRenderTarget(rtDesc));
@@ -224,21 +229,69 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 	}
 
 	m_drawList->PushClipRectFullScreen();
-	ImFont *font = Pi::pigui->GetFont("orbiteer", 14);
+	ImFont *font = Pi::pigui->GetFont("orbiteer", 12);
 	if (!font) font = ImGui::GetFont();
 
 	m_drawList->PushTextureID(font->ContainerAtlas->TexID);
 
-	m_drawList->AddRect({ 10, 40 }, { 245, 245 }, IM_COL32(120, 1300, 240, 255), 10.0f, ImDrawCornerFlags_All, 4.0f);
-	m_drawList->AddText(font, font->FontSize, { 15, 45 },
-		IM_COL32(255, 255, 255, 255), "This is a test.");
-	m_drawList->AddText(font, font->FontSize, { 15, 65 },
-		IM_COL32(255, 255, 255, 255), "Test 2.");
-	m_drawList->AddText(font, font->FontSize, { 15, 85 },
-		IM_COL32(255, 255, 255, 255), "Test 3.");
+	ImVec2 p1 = { 10, ceil(RT_SIZE * 0.13f) };
+	ImVec2 p2 = { RT_SIZE - 10, RT_SIZE - 10 };
+	ImVec2 quart = { (p2.x - p1.x) / 4.0f, (p2.y - p1.y) / 4.0f };
+	ImVec2 xwidth = { p2.x - p1.x, 0 };
+	ImVec2 yheight = { 0, p2.y - p1.y };
+
+	ImVec2 x31 = { p1.x, p1.y + quart.y * 1.f };
+	ImVec2 x32 = { p1.x, p1.y + quart.y * 2.f };
+	ImVec2 x33 = { p1.x, p1.y + quart.y * 3.f };
+	ImVec2 y31 = { p1.x + quart.x * 1.f, p1.y };
+	ImVec2 y32 = { p1.x + quart.x * 2.f, p1.y };
+	ImVec2 y33 = { p1.x + quart.x * 3.f, p1.y };
+
+	constexpr ImU32 lineCol = IM_COL32(170, 180, 240, 255);
+	constexpr ImU32 scanCol = IM_COL32(240, 220, 180, 255);
+	constexpr ImU32 contactCol = IM_COL32(240, 180, 160, 255);
+
+	m_drawList->AddRect(p1, p2, lineCol, 8.0f, ImDrawCornerFlags_All, 5.0f);
+	m_drawList->AddLine(x31, x31 + xwidth, lineCol, 3);
+	m_drawList->AddLine(x32, x32 + xwidth, lineCol, 3);
+	m_drawList->AddLine(x33, x33 + xwidth, lineCol, 3);
+	m_drawList->AddLine(y31, y31 + yheight, lineCol, 3);
+	m_drawList->AddLine(y32, y32 + yheight, lineCol, 3);
+	m_drawList->AddLine(y33, y33 + yheight, lineCol, 3);
+
+	Space::BodyNearList nearby = Pi::game->GetSpace()->GetBodiesMaybeNear(Pi::player, SCAN_RANGE);
+
+	for (auto *body : nearby) {
+		if (!body->IsType(ObjectType::SHIP))
+			continue;
+
+		auto pos = body->GetPositionRelTo(Pi::player);
+		if (pos.Dot(-Pi::player->GetOrient().VectorZ()) <= 0 || pos.LengthSqr() > SCAN_RANGE * SCAN_RANGE)
+			continue;
+
+		auto frameUp = Pi::player->GetPosition().NormalizedSafe();
+		auto playerDir = -Pi::player->GetOrient().VectorZ();
+		playerDir = (playerDir - playerDir.Dot(frameUp) * frameUp).NormalizedSafe();
+		auto orient = matrix3x3d::FromVectors(playerDir.Cross(frameUp), frameUp, -playerDir);
+
+		pos = pos * orient;
+		float w = Clamp(pos.x * 2.0 / SCAN_RANGE, -1.0, 1.0);
+		float h = Clamp(pos.z / SCAN_RANGE, -1.0, 0.0);
+
+		ImVec2 selfPos{ p1.x + xwidth.x * 0.5f, p2.y };
+		ImVec2 contactPos = selfPos + ImVec2{ xwidth.x * w * 0.5f, h * yheight.y };
+
+		std::string test = fmt::format("{}", int(ceil(pos.y / 1000)));
+		m_drawList->AddCircle(contactPos, 4, contactCol, 12, 2);
+		m_drawList->AddText(font, font->FontSize, contactPos + ImVec2{ 0.f, -18.f }, contactCol, test.c_str());
+		if (body == Pi::player->GetCombatTarget())
+			m_drawList->AddCircle(contactPos, 2, IM_COL32(200, 100, 100, 255), 12, 3);
+	}
 
 	float interp = abs(sin(Pi::game->GetTime()));
-	m_drawList->AddLine({ 15, 110 }, { 200.f * interp + 15, 110 }, IM_COL32(200, 210, 220, 255), 10.0f);
+	ImVec2 startPos = p1 + yheight * 0.05f + xwidth * 0.5f;
+	ImVec2 interpWidth{ xwidth.x * 0.5f * interp - 10.f, 0.f };
+	m_drawList->AddLine(startPos - interpWidth, startPos + interpWidth, scanCol, 10.0f);
 
 	Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
 	m_drawList->Clear();
