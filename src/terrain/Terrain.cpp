@@ -26,6 +26,10 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 		return choices[body->GetHeightMapFractal()](body);
 	}
 
+	if (body->GetName() == "New Hope") {
+		return InstanceGenerator<TerrainHeightJSON, TerrainColorJSON>(body);
+	}
+
 	Random rand(body->GetSeed());
 
 	GeneratorInstancer gi = 0;

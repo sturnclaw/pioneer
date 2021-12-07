@@ -161,6 +161,9 @@ private:
 //This is the most complex and insanely crazy terrain you will ever see :
 class TerrainHeightFlat;
 
+// CPU-side node-based terrain height evaluator
+class TerrainHeightJSON;
+
 //New terrains with less noise :
 class TerrainHeightAsteroid;
 class TerrainHeightAsteroid2;
@@ -252,6 +255,9 @@ class TerrainColorStarWhiteDwarf;
 class TerrainColorTFGood;
 class TerrainColorTFPoor;
 class TerrainColorVolcanic;
+
+// here only for debug coloration of JSON node-based terrain
+class TerrainColorJSON;
 
 #ifdef _MSC_VER
 #pragma warning(default : 4250)

@@ -317,6 +317,9 @@ void PerfInfo::DrawRendererStats()
 	if (ImGui::Button("Reload Shaders"))
 		Pi::renderer->ReloadShaders();
 
+	if (ImGui::Button("Reload Terrain"))
+		Pi::OnChangeDetailLevel();
+
 	ImGui::Text("%u Texture2D in cache (%.3f MB)", numTex2ds, double(tex2dMemUsage) / scale_MB);
 	ImGui::Text("%u Cubemaps in cache (%.3f MB)", numTexCubemaps, double(texCubeMemUsage) / scale_MB);
 	ImGui::Text("%u TextureArray2D in cache (%.3f MB)", numTexArray2ds, double(texArray2dMemUsage) / scale_MB);
