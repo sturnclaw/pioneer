@@ -228,6 +228,7 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 			m_screenRT->GetColorTexture());
 	}
 
+	m_drawList->_ResetForNewFrame();
 	m_drawList->PushClipRectFullScreen();
 	ImFont *font = Pi::pigui->GetFont("orbiteer", 12);
 	if (!font) font = ImGui::GetFont();
@@ -294,7 +295,6 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 	m_drawList->AddLine(startPos - interpWidth, startPos + interpWidth, scanCol, 10.0f);
 
 	Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
-	m_drawList->Clear();
 
 	renderer->ClearDepthBuffer();
 
