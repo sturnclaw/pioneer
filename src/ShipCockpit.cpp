@@ -9,12 +9,16 @@
 #include "Player.h"
 #include "Space.h"
 #include "WorldView.h"
+
+#include "graphics/Drawables.h"
 #include "graphics/Renderer.h"
 #include "graphics/Texture.h"
-#include "imgui/examples/imgui_impl_opengl3.h"
+
 #include "imgui/imgui.h"
+#include "pigui/PiGuiRenderer.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui_internal.h"
+
 #include "ship/CameraController.h"
 
 ShipCockpit::ShipCockpit(const std::string &modelName) :
@@ -202,6 +206,19 @@ void ShipCockpit::Update(const Player *player, float timeStep)
 void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *camera, FrameId frameId)
 {
 	PROFILE_SCOPED()
+
+	if (!m_screenMaterial) {
+		Graphics::RenderStateDesc rsd;
+		rsd.blendMode = Graphics::BLEND_ALPHA;
+		rsd.cullMode = Graphics::CULL_NONE;
+		rsd.depthWrite = false;
+
+		Graphics::MaterialDescriptor mDesc;
+		mDesc.textures = 1;
+
+		m_screenMaterial.reset(renderer->CreateMaterial("ui", mDesc, rsd));
+	}
+
 	if (!m_screenRT) {
 		Graphics::RenderTargetDesc rtDesc(RT_SIZE, RT_SIZE,
 			Graphics::TextureFormat::TEXTURE_RGBA_8888,
@@ -239,6 +256,8 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 	constexpr ImU32 scanCol = IM_COL32(240, 220, 180, 255);
 	constexpr ImU32 contactCol = IM_COL32(240, 180, 160, 255);
 
+	m_drawList->AddRect({ 0, 0 }, { RT_SIZE, RT_SIZE }, lineCol, 8.0f);
+	m_drawList->AddCircleFilled({ 0, 0 }, 4.0, scanCol, 6);
 	m_drawList->AddRect(p1, p2, lineCol, 8.0f, ImDrawCornerFlags_All, 5.0f);
 	m_drawList->AddLine(x31, x31 + xwidth, lineCol, 3);
 	m_drawList->AddLine(x32, x32 + xwidth, lineCol, 3);
@@ -281,12 +300,42 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 	ImVec2 interpWidth{ xwidth.x * 0.5f * interp - 10.f, 0.f };
 	m_drawList->AddLine(startPos - interpWidth, startPos + interpWidth, scanCol, 10.0f);
 
-	Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
+	// Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
 
 	renderer->ClearDepthBuffer();
 
 	Body::SetFrame(frameId);
 	Render(renderer, camera, m_translate, m_transform);
+
+	matrix4x4f hudTransform = matrix4x4f(m_transform) * matrix4x4f::Translation(0, 0, -1.0f);
+
+	{
+		ImDrawData drawData{};
+		drawData.Valid = true;
+		ImDrawList *list = m_drawList.get();
+		drawData.CmdLists = &list;
+		drawData.CmdListsCount = 1;
+		drawData.TotalVtxCount += list->VtxBuffer.size();
+		drawData.TotalIdxCount += list->IdxBuffer.size();
+
+		// Y-flip the display to match OpenGL texture coordinates
+		drawData.DisplayPos = ImVec2(0.0f, 0.0f);
+		drawData.DisplaySize = ImVec2(RT_SIZE, RT_SIZE);
+		drawData.FramebufferScale = ImVec2(1.0f, 1.0f);
+
+		matrix4x4f transform = hudTransform *
+			matrix4x4f::ScaleMatrix(1.0 / (RT_SIZE * 2.0)) *
+			matrix4x4f::Translation(RT_SIZE * -0.5, RT_SIZE * 0.5, 0) *
+			matrix4x4f::ScaleMatrix(1.0, -1.0, 1.0);
+
+		renderer->SetTransform(transform);
+
+		Pi::pigui->GetRenderer()->RenderDrawData(&drawData, m_screenMaterial.get());
+	}
+
+	renderer->SetTransform(hudTransform);
+	Graphics::Drawables::GetAxes3DDrawable(renderer)->Draw(renderer);
+
 	Body::SetFrame(FrameId::Invalid);
 }
 
