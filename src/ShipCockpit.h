@@ -19,6 +19,7 @@ class InternalCameraController;
 struct ImDrawList;
 
 namespace Graphics {
+	class Material;
 	class RenderTarget;
 };
 
@@ -45,6 +46,7 @@ private:
 
 	std::unique_ptr<ImDrawList> m_drawList;
 	std::unique_ptr<Graphics::RenderTarget> m_screenRT;
+	std::unique_ptr<Graphics::Material> m_screenMaterial;
 
 	vector3d m_shipDir;		// current ship direction
 	vector3d m_shipYaw;		// current ship yaw vector
