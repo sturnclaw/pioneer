@@ -45,7 +45,6 @@ private:
 	Body *m_ship; // current ship body, for rendering
 
 	std::unique_ptr<ImDrawList> m_drawList;
-	std::unique_ptr<Graphics::RenderTarget> m_screenRT;
 	std::unique_ptr<Graphics::Material> m_screenMaterial;
 
 	vector3d m_shipDir;		// current ship direction

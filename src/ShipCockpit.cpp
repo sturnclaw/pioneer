@@ -232,19 +232,6 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 		m_screenMaterial.reset(renderer->CreateMaterial("ui", mDesc, rsd));
 	}
 
-	if (!m_screenRT) {
-		Graphics::RenderTargetDesc rtDesc(RT_SIZE, RT_SIZE,
-			Graphics::TextureFormat::TEXTURE_RGBA_8888,
-			Graphics::TextureFormat::TEXTURE_NONE);
-		m_screenRT.reset(renderer->CreateRenderTarget(rtDesc));
-		auto *mat = GetModel()->GetMaterialByName("screen_scanner").Get();
-
-		mat->SetTexture(Graphics::Renderer::GetName("texture0"),
-			m_screenRT->GetColorTexture());
-		mat->SetTexture(Graphics::Renderer::GetName("texture2"),
-			m_screenRT->GetColorTexture());
-	}
-
 	m_drawList->_ResetForNewFrame();
 	m_drawList->PushClipRectFullScreen();
 	ImFont *font = Pi::pigui->GetFont("orbiteer", 12);
@@ -312,8 +299,6 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *came
 	ImVec2 startPos = p1 + yheight * 0.05f + xwidth * 0.5f;
 	ImVec2 interpWidth{ xwidth.x * 0.5f * interp - 10.f, 0.f };
 	m_drawList->AddLine(startPos - interpWidth, startPos + interpWidth, scanCol, 10.0f);
-
-	// Pi::pigui->RenderToTexture(m_screenRT.get(), { m_drawList.get() });
 
 	renderer->ClearDepthBuffer();
 
