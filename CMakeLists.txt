@@ -218,6 +218,7 @@ else (MSVC)
 
 	pkg_check_modules(SDL2 REQUIRED sdl2)
 	pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+	pkg_check_modules(SDL2_NET REQUIRED SDL2_net)
 
 	pkg_check_modules(ASSIMP REQUIRED assimp)
 	pkg_check_modules(SIGCPP REQUIRED sigc++-2.0)
@@ -329,6 +330,7 @@ list(APPEND pioneerLibs
 	${OPENGL_LIBRARIES}
 	${SDL2_LIBRARIES}
 	${SDL2_IMAGE_LIBRARIES}
+	${SDL2_NET_LIBRARIES}
 	${SIGCPP_LIBRARIES}
 	${VORBISFILE_LIBRARIES}
 	${LUA_LIBRARIES}
