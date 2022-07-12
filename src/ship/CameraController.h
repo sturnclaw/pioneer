@@ -45,22 +45,6 @@ public:
 	virtual void OnActivated(){};
 	virtual void OnDeactivated(){};
 
-	const Ship *GetShip() const { return m_ship; }
-
-protected:
-	RefCountedPtr<CameraContext> m_camera;
-
-private:
-	const Ship *m_ship;
-	vector3d m_pos;
-	matrix3x3d m_orient;
-};
-
-class MoveableCameraController : public CameraController {
-public:
-	MoveableCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
-		CameraController(camera, ship) {}
-
 	// Rotate the camera in a specific axis.
 	// `amount` is in radians and should be pre-multiplied by the frame delta.
 	virtual void RollCamera(float amount) {}
@@ -75,9 +59,19 @@ public:
 	virtual void ZoomEvent(float amount) {}
 	/// Animated zoom update (on each frame), primarily designed for mouse wheel.
 	virtual void ZoomEventUpdate(float frameTime) {}
+
+	const Ship *GetShip() const { return m_ship; }
+
+protected:
+	RefCountedPtr<CameraContext> m_camera;
+
+private:
+	const Ship *m_ship;
+	vector3d m_pos;
+	matrix3x3d m_orient;
 };
 
-class InternalCameraController : public MoveableCameraController {
+class InternalCameraController : public CameraController {
 public:
 	enum Mode {
 		MODE_FRONT = 0,
@@ -86,6 +80,7 @@ public:
 		MODE_RIGHT,
 		MODE_TOP,
 		MODE_BOTTOM,
+		// MODE_COCKPIT,
 		MODE_MAX
 	};
 
@@ -119,8 +114,8 @@ public:
 		m_rotToY = rotation.y;
 	}
 
-	// TODO: remove this and replace with a better function.
-	void getRots(double &rotX, double &rotY);
+	matrix3x3d GetViewOrient() const { return m_viewOrient; }
+	vector3d GetViewOffset() const { return m_viewOffset; }
 
 private:
 	Mode m_mode;
@@ -136,13 +131,18 @@ private:
 	float m_origFov;
 	float m_zoomPct;
 	float m_zoomPctTo;
+
+	// keep a smoothed "turn speed" value
+	vector3d m_smoothAngVel;
+
 	matrix3x3d m_viewOrient;
+	vector3d m_viewOffset;
 
 	bool m_smoothing;
 };
 
 // Zoomable, rotatable orbit camera, always looks at the ship
-class ExternalCameraController : public MoveableCameraController {
+class ExternalCameraController : public CameraController {
 public:
 	ExternalCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship);
 
@@ -177,7 +177,7 @@ private:
 };
 
 // Much like external camera, but does not turn when the ship turns
-class SiderealCameraController : public MoveableCameraController {
+class SiderealCameraController : public CameraController {
 public:
 	SiderealCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship);
 
@@ -227,7 +227,7 @@ private:
 };
 
 // Zoomable, fly by camera, always looks at the ship
-class FlyByCameraController : public MoveableCameraController {
+class FlyByCameraController : public CameraController {
 public:
 	FlyByCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship);
 

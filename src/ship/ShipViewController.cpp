@@ -4,15 +4,16 @@
 #include "ShipViewController.h"
 
 #include "CameraController.h"
+#include "CockpitScene.h"
 #include "GameConfig.h"
 #include "GameSaveError.h"
 #include "Headtracker.h"
 #include "Input.h"
-#include "WorldView.h"
-
 #include "Pi.h"
 #include "Player.h"
 #include "PlayerShipController.h"
+#include "WorldView.h"
+
 
 namespace {
 	static const float MOUSELOOK_SPEED = 0.45 * 0.01;
@@ -119,17 +120,23 @@ void ShipViewController::Init()
 
 	m_headtrackingManager.reset(new HeadtrackingManager());
 	m_headtrackingManager->Connect(headtrackingIP.c_str(), port);
+
+	m_cockpit.reset(new Cockpit::CockpitScene(Pi::renderer));
 }
 
 void ShipViewController::Activated()
 {
 	Pi::input->AddInputFrame(&InputBindings);
 
-	m_onMouseWheelCon =
-		Pi::input->onMouseWheel.connect(sigc::mem_fun(this, &ShipViewController::MouseWheel));
+	m_onMouseWheelCon = Pi::input->onMouseWheel.connect(
+		sigc::mem_fun(this, &ShipViewController::MouseWheel));
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 	Pi::player->SetFlag(Body::FLAG_DRAW_EXCLUDE, !IsExteriorView());
+
+	m_cockpit->SetShip(Pi::player);
+	if (m_cockpit->GetShipType() != Pi::player->GetShipType())
+		m_cockpit->InitForShipType(Pi::player->GetShipType());
 }
 
 void ShipViewController::Deactivated()
@@ -185,6 +192,11 @@ bool ShipViewController::IsExteriorView() const
 	return m_camType != CAM_INTERNAL;
 }
 
+bool ShipViewController::IsCockpitView() const
+{
+	return m_camType == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_FRONT;
+}
+
 void ShipViewController::OnCockpitActivated()
 {
 
@@ -201,8 +213,8 @@ void ShipViewController::ChangeInternalCameraMode(InternalCameraController::Mode
 
 void ShipViewController::Update()
 {
-	auto *cam = static_cast<MoveableCameraController *>(m_activeCameraController);
-	auto frameTime = Pi::GetFrameTime();
+	CameraController *cam = m_activeCameraController;
+	float frameTime = Pi::GetFrameTime();
 
 	m_headtrackingManager->Update();
 
@@ -296,22 +308,32 @@ void ShipViewController::Update()
 	}
 
 	m_activeCameraController->Update();
+
+	if (IsCockpitView()) {
+		m_cockpit->Update(
+			m_internalCameraController->GetViewOrient(),
+			m_internalCameraController->GetViewOffset());
+	}
 }
 
 void ShipViewController::Draw(Camera *camera)
 {
+	if (!IsCockpitView())
+		return;
+
 	// Render cockpit
-	// XXX camera should rotate inside cockpit, not rotate the cockpit around in the world
-	if (!IsExteriorView() && Pi::player->GetCockpit() && m_internalCameraController->GetMode() == InternalCameraController::MODE_FRONT)
-		Pi::player->GetCockpit()->RenderCockpit(Pi::renderer, camera, camera->GetContext()->GetTempFrame());
+	matrix3x3f invOrient = matrix3x3f(m_internalCameraController->GetViewOrient()).Inverse();
+	vector3f invOffset = -vector3f(m_internalCameraController->GetViewOffset());
+
+	matrix4x4f viewTransform = matrix4x4f(invOrient, invOffset);
+
+	m_cockpit->Render(Pi::renderer, camera, viewTransform);
 }
 
 void ShipViewController::MouseWheel(bool up)
 {
-	MoveableCameraController *cam = static_cast<MoveableCameraController *>(m_activeCameraController);
-
 	if (!up) // Zoom out
-		cam->ZoomEvent(ZOOM_SPEED * WHEEL_SENSITIVITY);
+		m_activeCameraController->ZoomEvent(ZOOM_SPEED * WHEEL_SENSITIVITY);
 	else
-		cam->ZoomEvent(-ZOOM_SPEED * WHEEL_SENSITIVITY);
+		m_activeCameraController->ZoomEvent(-ZOOM_SPEED * WHEEL_SENSITIVITY);
 }

@@ -47,7 +47,7 @@ void CameraController::Update()
 }
 
 InternalCameraController::InternalCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+	CameraController(camera, ship),
 	m_mode(MODE_FRONT),
 	m_rotToX(0),
 	m_rotToY(0),
@@ -56,7 +56,9 @@ InternalCameraController::InternalCameraController(RefCountedPtr<CameraContext> 
 	m_origFov(camera->GetFovAng()),
 	m_zoomPct(1),
 	m_zoomPctTo(1),
+	m_smoothAngVel(0.0),
 	m_viewOrient(matrix3x3d::Identity()),
+	m_viewOffset(vector3d()),
 	m_smoothing(false)
 {
 	Reset();
@@ -101,6 +103,7 @@ void InternalCameraController::Reset()
 	FillCameraPosOrient(m, "tag_camera_right", m_initPos[MODE_RIGHT], m_initOrient[MODE_RIGHT], fallbackTransform, matrix3x3d::RotateY(M_PI / 2));
 	FillCameraPosOrient(m, "tag_camera_top", m_initPos[MODE_TOP], m_initOrient[MODE_TOP], fallbackTransform, matrix3x3d::RotateX((M_PI / 2) * 3));
 	FillCameraPosOrient(m, "tag_camera_bottom", m_initPos[MODE_BOTTOM], m_initOrient[MODE_BOTTOM], fallbackTransform, matrix3x3d::RotateX(M_PI / 2));
+	// FillCameraPosOrient(m, "tag_camera_cockpit", m_initPos[MODE_COCKPIT], m_initOrient[MODE_COCKPIT], fallbackTransform, matrix3x3d::Identity());
 
 	SetMode(m_mode);
 }
@@ -119,17 +122,31 @@ void InternalCameraController::Update()
 		matrix3x3d::RotateY(-m_rotY) *
 		matrix3x3d::RotateX(-m_rotX);
 
+	if (m_mode == MODE_FRONT && false) {
+		const Ship *s = GetShip();
+
+		// Calculate look-into-turn angle
+
+		// Get angular velocity in ship-space
+		vector3d angVel = s->GetAngVelocity() * s->GetInterpOrient();
+		angVel.z = 0.0; // cancel out roll
+
+		// running average with each new frame having a 33% impact
+		m_smoothAngVel += m_smoothAngVel + angVel;
+		m_smoothAngVel /= 3.0;
+
+		// calculate total deflection and limit to a sane value
+		const double len = std::min(M_PI / 8.0, (m_smoothAngVel.Length() - 0.1) / 10.0);
+
+		// TODO: accumulate deflection smoothly over time
+		m_viewOrient = matrix3x3d::Rotate(len, m_smoothAngVel.NormalizedSafe()) * m_viewOrient;
+	}
+
 	SetOrient(m_initOrient[m_mode] * m_viewOrient);
 
 	m_camera->SetFovAng(m_origFov * m_zoomPct);
 
 	CameraController::Update();
-}
-
-void InternalCameraController::getRots(double &rX, double &rY)
-{
-	rX = m_rotX;
-	rY = m_rotY;
 }
 
 void InternalCameraController::SetSmoothingEnabled(bool enabled)
@@ -143,13 +160,14 @@ void InternalCameraController::SetMode(Mode m)
 	m_mode = m;
 	SetPosition(m_initPos[m_mode]);
 
-	static const char *m_names[6]{
+	static const char *m_names[MODE_MAX]{
 		Lang::CAMERA_FRONT_VIEW,
 		Lang::CAMERA_REAR_VIEW,
 		Lang::CAMERA_LEFT_VIEW,
 		Lang::CAMERA_RIGHT_VIEW,
 		Lang::CAMERA_TOP_VIEW,
-		Lang::CAMERA_BOTTOM_VIEW
+		Lang::CAMERA_BOTTOM_VIEW,
+		// ""
 	};
 
 	m_name = m_names[m_mode];
@@ -198,7 +216,7 @@ void InternalCameraController::OnDeactivated()
 }
 
 ExternalCameraController::ExternalCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+	CameraController(camera, ship),
 	m_dist(200),
 	m_distTo(m_dist),
 	m_rotX(0),
@@ -312,7 +330,7 @@ void ExternalCameraController::LoadFromJson(const Json &jsonObj)
 }
 
 SiderealCameraController::SiderealCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+	CameraController(camera, ship),
 	m_dist(200),
 	m_distTo(m_dist),
 	m_sidOrient(matrix3x3d::Identity())
@@ -375,7 +393,7 @@ void SiderealCameraController::LoadFromJson(const Json &jsonObj)
 }
 
 FlyByCameraController::FlyByCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
-	MoveableCameraController(camera, ship),
+	CameraController(camera, ship),
 	m_dist(500),
 	m_distTo(m_dist),
 	m_roll(0),
