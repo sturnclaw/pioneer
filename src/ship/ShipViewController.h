@@ -11,6 +11,10 @@
 
 class HeadtrackingManager;
 
+namespace Cockpit {
+	class CockpitScene;
+}
+
 class ShipViewController : public ViewController {
 public:
 	ShipViewController(WorldView *v);
@@ -34,6 +38,7 @@ public:
 
 	// returns true if the active camera is an exterior view.
 	bool IsExteriorView() const;
+	bool IsCockpitView() const;
 
 	sigc::signal<void> onChangeCamType;
 
@@ -54,6 +59,8 @@ private:
 	std::unique_ptr<SiderealCameraController> m_siderealCameraController;
 	std::unique_ptr<FlyByCameraController> m_flybyCameraController;
 	CameraController *m_activeCameraController; //one of the above
+
+	std::unique_ptr<Cockpit::CockpitScene> m_cockpit;
 
 	bool headtracker_input_priority;
 	bool m_mouseActive;
