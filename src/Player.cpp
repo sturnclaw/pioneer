@@ -52,7 +52,6 @@ Player::Player(const ShipType::Id &shipId) :
 	Ship(shipId)
 {
 	SetController(new PlayerShipController());
-	InitCockpit();
 	m_fixedGuns->SetShouldUseLeadCalc(true);
 	registerEquipChangeListener(this);
 	m_accel = vector3d(0.0f, 0.0f, 0.0f);
@@ -61,7 +60,6 @@ Player::Player(const ShipType::Id &shipId) :
 Player::Player(const Json &jsonObj, Space *space) :
 	Ship(jsonObj, space)
 {
-	InitCockpit();
 	m_fixedGuns->SetShouldUseLeadCalc(true);
 	registerEquipChangeListener(this);
 }
@@ -70,40 +68,11 @@ void Player::SetShipType(const ShipType::Id &shipId)
 {
 	Ship::SetShipType(shipId);
 	registerEquipChangeListener(this);
-	InitCockpit();
 }
 
 void Player::SaveToJson(Json &jsonObj, Space *space)
 {
 	Ship::SaveToJson(jsonObj, space);
-}
-
-void Player::InitCockpit()
-{
-	delete m_cockpit.release();
-	if (!Pi::config->Int("EnableCockpit"))
-		return;
-
-	// XXX select a cockpit model. this is all quite skanky because we want a
-	// fallback if the name is not found, which means having to actually try to
-	// load the model. but ModelBody (on which ShipCockpit is currently based)
-	// requires a model name, not a model object. it won't hurt much because it
-	// all stays in the model cache anyway, its just awkward. the fix is to fix
-	// ShipCockpit so its not a ModelBody and thus does its model work
-	// directly, but we're not there yet
-	std::string cockpitModelName;
-	if (!GetShipType()->cockpitName.empty()) {
-		if (Pi::FindModel(GetShipType()->cockpitName, false))
-			cockpitModelName = GetShipType()->cockpitName;
-	}
-	if (cockpitModelName.empty()) {
-		if (Pi::FindModel("default_cockpit", false))
-			cockpitModelName = "default_cockpit";
-	}
-	if (!cockpitModelName.empty())
-		m_cockpit.reset(new ShipCockpit(cockpitModelName));
-
-	OnCockpitActivated();
 }
 
 bool Player::DoDamage(float kgDamage)
@@ -296,12 +265,6 @@ void Player::AbortHyperjump()
 	Ship::AbortHyperjump();
 }
 
-void Player::OnCockpitActivated()
-{
-	if (m_cockpit)
-		m_cockpit->OnActivated(this);
-}
-
 void Player::StaticUpdate(const float timeStep)
 {
 	Ship::StaticUpdate(timeStep);
@@ -346,11 +309,6 @@ void Player::StaticUpdate(const float timeStep)
 		m_creakSound.SetOp(Sound::OP_STOP_AT_TARGET_VOLUME);
 	}
 	m_accel = current_accel;
-
-	// XXX even when not on screen. hacky, but really cockpit shouldn't be here
-	// anyway so this will do for now
-	if (m_cockpit)
-		m_cockpit->Update(this, timeStep);
 }
 
 int Player::GetManeuverTime() const

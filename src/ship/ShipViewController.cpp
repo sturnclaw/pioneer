@@ -143,7 +143,7 @@ void ShipViewController::SetCamType(enum CamType c)
 	switch (c) {
 	case CAM_INTERNAL:
 		m_activeCameraController = m_internalCameraController.get();
-		Pi::player->OnCockpitActivated();
+		OnCockpitActivated();
 		break;
 	case CAM_EXTERNAL:
 		m_activeCameraController = m_externalCameraController.get();
@@ -175,6 +175,11 @@ void ShipViewController::SetCamType(enum CamType c)
 bool ShipViewController::IsExteriorView() const
 {
 	return m_camType != CAM_INTERNAL;
+}
+
+void ShipViewController::OnCockpitActivated()
+{
+
 }
 
 void ShipViewController::ChangeInternalCameraMode(InternalCameraController::Mode m)
