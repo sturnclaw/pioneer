@@ -536,10 +536,8 @@ static int l_engine_set_cockpit_enabled(lua_State *l)
 	const bool enabled = lua_toboolean(l, 1);
 	Pi::config->SetInt("EnableCockpit", (enabled ? 1 : 0));
 	Pi::config->Save();
-	if (Pi::player) {
-		Pi::player->InitCockpit();
-		if (enabled) Pi::player->OnCockpitActivated();
-	}
+
+	// TODO: notify downstream code of the config being changed
 	return 0;
 }
 

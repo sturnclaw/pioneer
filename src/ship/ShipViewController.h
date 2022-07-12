@@ -59,6 +59,7 @@ private:
 	bool m_mouseActive;
 
 	void MouseWheel(bool up);
+	void OnCockpitActivated();
 
 public:
 	void Init();
