@@ -5,6 +5,7 @@
 
 #include "Camera.h"
 #include "JsonUtils.h"
+#include "InteractionScene.h"
 #include "Pi.h"
 #include "Ship.h"
 #include "ShipType.h"
@@ -14,7 +15,6 @@
 #include "graphics/Types.h"
 #include "profiler/Profiler.h"
 #include "scenegraph/Model.h"
-#include "ship/InteractionScene.h"
 
 using namespace Cockpit;
 
