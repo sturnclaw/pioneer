@@ -4,7 +4,6 @@
 #include "ShipViewController.h"
 
 #include "CameraController.h"
-#include "CockpitScene.h"
 #include "GameConfig.h"
 #include "GameSaveError.h"
 #include "Headtracker.h"
@@ -13,6 +12,7 @@
 #include "Player.h"
 #include "PlayerShipController.h"
 #include "WorldView.h"
+#include "cockpit/CockpitScene.h"
 
 
 namespace {

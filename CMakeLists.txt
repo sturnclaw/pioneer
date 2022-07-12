@@ -116,6 +116,7 @@ endif (REMOTE_LUA_REPL)
 
 list(APPEND SRC_FOLDERS
 	src/
+	src/cockpit
 	src/collider
 	src/galaxy
 	src/graphics
