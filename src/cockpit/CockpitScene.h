@@ -31,7 +31,8 @@ namespace Cockpit {
 	class DrawingContext;
 	class InteractionScene;
 
-	class PropInfo;
+	class Prop;
+	class PropDB;
 
 	class CockpitScene {
 	public:
@@ -48,10 +49,9 @@ namespace Cockpit {
 		void InitForShipType(const ShipType *type);
 		const ShipType *GetShipType() const { return m_shipType; }
 
-		void Load(const std::string &cockpitPath);
-		void Clear();
+		InteractionScene *GetInteraction() { return m_interactionScene.get(); }
 
-		void SetShip(const Ship *ship);
+		void SetShip(Ship *ship);
 
 		void SetDebugFlags(uint32_t flags);
 
@@ -60,6 +60,9 @@ namespace Cockpit {
 		void Render(Graphics::Renderer *r, Camera *camera, const matrix4x4f &viewTransform);
 
 	private:
+		void Load(std::string_view cockpitPath, const Json &cockpitInfo);
+		void Clear();
+
 		void LoadProps(const Json &node);
 
 	private:
@@ -71,13 +74,15 @@ namespace Cockpit {
 		vector3f m_camPosition;
 		matrix3x3f m_camOrient;
 
-		const Ship *m_ship;
+		Ship *m_ship;
 		const ShipType *m_shipType;
 
 		vector3f m_lastTrace;
 
 		// std::vector<std::unique_ptr<DrawingContext>> m_displayContexts;
-		// std::vector<std::unique_ptr<PropInfo>> m_props;
-		std::map<size_t, PropInfo*> m_actionMap;
+		std::vector<std::unique_ptr<Prop>> m_props;
+
+		// FIXME: this needs to be registered as an engine system of some sort
+		static PropDB *m_propDB;
 	};
 }

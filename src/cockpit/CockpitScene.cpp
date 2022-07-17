@@ -7,16 +7,21 @@
 #include "JsonUtils.h"
 #include "InteractionScene.h"
 #include "Pi.h"
+#include "Prop.h"
 #include "Ship.h"
 #include "ShipType.h"
 
 #include "graphics/Drawables.h"
 #include "graphics/Graphics.h"
 #include "graphics/Types.h"
+#include "lua/LuaObject.h"
+#include "matrix3x3.h"
 #include "profiler/Profiler.h"
 #include "scenegraph/Model.h"
 
 using namespace Cockpit;
+
+PropDB *CockpitScene::m_propDB = nullptr;
 
 CockpitScene::CockpitScene(Graphics::Renderer *r) :
 	m_camPosition(),
@@ -34,37 +39,56 @@ CockpitScene::CockpitScene(Graphics::Renderer *r) :
 
 CockpitScene::~CockpitScene()
 {
-
+	m_props.clear();
+	m_interactionScene.reset();
 }
 
 void CockpitScene::InitForShipType(const ShipType *shipType)
 {
 	Clear();
 
-	std::string cockpitName;
+	m_shipType = shipType;
 
-	if (!shipType->cockpitName.empty()) {
-		if (Pi::FindModel(shipType->cockpitName, false))
-			cockpitName = shipType->cockpitName;
+	if (!m_propDB) {
+		m_propDB = new PropDB();
+		m_propDB->LoadPropCtx();
+		m_propDB->LoadProps("cockpits/props/switches.json");
 	}
 
-	if (cockpitName.empty()) {
-		if (Pi::FindModel("default_cockpit", false))
-			cockpitName = shipType->cockpitName;
-		else
-			return;
+	Json cockpitInfo = nullptr;
+	std::string_view cockpitName = shipType->cockpitName;
+	if (!cockpitName.empty()) {
+		cockpitInfo = JsonUtils::LoadJsonDataFile(fmt::format("cockpits/{}/cockpit.json", cockpitName));
 	}
 
-	Load(cockpitName);
+	if (cockpitInfo.is_null()) {
+		cockpitInfo = JsonUtils::LoadJsonDataFile("cockpits/default_cockpit/cockpit.json");
+	}
+
+	if (!cockpitInfo.is_object())
+		return;
+
+	Load(cockpitName, cockpitInfo);
 }
 
-void CockpitScene::Load(const std::string &cockpitPath)
+void CockpitScene::Load(std::string_view cockpitPath, const Json &cockpitInfo)
 {
-	const Json &cockpitInfo = JsonUtils::LoadJsonDataFile("cockpits/" + cockpitPath + "/cockpit.json");
+	std::string cockpitModel = cockpitInfo["model"];
+	SceneGraph::Model *model = Pi::FindModel(cockpitModel, false);
+	if (!model)
+		model = Pi::FindModel("default_cockpit");
 
-	m_model.reset(Pi::FindModel(cockpitPath)->MakeInstance());
+	m_model.reset(model->MakeInstance());
+
 	m_interactionScene.reset(new InteractionScene());
+
+	/*
 	m_interactionScene->AddSphereTrigger(0, vector3f(0.01, -0.01, -0.5), 0.1);
+	m_interactionScene->AddBoxTrigger(1,
+		vector3f(-0.05, 0.0, -0.5),
+		matrix3x3f::RotateX(M_PI_4),
+		vector3f(0.05, 0.05, 0.1));
+	*/
 
 	auto iter = cockpitInfo.find("props");
 	if (iter != cockpitInfo.end() && iter->is_array())
@@ -74,8 +98,7 @@ void CockpitScene::Load(const std::string &cockpitPath)
 void CockpitScene::Clear()
 {
 	// m_displayContexts.clear();
-	// m_props.clear();
-	m_actionMap.clear();
+	m_props.clear();
 
 	m_interactionScene.reset();
 	m_model.reset();
@@ -83,9 +106,49 @@ void CockpitScene::Clear()
 
 void CockpitScene::LoadProps(const Json &node)
 {
+	for (const auto &entry : node) {
+		std::string_view id = entry["id"];
+		PropInfo *propInfo = m_propDB->GetProp(id);
+		if (propInfo == nullptr) {
+			Log::Warning("Could not find prop {}\n", id);
+			continue;
+		}
+
+		vector3f position;
+		matrix3x3f orient = matrix3x3fIdentity;
+
+		const Json &posNode = entry["position"];
+		if (posNode.is_array()) {
+			position.x = posNode[0];
+			position.y = posNode[1];
+			position.z = posNode[2];
+		}
+
+		const Json &orientNode = entry["orient"];
+		if (orientNode.is_array()) {
+			orient[0] = orientNode[0];
+			orient[1] = orientNode[1];
+			orient[2] = orientNode[2];
+			orient[3] = orientNode[3];
+			orient[4] = orientNode[4];
+			orient[5] = orientNode[5];
+			orient[6] = orientNode[6];
+			orient[7] = orientNode[7];
+			orient[8] = orientNode[8];
+		}
+
+		Prop *prop = new Prop(propInfo, this, m_props.size(), m_propDB->GetEnvTable());
+
+		prop->SetPosition(position);
+		prop->SetOrient(orient);
+
+		prop->UpdateTriggers();
+
+		m_props.emplace_back(prop);
+	}
 }
 
-void CockpitScene::SetShip(const Ship *ship)
+void CockpitScene::SetShip(Ship *ship)
 {
 	m_ship = ship;
 }
@@ -102,6 +165,17 @@ void CockpitScene::Update(matrix3x3d viewOrient, vector3d viewOffset)
 		vector3f linthrust{ prop->GetLinThrusterState() };
 		vector3f angthrust{ prop->GetAngThrusterState() };
 		m_model->SetThrust(linthrust, -angthrust);
+	}
+
+	// Set this ship in the cockpit environment table
+	LuaRef &envTable = m_propDB->GetEnvTable();
+	envTable.PushCopyToStack();
+	LuaObject<Ship>::PushToLua(m_ship);
+	lua_setfield(envTable.GetLua(), -2, "ship");
+	lua_pop(envTable.GetLua(), 1);
+
+	for (auto &prop : m_props) {
+		prop->Update(Pi::GetFrameTime());
 	}
 
 	if (Pi::input->IsCapturingMouse())
@@ -127,6 +201,13 @@ void CockpitScene::Update(matrix3x3d viewOrient, vector3d viewOffset)
 	m_lastTrace = traceRay;
 
 	size_t id = m_interactionScene->TraceRay(m_camPosition, m_camOrient * traceRay);
+
+	uint32_t propId = id >> 8;
+	uint32_t triggerId = id & 0xff;
+
+	if (propId < m_props.size() && Pi::input->IsMouseButtonPressed(SDL_BUTTON_LEFT)) {
+		m_props[propId]->TriggerAction(triggerId);
+	}
 }
 
 void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4f &viewTransform)
@@ -152,7 +233,9 @@ void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4
 
 	m_model->Render(viewTransform);
 
-	// TODO: render props
+	for (auto &prop : m_props) {
+		prop->Render(r, viewTransform);
+	}
 
 	m_interactionScene->DrawDebug(r, m_debugMat.get(), viewTransform);
 
