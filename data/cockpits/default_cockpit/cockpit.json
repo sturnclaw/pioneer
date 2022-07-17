@@ -1,0 +1,12 @@
+{
+	"name": "Default",
+	"version": 1,
+	"model": "default_cockpit",
+	"props": [
+		{
+			"id": "switch_rotation_damping",
+			"position": [0, 0, -0.5],
+			"orient": [1, 0, 0, 0, 1, 0, 0, 0, 1]
+		}
+	]
+}

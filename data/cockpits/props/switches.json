@@ -1,0 +1,37 @@
+[
+	{
+		"id": "switch_generic",
+		"model": "switch_generic",
+		"tooltip": "cockpit/SWITCH_UNASSIGNED",
+		"style": "default",
+		"template": true,
+		"labels": {
+			"top": {
+				"tag": "tag_label_top_special",
+				"text": "cockpit/ON"
+			},
+			"bottom": "cockpit/OFF"
+		},
+		"modules": {
+			"toggle": {
+				"type": "ToggleSwitch",
+				"animation": "toggle",
+				"trigger": {
+					"tag": "tag_toggle",
+					"type": "box"
+				}
+			}
+		}
+	},
+
+	{
+		"id": "switch_rotation_damping",
+		"inherit-from": "switch_generic",
+		"tooltip": "cockpit/SWITCH_RCS_ON",
+		"label:top": "cockpit/RCS_ON",
+		"module:toggle": {
+			"state": "ship:GetRotationDamping()",
+			"action": "fc:Action('BindToggleRotationDamping')"
+		}
+	}
+]
