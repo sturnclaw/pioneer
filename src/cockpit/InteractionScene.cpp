@@ -29,7 +29,7 @@ uint32_t InteractionScene::AddBoxTrigger(size_t action, const vector3f &position
 	collider.action = action;
 	m_boxTriggers.push_back(collider);
 
-	return m_boxTriggers.size() | BOX_BIT;
+	return (m_boxTriggers.size() - 1) | BOX_BIT;
 }
 
 uint32_t InteractionScene::AddSphereTrigger(size_t action, const vector3f &position, float radius)
@@ -38,7 +38,7 @@ uint32_t InteractionScene::AddSphereTrigger(size_t action, const vector3f &posit
 	collider.action = action;
 	m_sphereTriggers.push_back(collider);
 
-	return m_sphereTriggers.size();
+	return (m_sphereTriggers.size() - 1);
 }
 
 void InteractionScene::UpdateTriggerPos(uint32_t id, const vector3f &position, const matrix3x3f &orient)
@@ -137,7 +137,7 @@ void InteractionScene::DrawDebug(Graphics::Renderer *r, Graphics::Material *m, c
 	for (const BoxCollider &coll : m_boxTriggers) {
 		const Color color = coll.action == m_lastAction ? activeColor : boxColor;
 		// Make a matrix to rotate the given AABB back into world space
-		matrix3x3f rot = coll.inv_rot.ToMatrix3x3<float>().Transpose();
+		matrix3x3f rot = coll.inv_rot.ToMatrix3x3<float>();
 		const AABBf &aabb = coll.aabb;
 
 		const vector3f verts[16] = {
