@@ -137,27 +137,30 @@ void InteractionScene::DrawDebug(Graphics::Renderer *r, Graphics::Material *m, c
 	for (const BoxCollider &coll : m_boxTriggers) {
 		const Color color = coll.action == m_lastAction ? activeColor : boxColor;
 		// Make a matrix to rotate the given AABB back into world space
-		matrix3x3f rot = coll.inv_rot.ToMatrix3x3<float>();
+		matrix3x3f rot = coll.rotation.ToMatrix3x3<float>();
 		const AABBf &aabb = coll.aabb;
 
-		const vector3f verts[16] = {
-			rot * vector3f(aabb.min.x, aabb.min.y, aabb.min.z),
-			rot * vector3f(aabb.max.x, aabb.min.y, aabb.min.z),
-			rot * vector3f(aabb.max.x, aabb.max.y, aabb.min.z),
-			rot * vector3f(aabb.min.x, aabb.max.y, aabb.min.z),
-			rot * vector3f(aabb.min.x, aabb.min.y, aabb.min.z),
-			rot * vector3f(aabb.min.x, aabb.min.y, aabb.max.z),
-			rot * vector3f(aabb.max.x, aabb.min.y, aabb.max.z),
-			rot * vector3f(aabb.max.x, aabb.min.y, aabb.min.z),
+		vector3f min = -aabb.extents;
+		vector3f max =  aabb.extents;
 
-			rot * vector3f(aabb.max.x, aabb.max.y, aabb.max.z),
-			rot * vector3f(aabb.min.x, aabb.max.y, aabb.max.z),
-			rot * vector3f(aabb.min.x, aabb.min.y, aabb.max.z),
-			rot * vector3f(aabb.max.x, aabb.min.y, aabb.max.z),
-			rot * vector3f(aabb.max.x, aabb.max.y, aabb.max.z),
-			rot * vector3f(aabb.max.x, aabb.max.y, aabb.min.z),
-			rot * vector3f(aabb.min.x, aabb.max.y, aabb.min.z),
-			rot * vector3f(aabb.min.x, aabb.max.y, aabb.max.z),
+		const vector3f verts[16] = {
+			aabb.center + rot * vector3f(min.x, min.y, min.z),
+			aabb.center + rot * vector3f(max.x, min.y, min.z),
+			aabb.center + rot * vector3f(max.x, max.y, min.z),
+			aabb.center + rot * vector3f(min.x, max.y, min.z),
+			aabb.center + rot * vector3f(min.x, min.y, min.z),
+			aabb.center + rot * vector3f(min.x, min.y, max.z),
+			aabb.center + rot * vector3f(max.x, min.y, max.z),
+			aabb.center + rot * vector3f(max.x, min.y, min.z),
+
+			aabb.center + rot * vector3f(max.x, max.y, max.z),
+			aabb.center + rot * vector3f(min.x, max.y, max.z),
+			aabb.center + rot * vector3f(min.x, min.y, max.z),
+			aabb.center + rot * vector3f(max.x, min.y, max.z),
+			aabb.center + rot * vector3f(max.x, max.y, max.z),
+			aabb.center + rot * vector3f(max.x, max.y, min.z),
+			aabb.center + rot * vector3f(min.x, max.y, min.z),
+			aabb.center + rot * vector3f(min.x, max.y, max.z),
 		};
 
 		for (unsigned int i = 0; i < 7; i++) {
