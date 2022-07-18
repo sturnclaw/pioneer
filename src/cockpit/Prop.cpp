@@ -509,8 +509,6 @@ void Prop::CreateTrigger(const ActionInfo &action, uint32_t actionId)
 			rotScale.VectorX().Length(),
 			rotScale.VectorY().Length(),
 			rotScale.VectorZ().Length());
-		rotScale.Renormalize();
-		extents = extents * rotScale; // transform extents into AABB space
 
 		// Ensure we normalize the orient to only rotation
 		triggerId = iScene->AddBoxTrigger(actionId,

@@ -16,50 +16,19 @@ namespace Graphics {
 }
 
 struct AABBf {
-	vector3f min, max;
-
-	vector3f GetExtents() const
-	{
-		return (max - min) * 0.5f;
-	}
-
-	vector3f GetCenter() const
-	{
-		return (max + min) * 0.5f;
-	}
-
-	void Update(const vector3f &p)
-	{
-		max.x = std::max(max.x, p.x);
-		max.y = std::max(max.y, p.y);
-		max.z = std::max(max.z, p.z);
-
-		min.x = std::min(min.x, p.x);
-		min.y = std::min(min.y, p.y);
-		min.z = std::min(min.z, p.z);
-	}
-
-	bool Contains(const vector3f &p) const
-	{
-		return ((p.x >= min.x) && (p.x <= max.x) &&
-			(p.y >= min.y) && (p.y <= max.y) &&
-			(p.z >= min.z) && (p.z <= max.z));
-	}
-
-	bool Intersects(const AABBf &o) const
-	{
-		return (min.x < o.max.x) && (max.x > o.min.x) &&
-			(min.y < o.max.y) && (max.y > o.min.y) &&
-			(min.z < o.max.z) && (max.z > o.min.z);
-	}
+	vector3f center, extents;
 
 	// Adapted from https://gist.github.com/DomNomNom/46bb1ce47f68d255fd5d
+	// Performs a ray intersection test for a ray origin in AABB space with the
+	// AABB center at the origin.
+	// Calling code should subtract the AABB center from the origin and rotate
+	// both the origin and direction into AABB space.
 	bool IntersectsRay(const vector3f &o, const vector3f &d, float &out_t) const
 	{
 		vector3f invdir = 1.0f / d;
 
-		vector3f t1 = (min - o) * invdir;
-		vector3f t2 = (max - o) * invdir;
+		vector3f t1 = (-extents + o) * invdir;
+		vector3f t2 = ( extents + o) * invdir;
 
 		vector3f tmin = vector3f(std::min(t1.x, t2.x), std::min(t1.y, t2.y), std::min(t1.z, t2.z));
 		vector3f tmax = vector3f(std::max(t1.x, t2.x), std::max(t1.y, t2.y), std::max(t1.z, t2.z));
@@ -76,43 +45,35 @@ namespace Cockpit {
 
 	// Represent an OBB by an AABB and a rotation which transforms input data
 	// into the axis-aligned space of the AABB.
-	// An OBB can be constructed by taking the center and inverse rotation of
-	// a transformed AABB, applying the inverse rotation, and applying extents.
 	struct BoxCollider {
 		AABBf aabb;
-		Quaternionf inv_rot;
-		size_t action;
+		Quaternionf rotation;
+		uint32_t action;
 
 		BoxCollider(const vector3f &center, const vector3f &extents, const matrix3x3f &orient)
 		{
-			inv_rot = ~Quaternionf::FromMatrix3x3(orient);
-			aabb.min = inv_rot * center - extents;
-			aabb.max = inv_rot * center + extents;
+			rotation = Quaternionf::FromMatrix3x3(orient);
+			aabb.center = center;
+			aabb.extents = extents;
 		}
 
 		void Update(const vector3f &position, const matrix3x3f &orient)
 		{
-			const vector3f extents = aabb.GetExtents();
-			inv_rot = ~Quaternionf::FromMatrix3x3(orient);
-			aabb.min = inv_rot * position - extents;
-			aabb.max = inv_rot * position + extents;
-		}
-
-		bool Contains(const vector3f &p) const
-		{
-			return aabb.Contains(inv_rot * p);
+			rotation = Quaternionf::FromMatrix3x3(orient);
+			aabb.center = position;
 		}
 
 		bool IntersectsRay(const vector3f &o, const vector3f &d, float &out_t) const
 		{
-			return aabb.IntersectsRay(inv_rot * o, inv_rot * d, out_t);
+			// make a ray origin relative to the AABB center in axis-aligned rotation space
+			return aabb.IntersectsRay(rotation * (o - aabb.center), rotation * d, out_t);
 		}
 	};
 
 	struct SphereCollider {
 		vector3f center;
 		float radius;
-		size_t action;
+		uint32_t action;
 
 		SphereCollider(vector3f c, float r) :
 			center(c),
