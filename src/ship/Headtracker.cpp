@@ -82,10 +82,10 @@ void HeadtrackingManager::Update()
 	int numPackets = SDLNet_UDP_Recv(m_trackerSocket, m_trackerPacket);
 	while (numPackets > 0) {
 		// Packet is the wrong size for headtracking, ignore it
-		if (m_trackerPacket->len != sizeof(State))
-			continue;
+		if (m_trackerPacket->len == sizeof(State)) {
+			memcpy(&m_trackerState, m_trackerPacket->data, sizeof(State));
+		}
 
-		memcpy(&m_trackerState, m_trackerPacket->data, sizeof(State));
 		numPackets = SDLNet_UDP_Recv(m_trackerSocket, m_trackerPacket);
 	}
 }
