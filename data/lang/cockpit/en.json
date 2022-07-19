@@ -1,0 +1,18 @@
+{
+	"RCS_ON": {
+		"description": "Cockpit panel label for Rotation Control System ON",
+		"message": "RCS ON"
+	},
+	"SPEED_LIMIT": {
+		"description": "Cockpit panel label for Speed Limiter system",
+		"message": "Spd Limit"
+	},
+	"ON": {
+		"description": "Cockpit panel label for the ON position of some switches",
+		"message": "ON"
+	},
+	"OFF": {
+		"description": "Cockpit panel label for the OFF position of most switches",
+		"message": "OFF"
+	}
+}
