@@ -7,7 +7,7 @@
 		"template": true,
 		"labels": {
 			"top": {
-				"tag": "tag_label_top_special",
+				"tag": "label_top",
 				"text": "cockpit/ON"
 			},
 			"bottom": "cockpit/OFF"
@@ -32,6 +32,16 @@
 		"module:toggle": {
 			"state": "ship:GetRotationDamping()",
 			"action": "fc:Action('BindToggleRotationDamping')"
+		}
+	},
+	{
+		"id": "switch_speed_limiter",
+		"inherit-from": "switch_generic",
+		"tooltip": "cockpit/SWITCH_LIMIT_SPEED",
+		"label:top": "cockpit/SPEED_LIMIT",
+		"module:toggle": {
+			"state": "ship:GetSpeedLimit() and true or false",
+			"action": "fc:Action('BindToggleSpeedLimiter')"
 		}
 	}
 ]
