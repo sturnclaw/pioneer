@@ -6,6 +6,7 @@
 #include "CockpitScene.h"
 #include "InteractionScene.h"
 #include "JsonUtils.h"
+#include "Lang.h"
 #include "Modules.h"
 #include "Pi.h"
 
@@ -14,8 +15,10 @@
 #include "lua/LuaUtils.h"
 #include "matrix3x3.h"
 #include "matrix4x4.h"
+#include "scenegraph/Label3D.h"
 #include "scenegraph/MatrixTransform.h"
 #include "scenegraph/ModelNode.h"
+#include "scenegraph/NodeVisitor.h"
 
 #include <string_view>
 #include <memory>
@@ -156,7 +159,8 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 			// label.valign = info.value("valign", label.valign);
 			// TODO: load font from label def if present
 		} else if (pair.value().is_string()) {
-			label.tagName = labelId;
+			std::string tagName = fmt::format("label_{}", labelId);
+			label.tagName = std::string_view(tagName);
 			label.text = pair.value().get<std::string_view>();
 		} else {
 			Log::Warning("Label definition {} in prop {} is invalid (expected: object|string)\n", labelId, id);
@@ -346,6 +350,47 @@ void PropModule::callBinding(Context *ctx, LuaRef &binding, int nret)
 
 // ============================================================================
 
+class LabelUpdateVisitor : public SceneGraph::NodeVisitor {
+public:
+	LabelUpdateVisitor(PropInfo *type) :
+		m_type(type)
+	{}
+
+	void ApplyLabel(SceneGraph::Label3D &label) override
+	{
+		std::string_view tagname = label.GetName();
+		Log::Info("Processing label {}\n", tagname);
+
+		for (const auto &labelInfo : m_type->labels) {
+			if (labelInfo.tagName != tagname)
+				continue;
+
+			std::string_view text = labelInfo.text.sv();
+			size_t sep_idx = text.find('/');
+			if (sep_idx == std::string_view::npos)
+				sep_idx = 0;
+
+			// FIXME: Lang should accept std::string_view
+			std::string i18n_resource = std::string(text.substr(0, sep_idx));
+			std::string i18n_key = std::string(text.substr(sep_idx > 0 ? sep_idx + 1 : 0));
+
+			Log::Info("i18n_resource: {}, i18n_key: {}\n", i18n_resource, i18n_key);
+
+			if (i18n_resource.empty())
+				i18n_resource = "cockpit";
+
+			// TODO: pull localization region from user settings
+			Lang::Resource &res = Lang::GetResource(i18n_resource, "en");
+			Log::Info("Label text: {}\n", res.Get(i18n_key));
+
+			label.SetText(res.Get(i18n_key));
+			break;
+		}
+	}
+
+	PropInfo *m_type;
+};
+
 Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEnv) :
 	m_cockpit(cockpit),
 	m_propInfo(type),
@@ -370,6 +415,10 @@ Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEn
 
 	// Create the model instance for this prop
 	m_modelInstance.reset(m_propInfo->model->MakeInstance());
+
+	// Setup labels for this prop
+	LabelUpdateVisitor visitor(m_propInfo);
+	m_modelInstance->GetRoot()->Accept(visitor);
 
 	// Create model instances and state variables for this prop's modules
 	for (const auto &module : m_propInfo->modules) {
