@@ -136,7 +136,7 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 	buildingProp->i18n_key = node["tooltip"].get<std::string_view>();
 	buildingProp->model = FindModel(node["model"]);
 
-	const Json &style = FindStyle(node["style"])["label"];
+	// const Json &style = FindStyle(node["style"])["label"];
 
 	// Load each label def into a LabelInfo struct
 	for (const auto &pair : node["labels"].items()) {
@@ -184,6 +184,8 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 		PropModule *module = nullptr;
 		if (type == "ToggleSwitch") {
 			module = new PMToggleSwitch();
+		} else if (type == "Model") {
+			module = new PMModel();
 		} else {
 			Log::Warning("Unknown module type {} in module {}.{}\n", type, id, moduleId);
 			continue;
@@ -194,8 +196,10 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 		if (info.count("tag"))
 			module->parentTag = info["tag"].get<std::string_view>();
 
+		module->index = buildingProp->modules.size();
+
 		SceneGraph::Model *model = module->model ? module->model : buildingProp->model;
-		module->init(this, model, info);
+		module->init(this, model, moduleId, info);
 
 		buildingProp->modules.emplace_back(module);
 	}
@@ -295,7 +299,7 @@ LuaRef PropDB::LoadLuaExpr(const Json &expr, bool asReturn)
 	return ret;
 }
 
-void PropDB::LoadAction(const Json &node, uint16_t id)
+void PropDB::LoadAction(const Json &node, SceneGraph::Model *model, std::string_view id, uint16_t index)
 {
 	if (!buildingProp) {
 		Log::Warning("Cannot load a prop action without a valid prop\n");
@@ -308,10 +312,21 @@ void PropDB::LoadAction(const Json &node, uint16_t id)
 	}
 
 	ActionInfo action = {};
+	action.moduleId = uint16_t(buildingProp->modules.size()) | uint32_t(index) << 16;
 
-	action.tagName = node["tag"].get<std::string_view>();
-	action.colliderType = node["type"] == "box" ? InteractionScene::BOX_BIT : 0;
-	action.moduleId = uint16_t(buildingProp->modules.size()) | uint32_t(id) << 16;
+	if (node.is_object()) {
+		action.tagName = node["tag"].get<std::string_view>();
+		action.colliderType = node["type"] == "box" ? InteractionScene::BOX_BIT : 0;
+	} else {
+		std::string tagName = fmt::format("tag_{}", id);
+		action.tagName = std::string_view(tagName);
+		action.colliderType = InteractionScene::BOX_BIT;
+	}
+
+	if (model->FindTagByName(action.tagName) == nullptr) {
+		Log::Warning("Cannot find tag {} for action {} in model {}\n", action.tagName.sv(), id, model->GetName());
+		return;
+	}
 
 	buildingProp->actions.emplace_back(std::move(action));
 }
@@ -422,7 +437,7 @@ Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEn
 
 	// Create model instances and state variables for this prop's modules
 	for (const auto &module : m_propInfo->modules) {
-		PropState state = {};
+		ModuleState state = {};
 		state.state = module->createState();
 
 		if (module->model) {
@@ -493,13 +508,33 @@ void Prop::UpdateTriggers()
 	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
 		ActionInfo &action = m_propInfo->actions[idx];
 		PropModule *module = m_propInfo->modules[action.moduleId & 0xFFFF].get();
+		SceneGraph::Model *model = m_moduleCtx[module->index].modelInstance.get();
 
 		matrix4x4f transform = matrix4x4f(m_orient, m_pos) *
-			GetModuleTagTransform(module, action.tagName);
+			GetModuleTagTransform(module, model, action.tagName);
 
 		m_cockpit->GetInteraction()->UpdateTriggerPos(m_actionTriggers[idx],
-			transform.GetTranslate(),
-			transform.GetOrient().Normalized());
+			transform.GetTranslate(), transform.GetOrient().Normalized());
+	}
+}
+
+void Prop::UpdateTrigger(PropModule *module, uint16_t index)
+{
+	// Update a specific trigger registered by the associated module
+	uint32_t moduleId = (module->index & 0xFFFF) | (index << 16);
+	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
+		ActionInfo &action = m_propInfo->actions[idx];
+		if (action.moduleId != moduleId)
+			continue;
+
+		SceneGraph::Model *model = m_moduleCtx[module->index].modelInstance.get();
+		matrix4x4f transform = matrix4x4f(m_orient, m_pos) *
+			GetModuleTagTransform(module, model, action.tagName);
+
+		m_cockpit->GetInteraction()->UpdateTriggerPos(m_actionTriggers[idx],
+			transform.GetTranslate(), transform.GetOrient().Normalized());
+
+		break;
 	}
 }
 
@@ -537,7 +572,7 @@ void Prop::CreateTrigger(const ActionInfo &action, uint32_t actionId)
 	PropModule *module = m_propInfo->modules[moduleId].get();
 
 	// Calculate the transform for the resulting trigger
-	matrix4x4f transform = GetModuleTagTransform(module, action.tagName);
+	matrix4x4f transform = GetModuleTagTransform(module, module->model, action.tagName);
 
 	SceneGraph::MatrixTransform *tag;
 	if (module->model) {
@@ -574,17 +609,17 @@ void Prop::CreateTrigger(const ActionInfo &action, uint32_t actionId)
 	m_actionTriggers.push_back(triggerId);
 }
 
-matrix4x4f Prop::GetModuleTagTransform(PropModule *module, std::string_view tagName)
+matrix4x4f Prop::GetModuleTagTransform(PropModule *module, SceneGraph::Model *modelInstance, std::string_view tagName)
 {
 	matrix4x4f transform = matrix4x4fIdentity;
 	SceneGraph::MatrixTransform *tag = nullptr;
 
-	if (module->model) {
+	if (modelInstance) {
 		SceneGraph::MatrixTransform *parentTag = m_modelInstance->FindTagByName(module->parentTag);
 		if (parentTag)
 			transform = parentTag->GetTransform();
 
-		tag = module->model->FindTagByName(tagName);
+		tag = modelInstance->FindTagByName(tagName);
 	} else {
 		tag = m_modelInstance->FindTagByName(tagName);
 	}
@@ -606,6 +641,7 @@ PropModule::Context Prop::SetupContext(uint32_t moduleIdx)
 {
 	PropModule::Context ctx = {};
 
+	ctx.prop = this;
 	ctx.model = m_moduleCtx[moduleIdx].modelInstance.get();
 	if (!ctx.model)
 		ctx.model = m_modelInstance.get();
