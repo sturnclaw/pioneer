@@ -169,8 +169,6 @@ namespace Cockpit {
 			SceneGraph::MatrixTransform *parentTag;
 		};
 
-		};
-
 		void CreateTrigger(const ActionInfo &action, uint32_t actionId);
 		matrix4x4f GetModuleTagTransform(PropModule *module, SceneGraph::Model *modelInstance, std::string_view tagName);
 
