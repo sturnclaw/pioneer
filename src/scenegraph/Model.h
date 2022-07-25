@@ -145,7 +145,7 @@ namespace SceneGraph {
 		// update all animations once to ensure all transforms are correctly positioned
 		void InitAnimations();
 		// Get an animation matching the given name or return nullptr.
-		Animation *FindAnimation(const std::string &) const;
+		Animation *FindAnimation(std::string_view name) const;
 		// Get the index of an animation in this container. If there is no such animation, returns UINT32_MAX.
 		uint32_t FindAnimationIndex(Animation *) const;
 		// Return a reference to all animations defined on this model.

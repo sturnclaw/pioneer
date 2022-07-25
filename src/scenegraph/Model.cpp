@@ -351,7 +351,7 @@ namespace SceneGraph {
 		return false;
 	}
 
-	Animation *Model::FindAnimation(const std::string &name) const
+	Animation *Model::FindAnimation(std::string_view name) const
 	{
 		for (AnimationContainer::const_iterator anim = m_animations.begin(); anim != m_animations.end(); ++anim) {
 			if ((*anim)->GetName() == name) return (*anim);

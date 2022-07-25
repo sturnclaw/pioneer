@@ -45,6 +45,8 @@ CockpitScene::~CockpitScene()
 
 void CockpitScene::InitForShipType(const ShipType *shipType)
 {
+	PROFILE_SCOPED()
+
 	Clear();
 
 	m_shipType = shipType;
@@ -73,6 +75,8 @@ void CockpitScene::InitForShipType(const ShipType *shipType)
 
 void CockpitScene::Load(std::string_view cockpitPath, const Json &cockpitInfo)
 {
+	PROFILE_SCOPED()
+
 	std::string cockpitModel = cockpitInfo["model"];
 	SceneGraph::Model *model = Pi::FindModel(cockpitModel, false);
 	if (!model)
@@ -106,6 +110,8 @@ void CockpitScene::Clear()
 
 void CockpitScene::LoadProps(const Json &node)
 {
+	PROFILE_SCOPED()
+
 	for (const auto &entry : node) {
 		std::string_view id = entry["id"];
 		PropInfo *propInfo = m_propDB->GetProp(id);
@@ -212,6 +218,8 @@ void CockpitScene::Update(matrix3x3d viewOrient, vector3d viewOffset)
 
 void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4f &viewTransform)
 {
+	PROFILE_SCOPED()
+
 	if (!m_model || !m_ship)
 		return;
 
@@ -226,7 +234,8 @@ void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4
 		oldIntensity.push_back(r->GetLight(i).GetIntensity());
 	}
 
-	r->SetAmbientColor(Color4f(ambient, ambient, ambient));
+	// r->SetAmbientColor(Color4f(ambient, ambient, ambient));
+	r->SetAmbientColor(Color4f(1, 1, 1));
 	r->SetLightIntensity(intensities.size(), intensities.data());
 
 	r->ClearDepthBuffer();

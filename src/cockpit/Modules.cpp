@@ -11,14 +11,26 @@
 
 using namespace Cockpit;
 
+void PMModel::init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node)
+{
+	// Intentionally left blank
+}
+
+void PMModel::updateState(Context *ctx, float delta)
+{
+	// Intentionally left blank
+}
+
 // ============================================================================
 
-void PMToggleSwitch::init(PropDB *db, SceneGraph::Model *model, const Json &node)
+void PMToggleSwitch::init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node)
 {
-	stateBinding = db->LoadLuaExpr(node["state"], true);
-	actionBinding = db->LoadLuaExpr(node["action"]);
+	if (node.count("state") && node.count("action")) {
+		stateBinding = db->LoadLuaExpr(node["state"], true);
+		actionBinding = db->LoadLuaExpr(node["action"]);
+	}
 
-	const std::string &animName = node["animation"];
+	const std::string_view animName = node.value("animation", id);
 
 	SceneGraph::Animation *anim = model->FindAnimation(animName);
 	if (anim != nullptr) {
@@ -28,17 +40,21 @@ void PMToggleSwitch::init(PropDB *db, SceneGraph::Model *model, const Json &node
 	}
 
 	// TODO: load and register action binding for this prop module
-	db->LoadAction(node["trigger"], 0);
+	db->LoadAction(node.value("trigger", Json(nullptr)), model, id, 0);
 }
 
 void PMToggleSwitch::updateState(Context *ctx, float delta)
 {
-	callBinding(ctx, stateBinding, 1);
-	bool newState = LuaPull<bool>(ctx->lua, -1);
-	lua_pop(ctx->lua, 1);
+	bool curState = *getState(ctx);
+	if (stateBinding.IsValid()) {
+		callBinding(ctx, stateBinding, 1);
+		bool newState = LuaPull<bool>(ctx->lua, -1);
+		lua_pop(ctx->lua, 1);
 
-	if (newState != *getState(ctx)) {
-		toggleState(ctx);
+		if (newState != curState) {
+			curState = newState;
+			toggleState(ctx);
+		}
 	}
 
 	if (!ctx->model->GetAnimationActive(anim_idx))
@@ -46,11 +62,14 @@ void PMToggleSwitch::updateState(Context *ctx, float delta)
 
 	SceneGraph::Animation *anim = ctx->model->GetAnimations()[anim_idx];
 
-	float incr = newState ? delta : -delta;
+	float incr = curState ? delta : -delta;
 	double newProgress = anim->GetProgress() + (incr / anim->GetDuration());
 
 	anim->SetProgress(Clamp(newProgress, 0.0, 1.0));
 	anim->Interpolate();
+
+	// Update our trigger in case it is being animated
+	ctx->prop->UpdateTrigger(this, 0);
 
 	if (anim->GetProgress() == 0.0 || anim->GetProgress() == 1.0) {
 		ctx->model->SetAnimationActive(anim_idx, false);
@@ -60,7 +79,9 @@ void PMToggleSwitch::updateState(Context *ctx, float delta)
 bool PMToggleSwitch::onActionPressed(Context *ctx, uint32_t actionIdx)
 {
 	toggleState(ctx);
-	callBinding(ctx, actionBinding, 0);
+
+	if (actionBinding.IsValid())
+		callBinding(ctx, actionBinding, 0);
 
 	return false;
 }

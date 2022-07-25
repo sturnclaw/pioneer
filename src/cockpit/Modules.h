@@ -21,8 +21,18 @@
 	{ 															\
 		return static_cast<StateT *>(ctx->state);				\
 	}
+#define PROP_DEFINE_STATELESS()									\
+	void *createState() override { return nullptr; }			\
+	void deleteState(void *state) override {}					\
 
 namespace Cockpit {
+
+	struct PMModel : PropModule {
+		PROP_DEFINE_STATELESS();
+
+		void init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node) override;
+		void updateState(Context *ctx, float delta) override;
+	};
 
 	struct PMToggleSwitch : PropModule {
 		PROP_DEFINE_STATE_TYPE(bool);
@@ -35,7 +45,7 @@ namespace Cockpit {
 
 		uint32_t anim_idx = 0;
 
-		void init(PropDB *db, SceneGraph::Model *model, const Json &node) override;
+		void init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node) override;
 
 		void updateState(Context *ctx, float delta) override;
 
