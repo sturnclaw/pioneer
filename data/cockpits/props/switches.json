@@ -6,10 +6,7 @@
 		"style": "default",
 		"template": true,
 		"labels": {
-			"top": {
-				"tag": "label_top",
-				"text": "cockpit/ON"
-			},
+			"top": "cockpit/ON",
 			"bottom": "cockpit/OFF"
 		},
 		"modules": {
@@ -20,6 +17,44 @@
 					"tag": "tag_toggle",
 					"type": "box"
 				}
+			}
+		}
+	},
+
+	{
+		"id": "switch_boxed",
+		"inherit-from": "switch_generic",
+		"template": true,
+		"modules": {
+			"shield": {
+				"type": "Model",
+				"model": "switch_w_sides"
+			}
+		}
+	},
+
+	{
+		"id": "switch_shielded",
+		"model": "switch_shielded",
+		"tooltip": "cockpit/SWITCH_UNASSIGNED",
+		"template": true,
+		"labels": {
+			"top": {
+				"tag": "label_top_shielded",
+				"text": "cockpit/ON"
+			},
+			"bottom": {
+				"tag": "label_bottom_shielded",
+				"text": "cockpit/OFF"
+			}
+		},
+		"modules": {
+			"toggle": {
+				"type": "ToggleSwitch",
+				"model": "switch_generic"
+			},
+			"toggle_shield": {
+				"type": "ToggleSwitch"
 			}
 		}
 	},
@@ -36,12 +71,20 @@
 	},
 	{
 		"id": "switch_speed_limiter",
-		"inherit-from": "switch_generic",
+		"inherit-from": "switch_boxed",
 		"tooltip": "cockpit/SWITCH_LIMIT_SPEED",
 		"label:top": "cockpit/SPEED_LIMIT",
 		"module:toggle": {
 			"state": "ship:GetSpeedLimit() and true or false",
 			"action": "fc:Action('BindToggleSpeedLimiter')"
+		}
+	},
+	{
+		"id": "switch_test",
+		"inherit-from": "switch_shielded",
+		"module:toggle": {
+			"state": "_test",
+			"action": "_test = not _test"
 		}
 	}
 ]
