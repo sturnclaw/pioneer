@@ -3,11 +3,13 @@
 
 #include "Modules.h"
 
+#include "Prop.h"
 #include "JsonUtils.h"
 #include "lua/Lua.h"
-#include "lua/LuaTable.h"
+#include "lua/LuaPushPull.h"
 #include "lua/LuaUtils.h"
 #include "scenegraph/Animation.h"
+#include "scenegraph/Model.h"
 
 using namespace Cockpit;
 

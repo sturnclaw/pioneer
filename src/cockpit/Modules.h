@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "Prop.h"
+#include "PropDB.h"
 #include "core/StringName.h"
 #include "lua/LuaRef.h"
 
