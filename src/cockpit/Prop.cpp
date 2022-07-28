@@ -16,7 +16,7 @@
 #include "matrix3x3.h"
 #include "matrix4x4.h"
 #include "scenegraph/Label3D.h"
-#include "scenegraph/MatrixTransform.h"
+#include "scenegraph/Tag.h"
 #include "scenegraph/ModelNode.h"
 #include "scenegraph/NodeVisitor.h"
 
@@ -193,8 +193,17 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 
 		if (info.count("model"))
 			module->model = FindModel(info["model"]);
-		if (info.count("tag"))
+
+		if (info.count("tag")) {
 			module->parentTag = info["tag"].get<std::string_view>();
+			if (!buildingProp->model->FindTagByName(module->parentTag)) {
+				Log::Warning("Module {}.{}: no parent tag {} exists in model {}.\n",
+					id, moduleId, module->parentTag, buildingProp->model->GetName());
+
+				delete module;
+				continue;
+			}
+		}
 
 		module->index = buildingProp->modules.size();
 
@@ -444,11 +453,13 @@ Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEn
 			// Create a new instance of this module's model and parent it to the specified tag
 			state.modelInstance.reset(module->model->MakeInstance());
 
-			SceneGraph::Group *rootNode = m_modelInstance->FindTagByName(module->parentTag);
-			if (!rootNode)
-				rootNode = m_modelInstance->GetRoot().Get();
+			if (module->parentTag)
+				state.parentTag = m_modelInstance->FindTagByName(module->parentTag);
 
-			rootNode->AddChild(new SceneGraph::ModelNode(state.modelInstance.get()));
+			SceneGraph::Group *root = state.parentTag ?
+				state.parentTag : m_modelInstance->GetRoot().Get();
+
+			root->AddChild(new SceneGraph::ModelNode(state.modelInstance.get()));
 		}
 
 		m_moduleCtx.emplace_back(std::move(state));
@@ -461,7 +472,7 @@ Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEn
 		// 24.8 prop ID : actionId pair
 		uint32_t triggerId = (propId << 8) | (idx & 0xFF);
 
-		CreateTrigger(action, triggerId);
+		CreateTrigger(action, action.moduleId & 0xFFFF, triggerId);
 	}
 }
 
@@ -497,44 +508,8 @@ void Prop::Update(float delta)
 	for (size_t idx = 0; idx < m_moduleCtx.size(); idx++) {
 		PropModule *module = m_propInfo->modules[idx].get();
 
-		PropModule::Context ctx = SetupContext(idx);
+		PropModule::Context ctx = SetupContext(m_moduleCtx[idx]);
 		module->updateState(&ctx, delta);
-	}
-}
-
-void Prop::UpdateTriggers()
-{
-	// Update all trigger positions with this module's transform.
-	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
-		ActionInfo &action = m_propInfo->actions[idx];
-		PropModule *module = m_propInfo->modules[action.moduleId & 0xFFFF].get();
-		SceneGraph::Model *model = m_moduleCtx[module->index].modelInstance.get();
-
-		matrix4x4f transform = matrix4x4f(m_orient, m_pos) *
-			GetModuleTagTransform(module, model, action.tagName);
-
-		m_cockpit->GetInteraction()->UpdateTriggerPos(m_actionTriggers[idx],
-			transform.GetTranslate(), transform.GetOrient().Normalized());
-	}
-}
-
-void Prop::UpdateTrigger(PropModule *module, uint16_t index)
-{
-	// Update a specific trigger registered by the associated module
-	uint32_t moduleId = (module->index & 0xFFFF) | (index << 16);
-	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
-		ActionInfo &action = m_propInfo->actions[idx];
-		if (action.moduleId != moduleId)
-			continue;
-
-		SceneGraph::Model *model = m_moduleCtx[module->index].modelInstance.get();
-		matrix4x4f transform = matrix4x4f(m_orient, m_pos) *
-			GetModuleTagTransform(module, model, action.tagName);
-
-		m_cockpit->GetInteraction()->UpdateTriggerPos(m_actionTriggers[idx],
-			transform.GetTranslate(), transform.GetOrient().Normalized());
-
-		break;
 	}
 }
 
@@ -543,8 +518,37 @@ void Prop::Render(Graphics::Renderer *r, const matrix4x4f &viewTransform)
 	m_modelInstance->Render(viewTransform * matrix4x4f(m_orient, m_pos));
 }
 
+void Prop::UpdateTriggers()
+{
+	PROFILE_SCOPED()
+
+	// Update all trigger positions with this module's transform.
+	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
+		ActionState &action = m_actionTriggers[idx];
+		ModuleState &state = m_moduleCtx[action.moduleId];
+
+		UpdateTrigger(action, state);
+	}
+}
+
+void Prop::UpdateTrigger(PropModule *module, uint16_t index)
+{
+	PROFILE_SCOPED()
+
+	// Update a specific trigger registered by the associated module
+	for (size_t idx = 0; idx < m_propInfo->actions.size(); idx++) {
+		ActionState &action = m_actionTriggers[idx];
+		if (action.moduleId != module->index)
+			continue;
+
+		ModuleState &state = m_moduleCtx[module->index];
+		UpdateTrigger(action, state);
+		break;
+	}
+}
+
 // Propagate an ActionPressed event to the module which registered the action trigger
-bool Prop::TriggerAction(uint32_t action)
+bool Prop::OnActionPressed(uint32_t action)
 {
 	PROFILE_SCOPED()
 
@@ -559,72 +563,83 @@ bool Prop::TriggerAction(uint32_t action)
 
 	SetupEnvironment();
 
-	PropModule::Context ctx = SetupContext(moduleIdx);
+	PropModule::Context ctx = SetupContext(m_moduleCtx[moduleIdx]);
 	return m_propInfo->modules[moduleIdx]->onActionPressed(&ctx, actionIdx);
 }
 
+// ============================================================================
+
 // Create an interaction trigger from an ActionInfo and add it to the InteractionScene
-void Prop::CreateTrigger(const ActionInfo &action, uint32_t actionId)
+void Prop::CreateTrigger(const ActionInfo &action, uint32_t moduleId, uint32_t actionId)
 {
+	const ModuleState &state = m_moduleCtx[moduleId];
 	InteractionScene *iScene = m_cockpit->GetInteraction();
 
-	uint32_t moduleId = action.moduleId & 0xFFFF;
-	PropModule *module = m_propInfo->modules[moduleId].get();
+	ActionState outState = { InteractionScene::INVALID_ID, moduleId, nullptr };
+
+	// The trigger is defined as a tag on the module's model
+	if (state.modelInstance)
+		outState.actionTag = state.modelInstance->FindTagByName(action.tagName);
+	else // The trigger is defined as a tag on the parent model
+		outState.actionTag = m_modelInstance->FindTagByName(action.tagName);
+
+	assert(outState.actionTag);
 
 	// Calculate the transform for the resulting trigger
-	matrix4x4f transform = GetModuleTagTransform(module, module->model, action.tagName);
+	matrix4x4f transform = GetModuleTagTransform(state, outState.actionTag);
 
-	SceneGraph::MatrixTransform *tag;
-	if (module->model) {
-		// The trigger is defined as a tag on the module's model
-		tag = module->model->FindTagByName(action.tagName);
-	} else {
-		// The trigger is defined as a tag on the parent model
-		tag = m_modelInstance->FindTagByName(action.tagName);
-	}
-
-	uint32_t triggerId = InteractionScene::INVALID_ID;
 	if (action.colliderType & InteractionScene::BOX_BIT) {
 		// Calculate extents from 3x3 combined rotation-scale matrix
-		// We make the assumption that non-uniform scale is applied first,
-		// and the tag is not scaled further.
-		matrix3x3f rotScale = tag->GetTransform().GetOrient();
+		// We make the assumption that non-uniform scale is applied first.
+		matrix3x3f rotScale = outState.actionTag->GetTransform().GetOrient();
 		vector3f extents(
 			rotScale.VectorX().Length(),
 			rotScale.VectorY().Length(),
 			rotScale.VectorZ().Length());
 
 		// Ensure we normalize the orient to only rotation
-		triggerId = iScene->AddBoxTrigger(actionId,
+		outState.actionTrigger = iScene->AddBoxTrigger(actionId,
 			transform.GetTranslate(),
 			transform.GetOrient().Normalized(),
 			extents);
 	} else {
 		// Calculate scale from uniform matrix scale in world space.
-		matrix3x3f rotScale = tag->GetTransform().GetOrient();
+		matrix3x3f rotScale = outState.actionTag->GetTransform().GetOrient();
 		float scale = rotScale.VectorX().Length();
-		triggerId = iScene->AddSphereTrigger(actionId, transform.GetTranslate(), scale);
+
+		outState.actionTrigger = iScene->AddSphereTrigger(actionId,
+			transform.GetTranslate(), scale);
 	}
 
-	m_actionTriggers.push_back(triggerId);
+	m_actionTriggers.emplace_back(std::move(outState));
 }
 
-matrix4x4f Prop::GetModuleTagTransform(PropModule *module, SceneGraph::Model *modelInstance, std::string_view tagName)
+void Prop::UpdateTrigger(const ActionState &action, const ModuleState &state)
 {
-	matrix4x4f transform = matrix4x4fIdentity;
-	SceneGraph::MatrixTransform *tag = nullptr;
+	// Update the global transform of the parent tag
+	if (state.parentTag)
+		state.parentTag->UpdateGlobalTransform();
 
-	if (modelInstance) {
-		SceneGraph::MatrixTransform *parentTag = m_modelInstance->FindTagByName(module->parentTag);
-		if (parentTag)
-			transform = parentTag->GetTransform();
+	// Update the global transform of the action tag
+	action.actionTag->UpdateGlobalTransform();
 
-		tag = modelInstance->FindTagByName(tagName);
-	} else {
-		tag = m_modelInstance->FindTagByName(tagName);
-	}
+	// Calculate the updated cockpit-space transform of this trigger
+	matrix4x4f transform = matrix4x4f(m_orient, m_pos) *
+		GetModuleTagTransform(state, action.actionTag);
 
-	return tag ? transform * tag->GetTransform() : transform;
+	m_cockpit->GetInteraction()->UpdateTriggerPos(action.actionTrigger,
+		transform.GetTranslate(), transform.GetOrient().Normalized());
+}
+
+// Calculate the top-level "cockpit space" transform for the given module's tag
+matrix4x4f Prop::GetModuleTagTransform(const ModuleState &state, const SceneGraph::Tag *actionTag)
+{
+	matrix4x4f transform = actionTag->GetGlobalTransform();
+
+	if (state.parentTag)
+		transform = state.parentTag->GetGlobalTransform() * transform;
+
+	return transform;
 }
 
 // Set the self reference in the environment table
@@ -637,16 +652,16 @@ void Prop::SetupEnvironment()
 }
 
 // Populate a PropModule context for the given module
-PropModule::Context Prop::SetupContext(uint32_t moduleIdx)
+PropModule::Context Prop::SetupContext(ModuleState &module)
 {
 	PropModule::Context ctx = {};
 
 	ctx.prop = this;
-	ctx.model = m_moduleCtx[moduleIdx].modelInstance.get();
+	ctx.model = module.modelInstance.get();
 	if (!ctx.model)
 		ctx.model = m_modelInstance.get();
 
-	ctx.state = m_moduleCtx[moduleIdx].state;
+	ctx.state = module.state;
 	ctx.cockpit = m_cockpit;
 	ctx.lua = m_env.GetLua();
 

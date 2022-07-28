@@ -212,7 +212,7 @@ void CockpitScene::Update(matrix3x3d viewOrient, vector3d viewOffset)
 	uint32_t triggerId = id & 0xff;
 
 	if (propId < m_props.size() && Pi::input->IsMouseButtonPressed(SDL_BUTTON_LEFT)) {
-		m_props[propId]->TriggerAction(triggerId);
+		m_props[propId]->OnActionPressed(triggerId);
 	}
 }
 

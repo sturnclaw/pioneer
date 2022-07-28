@@ -151,14 +151,16 @@ namespace Cockpit {
 		const PropInfo *GetPropInfo() const { return m_propInfo; }
 
 		void Update(float delta);
-		void UpdateTriggers();
-
-		// Update a specific module's trigger
-		void UpdateTrigger(PropModule *module, uint16_t index);
-
 		void Render(Graphics::Renderer *r, const matrix4x4f &viewTransform);
 
-		bool TriggerAction(uint32_t action);
+		// Update the position and transforms of all triggers registered by this prop
+		void UpdateTriggers();
+
+		// Update a specific module's trigger position and transform
+		void UpdateTrigger(PropModule *module, uint16_t index);
+
+		// Called when a trigger registered by this prop is activated
+		bool OnActionPressed(uint32_t action);
 		void OnActionDragged(uint32_t action, vector2f delta);
 		void OnActionReleased(uint32_t action);
 
@@ -166,15 +168,22 @@ namespace Cockpit {
 		struct ModuleState {
 			void *state;
 			std::unique_ptr<SceneGraph::Model> modelInstance;
-			SceneGraph::MatrixTransform *parentTag;
+			SceneGraph::Tag *parentTag;
 		};
 
-		void CreateTrigger(const ActionInfo &action, uint32_t actionId);
-		matrix4x4f GetModuleTagTransform(PropModule *module, SceneGraph::Model *modelInstance, std::string_view tagName);
+		struct ActionState {
+			uint32_t actionTrigger;
+			uint32_t moduleId; // indirection to allow quick lookup of the owning module
+			SceneGraph::Tag *actionTag;
+		};
+
+		void CreateTrigger(const ActionInfo &action, uint32_t moduleId, uint32_t actionId);
+		void UpdateTrigger(const ActionState &action, const ModuleState &state);
+		matrix4x4f GetModuleTagTransform(const ModuleState &state, const SceneGraph::Tag *actionTag);
 
 		void SetupEnvironment();
 
-		PropModule::Context SetupContext(uint32_t moduleIdx);
+		PropModule::Context SetupContext(ModuleState &modState);
 
 		std::unique_ptr<SceneGraph::Model> m_modelInstance;
 
@@ -187,6 +196,6 @@ namespace Cockpit {
 		LuaRef &m_env;
 
 		std::vector<ModuleState> m_moduleCtx;
-		std::vector<uint32_t> m_actionTriggers;
+		std::vector<ActionState> m_actionTriggers;
 	};
 }
