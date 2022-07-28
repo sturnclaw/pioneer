@@ -27,8 +27,8 @@ struct AABBf {
 	{
 		vector3f invdir = 1.0f / d;
 
-		vector3f t1 = (-extents + o) * invdir;
-		vector3f t2 = ( extents + o) * invdir;
+		vector3f t1 = (-extents - o) * invdir;
+		vector3f t2 = ( extents - o) * invdir;
 
 		vector3f tmin = vector3f(std::min(t1.x, t2.x), std::min(t1.y, t2.y), std::min(t1.z, t2.z));
 		vector3f tmax = vector3f(std::max(t1.x, t2.x), std::max(t1.y, t2.y), std::max(t1.z, t2.z));
