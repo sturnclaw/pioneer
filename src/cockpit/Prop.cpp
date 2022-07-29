@@ -37,19 +37,28 @@ public:
 			if (labelInfo.tagName != tagname)
 				continue;
 
-			std::string_view text = labelInfo.text.sv();
-			size_t sep_idx = text.find('/');
-			if (sep_idx == std::string_view::npos)
-				sep_idx = 0;
+			std::string_view combinedKey = labelInfo.text.sv();
 
-			// FIXME: Lang should accept std::string_view
-			std::string i18n_resource = std::string(text.substr(0, sep_idx));
-			std::string i18n_key = std::string(text.substr(sep_idx > 0 ? sep_idx + 1 : 0));
+			// if the text is entirely empty, assume this label is disabled
+			if (combinedKey.empty()) {
+				label.SetText("");
+				break;
+			}
+
+			size_t sep_idx = combinedKey.find('/');
+
+			std::string_view i18n_resource;
+			std::string_view i18n_key;
+
+			if (sep_idx == std::string_view::npos) {
+				i18n_resource = "cockpit";
+				i18n_key = combinedKey;
+			} else {
+				i18n_resource = combinedKey.substr(0, sep_idx);
+				i18n_key = combinedKey.substr(sep_idx + 1);
+			}
 
 			Log::Info("i18n_resource: {}, i18n_key: {}\n", i18n_resource, i18n_key);
-
-			if (i18n_resource.empty())
-				i18n_resource = "cockpit";
 
 			// TODO: pull localization region from user settings
 			Lang::Resource &res = Lang::GetResource(i18n_resource, "en");
