@@ -85,6 +85,45 @@
 		"module:toggle": {
 			"state": "_test",
 			"action": "_test = not _test"
+		},
+		"label:bottom": ""
+	},
+	{
+		"id": "complicated_prop",
+		"model": "complicated_prop",
+		"tooltip": "cockpit/SWITCH_UNASSIGNED",
+		"style": "default",
+		"labels": {},
+		"modules": {
+			"switch_1": {
+				"type": "ToggleSwitch",
+				"model": "switch_generic",
+				"tag": "tag_switch_1",
+				"animation": "toggle",
+				"trigger": "tag_toggle"
+			},
+			"switch_2": {
+				"type": "ToggleSwitch",
+				"model": "switch_generic",
+				"tag": "tag_switch_2",
+				"animation": "toggle",
+				"trigger": "tag_toggle"
+			},
+			"toggle_back": {
+				"type": "ToggleSwitch",
+				"model": "switch_generic",
+				"tag": "tag_toggle_back",
+				"animation": "toggle",
+				"trigger": "tag_toggle",
+				"state": "self.active and true or false",
+				"action": "self.active = true"
+			},
+			"toggle_front": {
+				"type": "ToggleSwitch",
+				"animation": "toggle",
+				"state": "self.active and true or false",
+				"action": "self.active = false"
+			}
 		}
 	}
 ]
