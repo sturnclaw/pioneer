@@ -313,14 +313,16 @@ void PropDB::LoadAction(const Json &node, SceneGraph::Model *model, std::string_
 
 	ActionInfo action = {};
 	action.moduleId = uint16_t(buildingProp->modules.size()) | uint32_t(index) << 16;
+	action.colliderType = InteractionScene::BOX_BIT;
 
 	if (node.is_object()) {
 		action.tagName = node["tag"].get<std::string_view>();
 		action.colliderType = node["type"] == "box" ? InteractionScene::BOX_BIT : 0;
+	} else if (node.is_string()) {
+		action.tagName = node.get<std::string_view>();
 	} else {
 		std::string tagName = fmt::format("tag_{}", id);
 		action.tagName = std::string_view(tagName);
-		action.colliderType = InteractionScene::BOX_BIT;
 	}
 
 	if (model->FindTagByName(action.tagName) == nullptr) {

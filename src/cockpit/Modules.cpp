@@ -72,6 +72,9 @@ void PMToggleSwitch::updateState(Context *ctx, float delta)
 
 	// Update our trigger in case it is being animated
 	ctx->prop->UpdateTrigger(this, 0);
+	// TODO: mark all triggers in the prop dirty in case this module is used to animate other modules.
+	// This should be the job of a dedicated PMAnimator module
+	ctx->prop->MarkTriggersDirty();
 
 	if (anim->GetProgress() == 0.0 || anim->GetProgress() == 1.0) {
 		ctx->model->SetAnimationActive(anim_idx, false);

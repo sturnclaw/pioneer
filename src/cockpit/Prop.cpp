@@ -75,7 +75,8 @@ public:
 Prop::Prop(PropInfo *type, CockpitScene *cockpit, uint32_t propId, LuaRef &luaEnv) :
 	m_cockpit(cockpit),
 	m_propInfo(type),
-	m_env(luaEnv)
+	m_env(luaEnv),
+	m_triggersDirty(true)
 {
 	PROFILE_SCOPED()
 
@@ -168,11 +169,19 @@ void Prop::Update(float delta)
 		PropModule::Context ctx = SetupContext(m_moduleCtx[idx]);
 		module->updateState(&ctx, delta);
 	}
+
+	if (m_triggersDirty)
+		UpdateTriggers();
 }
 
 void Prop::Render(Graphics::Renderer *r, const matrix4x4f &viewTransform)
 {
 	m_modelInstance->Render(viewTransform * matrix4x4f(m_orient, m_pos));
+}
+
+void Prop::MarkTriggersDirty()
+{
+	m_triggersDirty = true;
 }
 
 void Prop::UpdateTriggers()
@@ -186,6 +195,8 @@ void Prop::UpdateTriggers()
 
 		UpdateTrigger(action, state);
 	}
+
+	m_triggersDirty = false;
 }
 
 void Prop::UpdateTrigger(PropModule *module, uint16_t index)
