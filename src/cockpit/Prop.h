@@ -49,6 +49,8 @@ namespace Cockpit {
 		void Update(float delta);
 		void Render(Graphics::Renderer *r, const matrix4x4f &viewTransform);
 
+		void MarkTriggersDirty();
+
 		// Update the position and transforms of all triggers registered by this prop
 		void UpdateTriggers();
 
@@ -90,6 +92,8 @@ namespace Cockpit {
 		PropInfo *m_propInfo;
 		LuaRef m_instance;
 		LuaRef &m_env;
+
+		bool m_triggersDirty;
 
 		std::vector<ModuleState> m_moduleCtx;
 		std::vector<ActionState> m_actionTriggers;
