@@ -177,6 +177,10 @@ void PropDB::LoadProp(const Json &node, std::string_view id)
 			module = new PMToggleSwitch();
 		} else if (type == "Model") {
 			module = new PMModel();
+		} else if (type == "Button") {
+			module = new PMButton();
+		} else if (type == "Animator") {
+			module = new PMAnimator();
 		} else {
 			Log::Warning("Unknown module type {} in module {}.{}\n", type, id, moduleId);
 			continue;
