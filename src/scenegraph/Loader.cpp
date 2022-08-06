@@ -325,6 +325,18 @@ namespace SceneGraph {
 		size_t slashpos = filename.rfind("/");
 		m_curMeshDef = filename.substr(slashpos + 1, filename.length() - slashpos);
 
+		std::string_view ext = filename;
+		ext = ext.substr(ext.rfind("."));
+
+		if (ext == ".dae")
+			m_modelFormat = ModelFormat::COLLADA;
+		else if (ext == ".gltf")
+			m_modelFormat = ModelFormat::GLTF;
+		else if (ext == ".obj")
+			m_modelFormat = ModelFormat::WAVEFRONT;
+		else
+			m_modelFormat = ModelFormat::UNKNOWN;
+
 		Assimp::Importer importer;
 		importer.SetIOHandler(new AssimpFileSystem(FileSystem::gameDataFiles));
 
@@ -599,8 +611,8 @@ namespace SceneGraph {
 			//duration is calculated after adding all keys
 			//take TPS from the first animation
 			const aiAnimation *firstAnim = scene->mAnimations[0];
-			const double ticksPerSecond = firstAnim->mTicksPerSecond > 0.0 ? firstAnim->mTicksPerSecond : 24.0;
-			const double secondsPerTick = 1.0 / ticksPerSecond;
+			double ticksPerSecond = firstAnim->mTicksPerSecond > 0.0 ? firstAnim->mTicksPerSecond : 24.0;
+			double secondsPerTick = 1.0 / ticksPerSecond;
 
 			double start = DBL_MAX;
 			double end = -DBL_MAX;
@@ -611,9 +623,18 @@ namespace SceneGraph {
 			//Could make FPS an additional define or always require 24
 			double defStart = def->start;
 			double defEnd = def->end;
-			if (is_equal_exact(ticksPerSecond, 1.0)) {
+
+			if (m_modelFormat == ModelFormat::COLLADA) {
 				defStart /= 24.0;
 				defEnd /= 24.0;
+			} else if (m_modelFormat == ModelFormat::GLTF) {
+				ticksPerSecond = 1000.0; // work around importer bug before assimp 5.0.1
+				secondsPerTick = 1.0 / ticksPerSecond;
+
+				// GLTF key values are in milliseconds
+				// FIXME: we assume 24 frames per second here, this should be specified in the model file
+				defStart *= ticksPerSecond / 24.0;
+				defEnd *= ticksPerSecond / 24.0;
 			}
 
 			// Add channels to current animation if it's already present
