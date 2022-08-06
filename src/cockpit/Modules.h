@@ -34,6 +34,29 @@ namespace Cockpit {
 		void updateState(Context *ctx, float delta) override;
 	};
 
+	struct PMAnimator : PropModule {
+		PROP_DEFINE_STATE_TYPE(float);
+
+		LuaRef stateBinding;
+
+		uint32_t anim_idx = 0;
+
+		void init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node) override;
+		void updateState(Context *ctx, float delta) override;
+	};
+
+	struct PMButton : PropModule {
+		PROP_DEFINE_STATELESS();
+
+		LuaRef actionBinding;
+
+		int32_t anim_idx = -1;
+
+		void init(PropDB *db, SceneGraph::Model *model, std::string_view id, const Json &node) override;
+		void updateState(Context *ctx, float delta) override;
+		bool onActionPressed(Context *ctx, uint32_t actionIdx) override;
+	};
+
 	struct PMToggleSwitch : PropModule {
 		PROP_DEFINE_STATE_TYPE(bool);
 
