@@ -5,7 +5,7 @@
 	},
 	"SPEED_LIMIT": {
 		"description": "Cockpit panel label for Speed Limiter system",
-		"message": "Spd Limit"
+		"message": "SPD LIM"
 	},
 	"ON": {
 		"description": "Cockpit panel label for the ON position of some switches",
@@ -14,5 +14,9 @@
 	"OFF": {
 		"description": "Cockpit panel label for the OFF position of most switches",
 		"message": "OFF"
+	},
+	"BUTTON": {
+		"description": "Cockpit panel label for a placeholder button",
+		"message": "BUTTON"
 	}
 }

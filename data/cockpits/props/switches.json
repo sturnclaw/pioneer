@@ -7,7 +7,7 @@
 		"template": true,
 		"labels": {
 			"top": "cockpit/ON",
-			"bottom": "cockpit/OFF"
+			"bottom": ""
 		},
 		"modules": {
 			"toggle": {
@@ -22,15 +22,10 @@
 	},
 
 	{
-		"id": "switch_boxed",
+		"id": "switch_small",
+		"model": "switch_small",
 		"inherit-from": "switch_generic",
-		"template": true,
-		"modules": {
-			"shield": {
-				"type": "Model",
-				"model": "switch_w_sides"
-			}
-		}
+		"template": true
 	},
 
 	{
@@ -45,7 +40,7 @@
 			},
 			"bottom": {
 				"tag": "label_bottom_shielded",
-				"text": "cockpit/OFF"
+				"text": ""
 			}
 		},
 		"modules": {
@@ -69,9 +64,10 @@
 			"action": "fc:Action('BindToggleRotationDamping')"
 		}
 	},
+
 	{
 		"id": "switch_speed_limiter",
-		"inherit-from": "switch_boxed",
+		"inherit-from": "switch_shielded",
 		"tooltip": "cockpit/SWITCH_LIMIT_SPEED",
 		"label:top": "cockpit/SPEED_LIMIT",
 		"module:toggle": {
@@ -79,6 +75,7 @@
 			"action": "fc:Action('BindToggleSpeedLimiter')"
 		}
 	},
+
 	{
 		"id": "switch_test",
 		"inherit-from": "switch_shielded",
@@ -88,41 +85,23 @@
 		},
 		"label:bottom": ""
 	},
+
 	{
-		"id": "complicated_prop",
-		"model": "complicated_prop",
+		"id": "button_test",
+		"model": "button_large",
 		"tooltip": "cockpit/SWITCH_UNASSIGNED",
 		"style": "default",
-		"labels": {},
+		"labels": {
+			"top": {
+				"tag": "label_button_top",
+				"text": "cockpit/BUTTON"
+			}
+		},
 		"modules": {
-			"switch_1": {
-				"type": "ToggleSwitch",
-				"model": "switch_generic",
-				"tag": "tag_switch_1",
+			"toggle_button": {
+				"type": "Button",
 				"animation": "toggle",
-				"trigger": "tag_toggle"
-			},
-			"switch_2": {
-				"type": "ToggleSwitch",
-				"model": "switch_generic",
-				"tag": "tag_switch_2",
-				"animation": "toggle",
-				"trigger": "tag_toggle"
-			},
-			"toggle_back": {
-				"type": "ToggleSwitch",
-				"model": "switch_generic",
-				"tag": "tag_toggle_back",
-				"animation": "toggle",
-				"trigger": "tag_toggle",
-				"state": "self.active and true or false",
-				"action": "self.active = true"
-			},
-			"toggle_front": {
-				"type": "ToggleSwitch",
-				"animation": "toggle",
-				"state": "self.active and true or false",
-				"action": "self.active = false"
+				"action": "_test = not _test"
 			}
 		}
 	}
