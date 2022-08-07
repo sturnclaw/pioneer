@@ -8,12 +8,15 @@
 #include "Pi.h"
 #include "Player.h"
 #include "Space.h"
+#include "WorldView.h"
+#include "cockpit/CockpitScene.h"
 #include "graphics/Renderer.h"
 #include "graphics/Stats.h"
 #include "graphics/Texture.h"
 #include "lua/Lua.h"
 #include "lua/LuaManager.h"
 #include "scenegraph/Model.h"
+#include "ship/ShipViewController.h"
 
 #include <imgui/imgui.h>
 #include <algorithm>
@@ -27,6 +30,21 @@
 // order of header includes matters, thanks Windows.h!
 #include <psapi.h>
 #endif
+
+static bool FlagsCheckbox(const char *label, uint32_t *value, uint32_t flag)
+{
+	bool active = (*value) & flag;
+	bool changed = ImGui::Checkbox(label, &active);
+
+	if (changed && active)
+		(*value) |= flag;
+	else if (changed && !active)
+		(*value) &= ~flag;
+
+	return changed;
+}
+
+// ============================================================================
 
 // using namespace PiGui;
 using PerfInfo = PiGui::PerfInfo;
@@ -361,30 +379,49 @@ void PerfInfo::DrawWorldViewStats()
 	ImGui::TextUnformatted(aibuf);
 
 	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
 	ImGui::TextUnformatted("Player Model ShowFlags:");
 
 	using Flags = SceneGraph::Model::DebugFlags;
 
-	bool showColl = m_state->playerModelDebugFlags & Flags::DEBUG_COLLMESH;
-	bool showBBox = m_state->playerModelDebugFlags & Flags::DEBUG_BBOX;
-	bool showTags = m_state->playerModelDebugFlags & Flags::DEBUG_TAGS;
+	uint32_t flags = m_state->playerModelDebugFlags;
+	FlagsCheckbox("Show Mesh Wireframe", &flags, Flags::DEBUG_WIREFRAME);
+	FlagsCheckbox("Show Collision Mesh", &flags, Flags::DEBUG_COLLMESH);
+	FlagsCheckbox("Show Bounding Box",   &flags, Flags::DEBUG_BBOX);
+	FlagsCheckbox("Show Tag Locations",  &flags, Flags::DEBUG_TAGS);
 
-	bool changed = ImGui::Checkbox("Show Collision Mesh", &showColl);
-	changed |= ImGui::Checkbox("Show Bounding Box", &showBBox);
-	changed |= ImGui::Checkbox("Show Tag Locations", &showTags);
-
-	/* clang-format off */
-	if (changed) {
-		m_state->playerModelDebugFlags = (showColl ? Flags::DEBUG_COLLMESH : 0)
-			| (showBBox ? Flags::DEBUG_BBOX : 0)
-			| (showTags ? Flags::DEBUG_TAGS : 0);
-		Pi::player->GetModel()->SetDebugFlags(m_state->playerModelDebugFlags);
+	if (flags != m_state->playerModelDebugFlags) {
+		m_state->playerModelDebugFlags = flags;
+		Pi::player->GetModel()->SetDebugFlags(flags);
 	}
-	/* clang-format on */
 
 	if (Pi::player->GetNavTarget() && Pi::player->GetNavTarget()->GetSystemBody()) {
 		const auto *sbody = Pi::player->GetNavTarget()->GetSystemBody();
 		ImGui::TextUnformatted(fmt::format("Name: {}, Population: {}", sbody->GetName(), sbody->GetPopulation() * 1e9).c_str());
+	}
+
+	ShipViewController *svc = Pi::game->GetWorldView()->shipView.get();
+
+	if (svc->IsCockpitView() && svc->GetCockpitScene()) {
+		using Flags = Cockpit::CockpitScene::DebugFlags;
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::TextUnformatted("Cockpit Debug:");
+
+		uint32_t debugFlags = svc->GetCockpitScene()->GetDebugFlags();
+
+		FlagsCheckbox("Show Triggers", &debugFlags, Flags::DEBUG_SHOW_TRIGGERS);
+		FlagsCheckbox("Show Displays", &debugFlags, Flags::DEBUG_SHOW_DISPLAYS);
+		FlagsCheckbox("Show Cursor",   &debugFlags, Flags::DEBUG_SHOW_CURSOR);
+		FlagsCheckbox("Fake Lighting", &debugFlags, Flags::DEBUG_FULL_LIGHTING);
+
+		if (debugFlags != svc->GetCockpitScene()->GetDebugFlags())
+			svc->GetCockpitScene()->SetDebugFlags(debugFlags);
 	}
 }
 
