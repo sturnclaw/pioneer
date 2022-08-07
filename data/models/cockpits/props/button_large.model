@@ -5,6 +5,7 @@ shininess 43
 tex_diff ../default_cockpit/default_cockpit_diff.dds
 tex_spec ../default_cockpit/default_cockpit_spec.dds
 tex_glow ../default_cockpit/default_cockpit_glow.dds
-tex_norm ../default_cockpit/default_cockpit_norm.png
 
-mesh switch_w_sides.dae
+mesh button_large.gltf
+
+anim toggle 0 8
