@@ -655,7 +655,12 @@ namespace SceneGraph {
 
 					const std::string channame(aichan->mNodeName.C_Str());
 					MatrixTransform *trans = dynamic_cast<MatrixTransform *>(meshRoot->FindNode(channame));
-					assert(trans);
+
+					if (!trans) {
+						// possibly dummy single-frame data for a node that's been converted to e.g. a label
+						continue;
+					}
+
 					animation->m_channels.push_back(AnimationChannel(trans));
 					AnimationChannel &chan = animation->m_channels.back();
 
