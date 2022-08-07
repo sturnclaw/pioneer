@@ -121,7 +121,6 @@ void CockpitScene::LoadProps(const Json &node)
 		}
 
 		vector3f position;
-		matrix3x3f orient = matrix3x3fIdentity;
 
 		const Json &posNode = entry["position"];
 		if (posNode.is_array()) {
@@ -131,22 +130,19 @@ void CockpitScene::LoadProps(const Json &node)
 		}
 
 		const Json &orientNode = entry["orient"];
+		Quaternionf quat;
+
 		if (orientNode.is_array()) {
-			orient[0] = orientNode[0];
-			orient[1] = orientNode[1];
-			orient[2] = orientNode[2];
-			orient[3] = orientNode[3];
-			orient[4] = orientNode[4];
-			orient[5] = orientNode[5];
-			orient[6] = orientNode[6];
-			orient[7] = orientNode[7];
-			orient[8] = orientNode[8];
+			quat.w = orientNode[0];
+			quat.x = orientNode[1];
+			quat.y = orientNode[2];
+			quat.z = orientNode[3];
 		}
 
 		Prop *prop = new Prop(propInfo, this, m_props.size(), m_propDB->GetEnvTable());
 
 		prop->SetPosition(position);
-		prop->SetOrient(orient);
+		prop->SetOrient(quat.ToMatrix3x3<float>());
 
 		prop->UpdateTriggers();
 
