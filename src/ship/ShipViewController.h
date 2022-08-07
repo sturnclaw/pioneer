@@ -35,6 +35,7 @@ public:
 	void SetCamType(enum CamType);
 	enum CamType GetCamType() const { return m_camType; }
 	CameraController *GetCameraController() const { return m_activeCameraController; }
+	Cockpit::CockpitScene *GetCockpitScene() const { return m_cockpit.get(); }
 
 	// returns true if the active camera is an exterior view.
 	bool IsExteriorView() const;

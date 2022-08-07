@@ -39,7 +39,9 @@ namespace Cockpit {
 		enum DebugFlags : uint32_t {
 			DEBUG_NONE = 0,
 			DEBUG_SHOW_TRIGGERS = 1 << 0,
-			DEBUG_SHOW_DISPLAYS = 1 << 1
+			DEBUG_SHOW_DISPLAYS = 1 << 1,
+			DEBUG_SHOW_CURSOR   = 1 << 2,
+			DEBUG_FULL_LIGHTING = 1 << 3
 		};
 
 	public:
@@ -53,6 +55,7 @@ namespace Cockpit {
 
 		void SetShip(Ship *ship);
 
+		uint32_t GetDebugFlags() const { return m_debugFlags; }
 		void SetDebugFlags(uint32_t flags);
 
 		void Update(matrix3x3d viewOrient, vector3d viewOffset);
@@ -78,6 +81,7 @@ namespace Cockpit {
 		const ShipType *m_shipType;
 
 		vector3f m_lastTrace;
+		uint32_t m_debugFlags;
 
 		// std::vector<std::unique_ptr<DrawingContext>> m_displayContexts;
 		std::vector<std::unique_ptr<Prop>> m_props;

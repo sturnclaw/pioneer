@@ -28,7 +28,8 @@ CockpitScene::CockpitScene(Graphics::Renderer *r) :
 	m_camOrient(),
 	m_ship(nullptr),
 	m_shipType(nullptr),
-	m_lastTrace()
+	m_lastTrace(),
+	m_debugFlags(0)
 {
 	Graphics::RenderStateDesc rsd = {};
 	rsd.primitiveType = Graphics::PrimitiveType::LINE_SINGLE;
@@ -155,6 +156,11 @@ void CockpitScene::SetShip(Ship *ship)
 	m_ship = ship;
 }
 
+void CockpitScene::SetDebugFlags(uint32_t flags)
+{
+	m_debugFlags = flags;
+}
+
 void CockpitScene::Update(matrix3x3d viewOrient, vector3d viewOffset)
 {
 	PROFILE_SCOPED()
@@ -230,9 +236,11 @@ void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4
 		oldIntensity.push_back(r->GetLight(i).GetIntensity());
 	}
 
-	// r->SetAmbientColor(Color4f(ambient, ambient, ambient));
-	r->SetAmbientColor(Color4f(1, 1, 1));
+	r->SetAmbientColor(Color4f(ambient, ambient, ambient));
 	r->SetLightIntensity(intensities.size(), intensities.data());
+
+	if (m_debugFlags & DEBUG_FULL_LIGHTING)
+		r->SetAmbientColor(Color4f(1, 1, 1));
 
 	r->ClearDepthBuffer();
 
@@ -242,12 +250,15 @@ void CockpitScene::Render(Graphics::Renderer *r, Camera *camera, const matrix4x4
 		prop->Render(r, viewTransform);
 	}
 
-	m_interactionScene->DrawDebug(r, m_debugMat.get(), viewTransform);
+	if (m_debugFlags & DEBUG_SHOW_TRIGGERS)
+		m_interactionScene->DrawDebug(r, m_debugMat.get(), viewTransform);
 
-	// Draw debug indicator for line trace normal
-	// matrix4x4f trans = matrix4x4f(m_camOrient, m_camPosition);
-	// r->SetTransform(viewTransform * trans * matrix4x4f::Translation(m_lastTrace));
-	// Graphics::Drawables::GetAxes3DDrawable(r)->Draw(r);
+	if (m_debugFlags & DEBUG_SHOW_CURSOR) {
+		// Draw debug indicator for line trace normal
+		matrix4x4f trans = matrix4x4f(m_camOrient, m_camPosition);
+		r->SetTransform(viewTransform * trans * matrix4x4f::Translation(m_lastTrace));
+		Graphics::Drawables::GetAxes3DDrawable(r)->Draw(r);
+	}
 
 	r->SetAmbientColor(oldAmbient);
 	r->SetLightIntensity(oldIntensity.size(), oldIntensity.data());
