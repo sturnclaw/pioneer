@@ -63,15 +63,16 @@ struct UIStyle {
 
 	ImFont *font = nullptr;
 	float   fontSize = 16.f;
+
 	ImU32   color = IM_COL32(255, 255, 255, 255);
-	ImU32   backgroundColor = IM_COL32(128, 128, 128, 255);
+	ImU32   backgroundColor = IM_COL32(0, 0, 0, 0);
 	ImVec2  padding = { 0.f, 0.f };
 
 	ImU32   borderColor = IM_COL32(255, 255, 255, 255);
-	ImU32   backgroundColor = IM_COL32(0, 0, 0, 0);
 	float   borderRounding = 0.f;
+	float   borderThickness = 1.f;
+
 	float   containerSpacing = 0.f;
-	ImVec2  padding = { 0.f, 0.f };
 
 	void RenderFrame(ImDrawList *dl, ImRect bb, bool drawBorder, bool drawBackground);
 

@@ -26,7 +26,7 @@ void UIStyle::RenderFrame(ImDrawList *dl, ImRect bb, bool drawBorder, bool drawB
 		dl->AddRectFilled(bb.Min, bb.Max, backgroundColor, borderRounding);
 
 	if (drawBorder)
-		dl->AddRect(bb.Min, bb.Max, borderColor, borderRounding);
+		dl->AddRect(bb.Min, bb.Max, borderColor, borderRounding, 0, borderThickness);
 }
 
 void UIStyle::RenderText(ImDrawList *dl, std::string_view text, ImVec2 screenPos, float wrapWidth)
