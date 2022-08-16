@@ -8,6 +8,7 @@
 #include "FileSystem.h"
 #include "ModManager.h"
 #include "ModelViewer.h"
+#include "mfd/MFDEditor.h"
 
 #include "argh/argh.h"
 #include "core/IniConfig.h"
@@ -52,6 +53,13 @@ void EditorApp::Initialize(argh::parser &cmdline)
 		SetAppName("ModelViewer");
 		return;
 	}
+
+	if (cmdline["--mfd"]) {
+		RefCountedPtr<MFDEditor> mfdEditor(new MFDEditor(this));
+
+		QueueLifecycle(mfdEditor);
+		return;
+	}
 }
 
 void EditorApp::AddLoadingTask(TaskSet::Handle handle)
@@ -73,6 +81,7 @@ void EditorApp::OnStartup()
 	cfg.SetInt("ScrHeight", 900);
 	cfg.SetInt("VSync", 1);
 	cfg.SetInt("AntiAliasingMode", 4);
+	cfg.SetInt("EnableGLDebug", 1);
 
 	cfg.Read(FileSystem::userFiles, "editor.ini");
 	cfg.Save(); // write defaults if the file doesn't exist
