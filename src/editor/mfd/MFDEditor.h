@@ -10,6 +10,7 @@
 namespace Editor {
 
 class EditorApp;
+class UndoSystem;
 
 struct UIObject;
 struct UIStyle;
@@ -21,6 +22,8 @@ public:
 	MFDEditor(EditorApp *app);
 	~MFDEditor();
 
+	UndoSystem *GetUndo();
+
 protected:
 	void Start() override;
 
@@ -29,6 +32,7 @@ protected:
 	void End() override;
 
 private:
+
 
 	void DrawInterface();
 
@@ -44,7 +48,7 @@ private:
 
 	void DrawPreview(ImDrawList *outputDl);
 
-	void UpdateLayout(ImRect layoutArea);
+	void DrawUndoStack();
 
 	void HandleViewportInteraction(bool clicked, bool wasPressed);
 
@@ -55,6 +59,7 @@ private:
 
 private:
 	EditorApp *m_app;
+	std::unique_ptr<UndoSystem> m_undoSystem;
 
 	ImVec2 m_viewportMousePos;
 
@@ -76,9 +81,11 @@ private:
 	std::unique_ptr<UIView> m_rootView;
 	UIStyle *m_defaultStyle;
 
-	bool m_metricsWindow;
 	bool m_viewportHovered;
 	bool m_viewportActive;
+
+	bool m_metricsWindow;
+	bool m_undoWindow;
 };
 
 } // namespace Editor

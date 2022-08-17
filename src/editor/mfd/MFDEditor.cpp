@@ -3,10 +3,13 @@
 
 #include "MFDEditor.h"
 
-#include "EditorApp.h"
-#include "EditorDraw.h"
 #include "UIObject.h"
 #include "UIView.h"
+
+#include "EditorApp.h"
+#include "EditorDraw.h"
+#include "UndoSystem.h"
+#include "UndoStepType.h"
 #include "graphics/Graphics.h"
 #include "imgui/imgui.h"
 
@@ -23,12 +26,16 @@ MFDEditor::MFDEditor(EditorApp *app) :
 	m_selectedObject(nullptr),
 	m_metricsWindow(false)
 {
-
+	m_undoSystem.reset(new UndoSystem());
 }
 
 MFDEditor::~MFDEditor()
 {
+}
 
+UndoSystem *MFDEditor::GetUndo()
+{
+	return m_undoSystem.get();
 }
 
 void MFDEditor::Start()
@@ -62,6 +69,13 @@ void MFDEditor::Start()
 
 void MFDEditor::Update(float deltaTime)
 {
+	// Note: this is janky as heck, should try to ensure Input works correctly even while ImGui has keyboard focus
+	if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift && ImGui::IsKeyPressed(SDL_SCANCODE_Z)) {
+		m_undoSystem->Redo();
+	} else if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(SDL_SCANCODE_Z)) {
+		m_undoSystem->Undo();
+	}
+
 	m_rootView->Update(deltaTime);
 
 	DrawInterface();
@@ -80,6 +94,7 @@ void MFDEditor::DrawInterface()
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("Tools")) {
 		ImGui::Checkbox("Metrics Window", &m_metricsWindow);
+		ImGui::Checkbox("Undo Stack", &m_undoWindow);
 		ImGui::EndMenu();
 	}
 	// TODO: add main menu contents here
@@ -111,6 +126,9 @@ void MFDEditor::DrawInterface()
 
 	if (m_metricsWindow)
 		ImGui::ShowMetricsWindow(&m_metricsWindow);
+
+	if (m_undoWindow)
+		DrawUndoStack();
 }
 
 void MFDEditor::DrawOutlinePanel()
@@ -258,7 +276,32 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 
 	// Update mouse down state, etc; handle active layout area interaction
 
-	UpdateLayout({ pos, pos + region });
+	ImGuiButtonFlags flags =
+		ImGuiButtonFlags_FlattenChildren |
+		ImGuiButtonFlags_PressedOnClick |
+		ImGuiButtonFlags_MouseButtonMask_;
+
+	ImRect area = { pos, pos + region };
+
+	bool wasPressed = m_viewportActive;
+	bool clicked = ImGui::ButtonBehavior(area, ImGui::GetID("ViewportContents"),
+		&m_viewportHovered, &m_viewportActive, flags);
+
+	// if the viewport is hovered/active or we just released it,
+	// update mouse interactions with it
+	if (m_viewportHovered || m_viewportActive || wasPressed) {
+		// restrict the mouse pos within the viewport and convert to viewport-relative coords
+		m_viewportMousePos = ImClamp(ImGui::GetIO().MousePos, area.Min, area.Max) - area.Min;
+
+		HandleViewportInteraction(clicked, wasPressed);
+	} else {
+		m_viewportMousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+	}
+
+	// Draw debug info over the layout area
+	std::string dbg = fmt::format("hovered: {}, active: {}, button: {}, zoom: {}",
+		m_viewportHovered, m_viewportActive, ImGui::GetCurrentContext()->ActiveIdMouseButton, m_viewportZoom);
+	ImGui::GetWindowDrawList()->AddText(area.Min, IM_COL32(255, 255, 255, 255), dbg.c_str());
 
 	// Draw the preview to the drawlist and offset vertex positions etc.
 
@@ -276,27 +319,38 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 	ImGui::End();
 }
 
-void MFDEditor::UpdateLayout(ImRect area)
+void MFDEditor::DrawUndoStack()
 {
-	ImGuiButtonFlags flags = ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_MouseButtonMask_;
+	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0))
+		ImGui::End();
 
-	bool wasPressed = m_viewportActive;
-	bool clicked = ImGui::ButtonBehavior(area, ImGui::GetID("ViewportContents"), &m_viewportHovered, &m_viewportActive, flags);
+	size_t numEntries = m_undoSystem->GetNumEntries();
+	size_t currentIdx = m_undoSystem->GetCurrentEntry();
+	size_t selectedIdx = currentIdx;
 
-	std::string dbg = fmt::format("hovered: {}, active: {}, button: {}, zoom: {}",
-		m_viewportHovered, m_viewportActive, ImGui::GetCurrentContext()->ActiveIdMouseButton, m_viewportZoom);
-	ImGui::GetWindowDrawList()->AddText(area.Min, IM_COL32(255, 255, 255, 255), dbg.c_str());
+	if (ImGui::Selectable("<Initial State>", currentIdx == 0))
+		selectedIdx = 0;
 
-	// if the viewport is hovered/active or we just released it,
-	// update mouse interactions with it
-	if (m_viewportHovered || m_viewportActive || wasPressed) {
-		// restrict the mouse pos within the viewport and convert to viewport-relative coords
-		m_viewportMousePos = ImClamp(ImGui::GetIO().MousePos, area.Min, area.Max) - area.Min;
+	for (size_t idx = 0; idx < numEntries; idx++)
+	{
+		const UndoEntry *entry = m_undoSystem->GetEntry(idx);
 
-		HandleViewportInteraction(clicked, wasPressed);
-	} else {
-		m_viewportMousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+		bool isSelected = currentIdx == idx + 1;
+		std::string label = fmt::format("{}##{}", entry->GetName(), idx);
+
+		if (ImGui::Selectable(label.c_str(), isSelected))
+			selectedIdx = idx + 1;
 	}
+
+	ImGui::End();
+
+	// If we selected an earlier history entry, undo to that point
+	for (; currentIdx > selectedIdx; --currentIdx)
+		m_undoSystem->Undo();
+
+	// If we selected a later history entry, redo to that point
+	for (; currentIdx < selectedIdx; ++currentIdx)
+		m_undoSystem->Redo();
 }
 
 void MFDEditor::HandleViewportInteraction(bool clicked, bool wasPressed)
@@ -357,8 +411,12 @@ void MFDEditor::DrawPreview(ImDrawList *outputDl)
 
 void MFDEditor::SetSelectedObject(UIObject *obj)
 {
-	// TODO: push an undo entry for changing the selection
+	GetUndo()->BeginEntry("Change Selection");
+
+	AddUndoSingleValue(GetUndo(), &m_selectedObject);
 	m_selectedObject = obj;
+
+	GetUndo()->EndEntry();
 }
 
 UIObject *MFDEditor::GetHoveredObject()
