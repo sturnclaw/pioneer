@@ -58,6 +58,7 @@ void EditorApp::Initialize(argh::parser &cmdline)
 		RefCountedPtr<MFDEditor> mfdEditor(new MFDEditor(this));
 
 		QueueLifecycle(mfdEditor);
+		SetAppName("MFDEditor");
 		return;
 	}
 }
