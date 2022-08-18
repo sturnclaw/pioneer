@@ -75,6 +75,9 @@ public:
 	// Return a reference to this view's font cache
 	FontCache &GetFontCache() { return m_fonts; }
 
+	// Return a reference to the font atlas used for this UIView
+	ImFontAtlas *GetFontAtlas() { return m_fontAtlas.get(); }
+
 	// Perform animation updates and layout pass
 	void Update(float deltaTime);
 

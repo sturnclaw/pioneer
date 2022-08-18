@@ -4,6 +4,7 @@
 #include "UIObject.h"
 
 #include "EditorDraw.h"
+#include "FloatComparison.h"
 #include "imgui/imgui.h"
 
 using namespace Editor;
@@ -55,22 +56,21 @@ void UIObject::Setup(uint32_t in_id, UIFeature in_features, UIStyle *in_style)
 {
 	id = in_id;
 	features = in_features;
-	contentType = ContentType_Text;
+	contentType = ContentType_None;
 	style = in_style;
+	alignment[0] = alignment[1] = UIAlign_NoExpand;
 }
 
 void UIObject::SetContentText(std::string_view in_content)
 {
 	contentType = ContentType_Text;
 	content = in_content;
-	contentSize = style->font->CalcTextSizeA(style->fontSize,
-		FLT_MAX, 0.f, content.data(), content.data() + content.size());
 }
 
 void UIObject::CalcSize(UIObject *parent)
 {
 	if (sizeMode[0] == SizeMode_FromContent) {
-		computedSize.x = size.x + style->padding.x;
+		computedSize.x = contentSize.x + style->padding.x;
 	} else if (sizeMode[0] == SizeMode_Fixed) {
 		computedSize.x = size.x;
 	} else if (sizeMode[0] == SizeMode_ParentPct) {
@@ -78,7 +78,7 @@ void UIObject::CalcSize(UIObject *parent)
 	} // SizeMode_FromChildren will be handled in a separate layout pass
 
 	if (sizeMode[1] == SizeMode_FromContent) {
-		computedSize.y = size.y + style->padding.y;
+		computedSize.y = contentSize.y + style->padding.y;
 	} else if (sizeMode[1] == SizeMode_Fixed) {
 		computedSize.y = size.y;
 	} else if (sizeMode[1] == SizeMode_ParentPct) {
@@ -89,19 +89,23 @@ void UIObject::CalcSize(UIObject *parent)
 void UIObject::CalcSizeFromChildren()
 {
 	ImVec2 totalSize = { 0.f, 0.f };
+	for (auto &child : children)
+		totalSize = ImMax(totalSize, child->computedSize);
 
-	if (features & UIFeature_OverlayLayout) {
-		// If this object isn't an automatically-laid out container, use the
-		// largest size of our children
-		for (auto &child : children)
-			totalSize = ImMax(totalSize, child->computedSize);
-	} else {
-		// Otherwise, calculate the total size from all children and the style
-		ImVec2 spacing = ImVec2(style->containerSpacing, style->containerSpacing);
-		totalSize += spacing * (children.size() - 1);
+	// If this object uses automatic layout, calculate the total size from all
+	// children and the style
+	if (!(features & UIFeature_OverlayLayout)) {
+		float spacing = style->containerSpacing * (children.size() - 1);
 
-		for (auto &child : children)
-			totalSize += child->computedSize;
+		if (primaryAxis == UIAxis_Horizontal) {
+			totalSize.x += spacing;
+			for (auto &child : children)
+				totalSize.x += child->computedSize.x;
+		} else {
+			totalSize.y += spacing;
+			for (auto &child : children)
+				totalSize.y += child->computedSize.y;
+		}
 	}
 
 	// add any padding specified in this object's style
@@ -113,12 +117,21 @@ void UIObject::CalcSizeFromChildren()
 		computedSize.y = totalSize.y;
 }
 
-ImVec2 UIObject::CalcContentSize(ImVec2 parentSize)
+void UIObject::CalcContentSize(UIObject *parent)
 {
-	if (contentType == ContentType_Text) {
-		return style->font->CalcTextSizeA(style->fontSize, FLT_MAX, parentSize.x, content.c_str());
-	} else {
+	ImVec2 maxArea;
+	if (parent)
+		maxArea = parent->computedSize - parent->style->padding * 2;
+	else
+		maxArea = size - style->padding * 2;
+
+	if (contentType == ContentType_Text && !content.empty()) {
+		contentSize = style->font->CalcTextSizeA(style->fontSize,
+			FLT_MAX, maxArea.x, content.c_str());
+	} else if (contentType == ContentType_Image) {
 		assert(false && "Image contents are not yet implemented!");
+	} else {
+		contentSize = { 0.f, 0.f };
 	}
 }
 
@@ -137,16 +150,49 @@ void UIObject::Layout()
 		}
 	} else {
 		// otherwise, arrange all children inside the container along the primary axis
-		// TODO: handle objects which can expand to take up free size in the container
-		ImVec2 nextPos = computedPos + style->padding;
+		ImVec2 fixedSize = style->padding * 2.f;
+		float combinedWeight = 0.f;
 
+		// First pass: gather total weight for expandable items and required size
+		for (auto &child : children) {
+			if (child->alignment[primaryAxis] != UIAlign_NoExpand) {
+				// TODO: allow different children different weights
+				combinedWeight += 1.f;
+			} else {
+				if (primaryAxis == UIAxis_Horizontal)
+					fixedSize.x += child->computedSize.x;
+				else
+					fixedSize.y += child->computedSize.y;
+			}
+		}
+
+		// Add container spacing
+		float spacing = style->containerSpacing;
+		fixedSize[primaryAxis] += spacing * (children.size() - 1);
+
+		float allotedSize = (computedSize[primaryAxis] - fixedSize[primaryAxis]) / combinedWeight;
+
+		ImVec2 nextPos = style->padding;
 		for (auto &child : children) {
 			child->computedPos = nextPos;
 
+			UIAlign align = child->alignment[primaryAxis];
+			float size = child->computedSize[primaryAxis];
+
+			// Each widget receives a given amount of space based on its weight
+			// (currently hardcoded to 1.f) and can expand or be positioned
+			// inside that alloted size.
+			float expand = align == UIAlign_NoExpand ? 0.f : allotedSize - size;
+
+			if (align == UIAlign_Fill)
+				child->computedSize[primaryAxis] += expand;
+			else if (align != UIAlign_NoExpand)
+				child->computedPos[primaryAxis] += CalcAlignment(align, size, size + expand);
+
 			if (primaryAxis == UIAxis_Horizontal)
-				nextPos.x += child->computedSize.x + style->containerSpacing;
+				nextPos.x += size + expand + style->containerSpacing;
 			else
-				nextPos.y += child->computedSize.y + style->containerSpacing;
+				nextPos.y += size + expand + style->containerSpacing;
 		}
 	}
 
@@ -157,7 +203,7 @@ void UIObject::Layout()
 
 void UIObject::Draw(UIView *view, ImDrawList *dl)
 {
-	assert(contentType == ContentType_Text && "Image contents are not yet implemented!");
+	assert(contentType != ContentType_Image && "Image contents are not yet implemented!");
 
 	bool drawBorder = features & UIFeature_DrawBorder;
 	bool drawBackground = features & UIFeature_DrawBackground;
@@ -166,4 +212,30 @@ void UIObject::Draw(UIView *view, ImDrawList *dl)
 
 	if (contentType == ContentType_Text && !content.empty())
 		style->RenderText(dl, content, screenRect.Min + contentPos);
+}
+
+void UIObject::AddChild(UIObject *child, size_t idx)
+{
+	assert(idx <= children.size() && "Cannot add a child to a non-contiguous index!");
+
+	children.emplace(children.cbegin() + idx, child);
+	child->parent = this;
+}
+
+UIObject *UIObject::RemoveChild(size_t idx)
+{
+	assert(idx < children.size() && "Child index to remove is not valid!");
+
+	UIObject *child = children[idx].release();
+	children.erase(children.cbegin() + idx);
+	child->parent = nullptr;
+
+	return child;
+}
+
+void UIObject::ReorderChild(size_t idx, size_t newIdx)
+{
+	// simply delete the child from the old index and emplace it at the new index
+	UIObject *child = RemoveChild(idx);
+	AddChild(child, newIdx);
 }

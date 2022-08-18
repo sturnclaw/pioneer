@@ -29,6 +29,7 @@ enum UIFeature : uint32_t {
 	UIFeature_ActiveAnim     = 1 << 5, // This UIObject should tick an animation for active/inactive
 	UIFeature_OverlayLayout  = 1 << 6, // This UIObject does not lay out children along the primary axis
 	UIFeature_InheritAnim    = 1 << 7, // This UIObject should inherit hovered/active state from the parent
+	UIFeature_WrapText       = 1 << 8, // This UIObject should wrap its text contents based on the size of the parent
 };
 
 enum SizeMode : uint8_t {
@@ -51,8 +52,10 @@ enum UIAxis : uint8_t {
 
 enum UIAlign : uint8_t {
 	UIAlign_Start = 0,
+	UIAlign_Center = 1,
 	UIAlign_End = 2,
-	UIAlign_Center = 4
+	UIAlign_Fill = 3,
+	UIAlign_NoExpand = 4,
 };
 
 struct UIStyle {
@@ -128,7 +131,7 @@ struct UIObject {
 	ImRect              screenRect = {};        // screen-space rect of this object
 	ImVec2              contentPos = {};        // offset of the content within the object according to alignment
 
-	UIObject           *parent;
+	UIObject           *parent = nullptr;
 	std::vector<std::unique_ptr<UIObject>> children;
 
 	// Initialize this object
@@ -147,10 +150,21 @@ struct UIObject {
 	void CalcSizeFromChildren();
 
 	// Update wanted size of this object from its content
-	ImVec2 CalcContentSize(ImVec2 parentSize);
+	void CalcContentSize(UIObject *parent);
 
 	// Layout all children of this object
 	void Layout();
+
+	// Add a new object as a child of this object
+	// The given child is now owned by this object
+	void AddChild(UIObject *child, size_t idx);
+
+	// Remove and return the child at the given index
+	// Deletion of the child is the responsibility of the parent code
+	UIObject *RemoveChild(size_t idx);
+
+	// Reorder the child at idx so it occupies newIdx in the array
+	void ReorderChild(size_t idx, size_t newIdx);
 };
 
 } // namespace Editor

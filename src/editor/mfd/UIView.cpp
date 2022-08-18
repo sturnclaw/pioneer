@@ -101,6 +101,8 @@ std::string_view UIView::GetStyleName(UIStyle *style)
 
 void UIView::Update(float deltaTime)
 {
+	PROFILE_SCOPED()
+
 	if (!m_rootObject)
 		return;
 
@@ -109,8 +111,11 @@ void UIView::Update(float deltaTime)
 	m_rootObject->computedSize = m_rootObject->size;
 	m_rootObject->screenRect = { m_rootObject->computedPos, m_rootObject->computedSize };
 
-	if (m_rootObject->children.empty())
+	if (m_rootObject->children.empty()) {
+		m_rootObject->CalcContentSize(nullptr);
+		m_rootObject->Layout();
 		return;
+	}
 
 	// Calculate widget sizes and perform a layout pass on them
 
@@ -123,6 +128,8 @@ void UIView::Update(float deltaTime)
 	// CalcSize / animation update pass (top-down)
 	// This updates all objects which have size modes that are independent or
 	// only depend on parent sizes.
+	PROFILE_START_DESC("#CalcSize Pass")
+
 	layoutStack.emplace_back(m_rootObject.get(), 0);
 	while (!layoutStack.empty()) {
 		auto &pair = layoutStack.back();
@@ -148,6 +155,9 @@ void UIView::Update(float deltaTime)
 			current->activeAnim = parent->activeAnim;
 		}
 
+		// Calculate the wanted size of this object's content
+		current->CalcContentSize(parent);
+
 		// Calculate this object's size
 		current->CalcSize(parent);
 
@@ -158,19 +168,24 @@ void UIView::Update(float deltaTime)
 		if (!current->children.empty())
 			layoutStack.emplace_back(current, 0);
 	}
+	PROFILE_STOP();
+
 
 	// Calculate size of objects which depend on their children's sizes (bottom-up)
+	PROFILE_START_DESC("#CalcSizeFromChildren Pass")
 	while (!postOrderStack.empty()) {
 		postOrderStack.back()->CalcSizeFromChildren();
 		postOrderStack.pop_back();
 	}
+	PROFILE_STOP()
 
 	// Note: there is no constraint-solving attempted here, children can overflow their parents
 
 	// Layout pass (top-down)
+	PROFILE_START_DESC("#Layout Pass")
+
 	layoutStack.emplace_back(m_rootObject.get(), 0);
 	m_rootObject->Layout();
-
 	while (!layoutStack.empty()) {
 		auto &pair = layoutStack.back();
 
@@ -189,6 +204,7 @@ void UIView::Update(float deltaTime)
 		if (!current->children.empty())
 			layoutStack.emplace_back(current, 0);
 	}
+	PROFILE_STOP()
 }
 
 void UIView::Draw(ImDrawList *dl)
@@ -202,6 +218,7 @@ void UIView::Draw(ImDrawList *dl)
 
 	// Push the font atlas texture here for 'fast path' inside widget drawing code
 	dl->PushTextureID(m_fontAtlas->TexID);
+	dl->PushClipRectFullScreen();
 
 	std::vector<UIObject *> drawStack = { m_rootObject.get() };
 
@@ -218,6 +235,7 @@ void UIView::Draw(ImDrawList *dl)
 		}
 	}
 
+	dl->PopClipRect();
 	dl->PopTextureID();
 
 	m_fontAtlas->Locked = false;
