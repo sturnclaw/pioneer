@@ -12,8 +12,210 @@
 #include "UndoStepType.h"
 #include "graphics/Graphics.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_stdlib.h"
 
 using namespace Editor;
+
+// Copied from imgui_demo.cpp
+namespace ImGui { void ShowFontAtlas(ImFontAtlas* atlas); }
+
+namespace {
+
+	bool LayoutHorizontal(std::string_view label, int N, float reserveSize)
+	{
+		float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+		float width = ImGui::GetContentRegionAvail().x;
+
+		ImGui::TextUnformatted(label.data());
+
+		ImGui::PushID(label.data());
+		ImGui::PushItemWidth((width / N) - reserveSize - spacing);
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Horizontal;
+
+		return true;
+	}
+
+	void EndLayout()
+	{
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
+		ImGui::PopItemWidth();
+		ImGui::PopID();
+		ImGui::NewLine();
+	}
+
+	template<typename Closure>
+	bool UndoHelper(std::string_view label, UndoSystem *undo, Closure update)
+	{
+		if (ImGui::IsItemDeactivated()) {
+			undo->EndEntry();
+			// Log::Info("Ending entry {}\n", label);
+			update();
+		}
+
+		if (ImGui::IsItemActivated()) {
+			undo->BeginEntry(label);
+			// Log::Info("Beginning entry {}\n", label);
+			return true;
+		}
+
+		if (ImGui::IsItemEdited())
+			update();
+
+		return false;
+	}
+
+	bool ComboUndoHelper(std::string_view undoName, const char *label, const char *preview, UndoSystem *undo)
+	{
+		ImGuiID id = ImGui::GetID(undoName.data());
+		bool *opened = ImGui::GetStateStorage()->GetBoolRef(id);
+		bool append = ImGui::BeginCombo(label, preview);
+
+		if (ImGui::IsWindowAppearing()) {
+			// Log::Info("Beginning entry {}\n", undoName);
+			undo->BeginEntry(undoName);
+			*opened = true;
+		}
+
+		if (*opened && !append)
+		{
+			*opened = false;
+			undo->EndEntry();
+			// Log::Info("Ending entry {}\n", undoName);
+		}
+
+		return append;
+	}
+
+	bool ComboUndoHelper(std::string_view label, const char *preview, UndoSystem *undo)
+	{
+		return ComboUndoHelper(label, label.data(), preview, undo);
+	}
+
+	template<typename T>
+	struct SpanHelper {
+		template<size_t N>
+		SpanHelper(T (&arr)[N]) :
+			data(arr),
+			size(N)
+		{}
+
+		T *data;
+		size_t size;
+	};
+
+	template<typename T>
+	void EditOptions(std::string_view label, const char *name, SpanHelper<const char * const>options, UndoSystem *undo, T *val)
+	{
+		size_t selected = size_t(*val);
+		const char *preview = selected < options.size ? options.data[selected] : "<invalid>";
+		if (ComboUndoHelper(label, name, preview, undo)) {
+			if (ImGui::IsWindowAppearing())
+				AddUndoSingleValue(undo, val);
+
+			for (size_t idx = 0; idx < options.size; ++idx) {
+				if (ImGui::Selectable(options.data[idx], selected == idx))
+					*val = T(idx);
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
+	static constexpr const char *AxisModes[] = {
+		"Horizontal",
+		"Vertical"
+	};
+
+	static constexpr const char *SizeModes[] = {
+		"Size to Content",
+		"Fixed Size",
+		"% of Parent Size",
+		"Size to Children",
+	};
+
+	static constexpr const char *ExpandModes[] = {
+		"Align Start",
+		"Align Center",
+		"Align End",
+		"Fill",
+		"Keep Size",
+	};
+
+	static constexpr const char *AlignModes[] = {
+		"Align Start",
+		"Align Center",
+		"Align End",
+	};
+
+	static constexpr const char *ContentTypes[] = {
+		"None",
+		"Text",
+	};
+
+	class UndoAddRemoveChild : public UndoStep {
+	public:
+		UndoAddRemoveChild(UIObject *parent, UIObject *add, size_t idx) :
+			m_parent(parent),
+			m_add(add),
+			m_idx(idx)
+		{
+			Swap();
+		}
+
+		UndoAddRemoveChild(UIObject *parent, UIObject *add) :
+			m_parent(parent),
+			m_add(add),
+			m_idx(parent->children.size())
+		{
+			Swap();
+		}
+
+		UndoAddRemoveChild(UIObject *parent, size_t idx) :
+			m_parent(parent),
+			m_add(nullptr),
+			m_idx(idx)
+		{
+			Swap();
+		}
+
+		void Undo() override { Swap(); }
+		void Redo() override { Swap(); }
+
+	private:
+		void Swap() {
+			if (m_add) {
+				m_parent->AddChild(m_add.release(), m_idx);
+			} else {
+				m_add.reset(m_parent->RemoveChild(m_idx));
+			}
+		}
+
+		UIObject *m_parent;
+		std::unique_ptr<UIObject> m_add;
+		size_t m_idx;
+	};
+
+	class UndoReorderChild : public UndoStep {
+	public:
+		UndoReorderChild(UIObject *parent, size_t oldIdx, size_t newIdx) :
+			m_parent(parent),
+			m_old(oldIdx),
+			m_new(newIdx)
+		{
+			Redo();
+		}
+
+		void Undo() override { m_parent->ReorderChild(m_new, m_old); }
+		void Redo() override { m_parent->ReorderChild(m_old, m_new); }
+
+	private:
+		UIObject *m_parent;
+		size_t m_old;
+		size_t m_new;
+	};
+
+}
+
 
 constexpr float GRID_SPACING = 10.f;
 
@@ -24,7 +226,11 @@ MFDEditor::MFDEditor(EditorApp *app) :
 	m_viewportScroll(100.f, 100.f),
 	m_viewportZoom(1.f),
 	m_selectedObject(nullptr),
-	m_metricsWindow(false)
+	m_viewportHovered(false),
+	m_viewportActive(false),
+	m_metricsWindow(false),
+	m_undoWindow(false),
+	m_debugWindow(false)
 {
 	m_undoSystem.reset(new UndoSystem());
 }
@@ -93,8 +299,18 @@ void MFDEditor::DrawInterface()
 {
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("Tools")) {
+		if (m_selectedObject && ImGui::Button("Add Child")) {
+			UIObject *child = new UIObject();
+			child->Setup(m_lastId++, {}, m_defaultStyle);
+
+			GetUndo()->BeginEntry("Add Child");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(m_selectedObject, child);
+			GetUndo()->EndEntry();
+		}
+
 		ImGui::Checkbox("Metrics Window", &m_metricsWindow);
 		ImGui::Checkbox("Undo Stack", &m_undoWindow);
+		ImGui::Checkbox("Debug Window", &m_debugWindow);
 		ImGui::EndMenu();
 	}
 	// TODO: add main menu contents here
@@ -129,6 +345,9 @@ void MFDEditor::DrawInterface()
 
 	if (m_undoWindow)
 		DrawUndoStack();
+
+	if (m_debugWindow)
+		DrawDebugWindow();
 }
 
 void MFDEditor::DrawOutlinePanel()
@@ -145,7 +364,7 @@ void MFDEditor::DrawOutlinePanel()
 	objectStack.emplace_back(m_rootObject, 0);
 
 	while (!objectStack.empty()) {
-		auto pair = objectStack.back();
+		auto &pair = objectStack.back();
 
 		// finished with this node's children, close the tree node and continue
 		if (pair.first->children.size() == pair.second) {
@@ -170,7 +389,7 @@ bool MFDEditor::DrawOutlineEntry(UIObject *obj)
 		ImGuiTreeNodeFlags_SpanFullWidth;
 
 	if (obj->children.empty())
-		flags |= ImGuiTreeNodeFlags_Leaf;
+		flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
 	if (obj == m_selectedObject)
 		flags |= ImGuiTreeNodeFlags_Selected;
@@ -192,40 +411,133 @@ bool MFDEditor::DrawOutlineEntry(UIObject *obj)
 		// TODO: open node context menu as needed
 	}
 
-	return open;
+	return open && !obj->children.empty();
 }
 
 void MFDEditor::DrawDetailsPanel()
 {
+	// TODO: tabbed layout containing object details, styles, and vars
+
 	if (m_selectedObject) {
-		DrawObjectDetails();
+		DrawObjectDetails(m_selectedObject->parent, m_selectedObject);
 		return;
 	}
 
-	// TODO: handle this through the undo system
+	ImVec2 val = m_rootView->GetViewSize();
+	ImGui::InputFloat2("View Size", &val.x, "%.1f");
 
-	ImVec2 viewSize = m_rootView->GetViewSize();
-	bool changed = ImGui::InputFloat2("View Size", &viewSize.x);
-
-	if (changed) {
-		m_rootView->SetViewSize(viewSize);
-	}
+	if (UndoHelper("Edit View Size", GetUndo(), [=](){ m_rootView->SetViewSize(val); }))
+		AddUndoGetSetValue<&UIView::GetViewSize, &UIView::SetViewSize>(GetUndo(), m_rootView.get(), val);
 
 	UIObject *hovered = GetHoveredObject();
 	ImGui::Text("Hovered: %d", hovered ? hovered->id : -1);
 }
 
-void MFDEditor::DrawObjectDetails()
+void MFDEditor::DrawObjectDetails(UIObject *parent, UIObject *obj)
 {
-	ImGui::Text("Label: %s", m_selectedObject->label.c_str());
+	std::string label = std::string(obj->label.sv());
+	ImGui::InputText("Label", &label);
 
-	std::string_view styleName = m_rootView->GetStyleName(m_selectedObject->style);
-	ImGui::Text("Style: %s", styleName.data());
+	if (UndoHelper("Edit Label", GetUndo(), [=](){ obj->label = StringName(label); }))
+		AddUndoSingleValue(GetUndo(), &obj->label, StringName(label));
 
-	ImGui::InputFloat2("Size", &m_selectedObject->size.x);
+	uint32_t features = obj->features;
+	bool changed = false;
+	if (ComboUndoHelper("Edit Features", "Features", GetUndo())) {
+		if (ImGui::IsWindowAppearing())
+			AddUndoSingleValue(GetUndo(), &obj->features);
 
-	ImGui::InputFloat2("CPos", &m_selectedObject->computedPos.x);
-	ImGui::InputFloat2("CSize", &m_selectedObject->computedSize.x);
+		changed |= ImGui::CheckboxFlags("Draw Border", &features, UIFeature_DrawBorder);
+		changed |= ImGui::CheckboxFlags("Draw Background", &features, UIFeature_DrawBackground);
+		changed |= ImGui::CheckboxFlags("Clickable", &features, UIFeature_Clickable);
+		changed |= ImGui::CheckboxFlags("Scrollable", &features, UIFeature_Scrollable);
+		changed |= ImGui::CheckboxFlags("Hover Animation", &features, UIFeature_HoverAnim);
+		changed |= ImGui::CheckboxFlags("Active Animation", &features, UIFeature_ActiveAnim);
+		changed |= ImGui::CheckboxFlags("Inherit Animations", &features, UIFeature_InheritAnim);
+		changed |= ImGui::CheckboxFlags("Overlay Layout", &features, UIFeature_OverlayLayout);
+
+		if (changed)
+			obj->features = UIFeature(features);
+
+		ImGui::EndCombo();
+	}
+
+	std::string_view styleName = m_rootView->GetStyleName(obj->style);
+	if (ImGui::BeginCombo("Style", styleName.data())) {
+
+		// TODO: maintain list of styles, possibly loaded from a file
+		ImGui::Selectable(styleName.data(), true);
+
+		ImGui::EndCombo();
+	}
+
+	if (parent) {
+
+		ImGui::Separator();
+
+		ImVec2 _size = obj->size;
+		ImGui::InputFloat2("Size", &_size.x);
+		if (UndoHelper("Edit Size", GetUndo(), [=](){ obj->size = _size; }))
+			AddUndoSingleValue(GetUndo(), &obj->size, _size);
+
+		if (LayoutHorizontal("Size Mode:", 2, ImGui::GetFontSize())) {
+			EditOptions("Edit Size Mode X", "X", SizeModes, GetUndo(), &obj->sizeMode[0]);
+			EditOptions("Edit Size Mode Y", "Y", SizeModes, GetUndo(), &obj->sizeMode[1]);
+
+			EndLayout();
+		}
+
+		if (parent->features & UIFeature_OverlayLayout) {
+
+			if (LayoutHorizontal("Alignment Mode:", 2, ImGui::GetFontSize())) {
+				EditOptions("Edit Alignment X", "X", AlignModes, GetUndo(), &obj->alignment[0]);
+				EditOptions("Edit Alignment Y", "Y", AlignModes, GetUndo(), &obj->alignment[1]);
+
+				EndLayout();
+			}
+
+		} else {
+
+			if (LayoutHorizontal("Expansion Mode:", 2, ImGui::GetFontSize())) {
+				EditOptions("Edit Expansion X", "X", ExpandModes, GetUndo(), &obj->alignment[0]);
+				EditOptions("Edit Expansion Y", "Y", ExpandModes, GetUndo(), &obj->alignment[1]);
+
+				EndLayout();
+			}
+
+		}
+
+		if (!(obj->features & UIFeature_OverlayLayout)) {
+			EditOptions("Edit Primary Axis", "PrimaryAxis", AxisModes, GetUndo(), &obj->primaryAxis);
+		}
+
+	}
+
+	ImGui::Separator();
+
+	EditOptions("Edit Content Type", "Content Type", ContentTypes, GetUndo(), &obj->contentType);
+
+	if (obj->contentType == ContentType_Text) {
+		std::string content = obj->content;
+		ImGui::InputText("Content", &content);
+
+		if (UndoHelper("Edit Content", GetUndo(), [=](){ obj->content = content; }))
+			AddUndoSingleValue(GetUndo(), &obj->content);
+	}
+
+	if (obj->contentType != ContentType_None) {
+		if (LayoutHorizontal("Content Alignment:", 2, ImGui::GetFontSize())) {
+			EditOptions("Edit Content Alignment X", "X", AlignModes, GetUndo(), &obj->contentAlign[0]);
+			EditOptions("Edit Content Alignment Y", "Y", AlignModes, GetUndo(), &obj->contentAlign[1]);
+
+			EndLayout();
+		}
+	}
+
+	ImGui::Separator();
+
+	ImGui::InputFloat2("Comp. Pos", &obj->computedPos.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+	ImGui::InputFloat2("Comp. Size", &obj->computedSize.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 }
 
 void MFDEditor::DrawLayoutView(ImRect layout)
@@ -316,6 +628,13 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 		dl->VtxBuffer[vtx].pos += pos + m_viewportScroll;
 	}
 
+	UIObject *highlightObject = GetHoveredObject();
+	if (highlightObject)
+		DrawObjectHighlight(dl, pos, highlightObject, IM_COL32(255, 128, 0, 255));
+
+	if (m_selectedObject && m_selectedObject != highlightObject)
+		DrawObjectHighlight(dl, pos, m_selectedObject, IM_COL32(0, 128, 255, 255));
+
 	ImGui::End();
 }
 
@@ -323,6 +642,9 @@ void MFDEditor::DrawUndoStack()
 {
 	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0))
 		ImGui::End();
+
+	ImGui::Text("Undo Depth: %ld", GetUndo()->GetEntryDepth());
+	ImGui::Separator();
 
 	size_t numEntries = m_undoSystem->GetNumEntries();
 	size_t currentIdx = m_undoSystem->GetCurrentEntry();
@@ -351,6 +673,18 @@ void MFDEditor::DrawUndoStack()
 	// If we selected a later history entry, redo to that point
 	for (; currentIdx < selectedIdx; ++currentIdx)
 		m_undoSystem->Redo();
+}
+
+void MFDEditor::DrawDebugWindow()
+{
+	if (!ImGui::Begin("Debug Window", &m_debugWindow)) {
+		ImGui::End();
+		return;
+	}
+
+	ImGui::ShowFontAtlas(m_rootView->GetFontAtlas());
+
+	ImGui::End();
 }
 
 void MFDEditor::HandleViewportInteraction(bool clicked, bool wasPressed)
@@ -407,6 +741,17 @@ void MFDEditor::DrawPreview(ImDrawList *outputDl)
 	// TODO: use a drawlist owned by the UIView with the correct UV data etc.
 
 	m_rootView->Draw(outputDl);
+}
+
+void MFDEditor::DrawObjectHighlight(ImDrawList *outputDl, ImVec2 screenPos, UIObject *obj, ImU32 col)
+{
+	// convert object rectangle into screen-relative drawlist coords
+	ImRect rect = obj->screenRect;
+	rect.Min = rect.Min * m_viewportZoom + m_viewportScroll + screenPos;
+	rect.Max = rect.Max * m_viewportZoom + m_viewportScroll + screenPos;
+
+	rect.Expand(4.f);
+	outputDl->AddRect(rect.Min, rect.Max, col, 2.f, {}, 2.f);
 }
 
 void MFDEditor::SetSelectedObject(UIObject *obj)

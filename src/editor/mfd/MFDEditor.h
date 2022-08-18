@@ -38,7 +38,7 @@ private:
 
 	void DrawDetailsPanel();
 
-	void DrawObjectDetails();
+	void DrawObjectDetails(UIObject *parent, UIObject *obj);
 
 	void DrawOutlinePanel();
 
@@ -48,7 +48,11 @@ private:
 
 	void DrawPreview(ImDrawList *outputDl);
 
+	void DrawObjectHighlight(ImDrawList *outputDl, ImVec2 screenPos, UIObject *obj, ImU32 col);
+
 	void DrawUndoStack();
+
+	void DrawDebugWindow();
 
 	void HandleViewportInteraction(bool clicked, bool wasPressed);
 
@@ -86,6 +90,7 @@ private:
 
 	bool m_metricsWindow;
 	bool m_undoWindow;
+	bool m_debugWindow;
 };
 
 } // namespace Editor
