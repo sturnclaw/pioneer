@@ -239,6 +239,9 @@ void UIObject::Draw(UIView *view, ImDrawList *dl)
 {
 	assert(contentType != ContentType_Image && "Image contents are not yet implemented!");
 
+	if (features & UIFeature_ClipOverflow)
+		dl->PushClipRect(screenRect.Min, screenRect.Max);
+
 	bool drawBorder = features & UIFeature_DrawBorder;
 	bool drawBackground = features & UIFeature_DrawBackground;
 	if (drawBorder || drawBackground)
@@ -246,6 +249,9 @@ void UIObject::Draw(UIView *view, ImDrawList *dl)
 
 	if (contentType == ContentType_Text && !content.empty())
 		style->RenderText(dl, content, screenRect.Min + contentPos);
+
+	if (features & UIFeature_ClipOverflow)
+		dl->PopClipRect();
 }
 
 void UIObject::AddChild(UIObject *child, size_t idx)

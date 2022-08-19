@@ -30,6 +30,7 @@ enum UIFeature : uint32_t {
 	UIFeature_OverlayLayout  = 1 << 6, // This UIObject does not lay out children along the primary axis
 	UIFeature_InheritAnim    = 1 << 7, // This UIObject should inherit hovered/active state from the parent
 	UIFeature_WrapText       = 1 << 8, // This UIObject should wrap its text contents based on the size of the parent
+	UIFeature_ClipOverflow   = 1 << 9, // This UIObject should visually clip its children
 };
 
 enum SizeMode : uint8_t {
