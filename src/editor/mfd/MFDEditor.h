@@ -48,7 +48,7 @@ private:
 
 	void DrawPreview(ImDrawList *outputDl);
 
-	void DrawObjectHighlight(ImDrawList *outputDl, ImVec2 screenPos, UIObject *obj, ImU32 col);
+	void DrawObjectHighlight(ImDrawList *outputDl, UIObject *obj, ImU32 col);
 
 	void DrawUndoStack();
 
@@ -61,10 +61,17 @@ private:
 	// return the currently hovered UI object, ignoring widget feature flags
 	UIObject *GetHoveredObject();
 
+	// convert a coordinate in view-space to a coordinate in editor screen space (for drawlists)
+	ImVec2 ViewToScreen(const ImVec2 &pos);
+
 private:
 	EditorApp *m_app;
 	std::unique_ptr<UndoSystem> m_undoSystem;
 
+	// Position of the viewport origin in screen coordinates
+	ImVec2 m_viewportScreenPos;
+
+	// Position of the mouse relative to the viewport origin
 	ImVec2 m_viewportMousePos;
 
 	// Negative scroll in viewport, thus scroll of (100, 100) moves the origin
@@ -80,6 +87,7 @@ private:
 	uint32_t m_lastId;
 
 	UIObject *m_selectedObject;
+	UIObject *m_nextObject;
 	UIObject *m_rootObject;
 
 	std::unique_ptr<UIView> m_rootView;

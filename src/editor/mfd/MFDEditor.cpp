@@ -226,6 +226,8 @@ MFDEditor::MFDEditor(EditorApp *app) :
 	m_viewportScroll(100.f, 100.f),
 	m_viewportZoom(1.f),
 	m_selectedObject(nullptr),
+	m_nextObject(nullptr),
+	m_rootObject(nullptr),
 	m_viewportHovered(false),
 	m_viewportActive(false),
 	m_metricsWindow(false),
@@ -285,6 +287,11 @@ void MFDEditor::Update(float deltaTime)
 	m_rootView->Update(deltaTime);
 
 	DrawInterface();
+
+	if (m_nextObject) {
+		m_selectedObject = m_nextObject;
+		m_nextObject = nullptr;
+	}
 }
 
 void MFDEditor::End()
@@ -404,6 +411,9 @@ bool MFDEditor::DrawOutlineEntry(UIObject *obj)
 	// TODO: render any other object information (icons etc.)
 
 	if (clicked) {
+
+		// TODO: handle drag/drop to reorder items in the list
+
 		SetSelectedObject(obj);
 	}
 
@@ -507,10 +517,10 @@ void MFDEditor::DrawObjectDetails(UIObject *parent, UIObject *obj)
 
 		}
 
-		if (!(obj->features & UIFeature_OverlayLayout)) {
-			EditOptions("Edit Primary Axis", "PrimaryAxis", AxisModes, GetUndo(), &obj->primaryAxis);
-		}
+	}
 
+	if (!(obj->features & UIFeature_OverlayLayout)) {
+		EditOptions("Edit Primary Axis", "PrimaryAxis", AxisModes, GetUndo(), &obj->primaryAxis);
 	}
 
 	ImGui::Separator();
@@ -550,6 +560,8 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 	ImVec2 pos = ImGui::GetCursorScreenPos();
 	ImVec2 region = ImGui::GetContentRegionAvail();
 	ImDrawList *dl = ImGui::GetWindowDrawList();
+
+	m_viewportScreenPos = pos;
 
 	// draw layout window outline
 	dl->AddRectFilled(pos, pos + region, ImColor(style.Colors[ImGuiCol_ChildBg]));
@@ -617,7 +629,10 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 
 	// Draw the preview to the drawlist and offset vertex positions etc.
 
+	dl->PushClipRect(area.Min, area.Max);
 	dl->AddDrawCmd();
+
+	int startCmd = dl->CmdBuffer.Size;
 	int startVtx = dl->VtxBuffer.Size;
 
 	DrawPreview(dl);
@@ -625,15 +640,30 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 	// offset and scale vertex positions into screen size
 	for (int vtx = startVtx; vtx < dl->VtxBuffer.Size; vtx++) {
 		dl->VtxBuffer[vtx].pos *= m_viewportZoom;
-		dl->VtxBuffer[vtx].pos += pos + m_viewportScroll;
+		dl->VtxBuffer[vtx].pos += m_viewportScroll + m_viewportScreenPos;
 	}
+
+	for (int cmd = startCmd; cmd < dl->CmdBuffer.Size; cmd++) {
+		ImRect clipRect = dl->CmdBuffer[cmd].ClipRect;
+
+		// Convert clip rect into screen coordinates and clip with viewport for display
+		clipRect.Min = ViewToScreen(clipRect.Min);
+		clipRect.Max = ViewToScreen(clipRect.Max);
+		clipRect.ClipWithFull(area);
+
+		dl->CmdBuffer[cmd].ClipRect = clipRect.ToVec4();
+	}
+
+	dl->AddDrawCmd();
 
 	UIObject *highlightObject = GetHoveredObject();
 	if (highlightObject)
-		DrawObjectHighlight(dl, pos, highlightObject, IM_COL32(255, 128, 0, 255));
+		DrawObjectHighlight(dl, highlightObject, IM_COL32(255, 128, 0, 255));
 
 	if (m_selectedObject && m_selectedObject != highlightObject)
-		DrawObjectHighlight(dl, pos, m_selectedObject, IM_COL32(0, 128, 255, 255));
+		DrawObjectHighlight(dl, m_selectedObject, IM_COL32(0, 128, 255, 255));
+
+	dl->PopClipRect();
 
 	ImGui::End();
 }
@@ -743,25 +773,19 @@ void MFDEditor::DrawPreview(ImDrawList *outputDl)
 	m_rootView->Draw(outputDl);
 }
 
-void MFDEditor::DrawObjectHighlight(ImDrawList *outputDl, ImVec2 screenPos, UIObject *obj, ImU32 col)
+void MFDEditor::DrawObjectHighlight(ImDrawList *outputDl, UIObject *obj, ImU32 col)
 {
 	// convert object rectangle into screen-relative drawlist coords
-	ImRect rect = obj->screenRect;
-	rect.Min = rect.Min * m_viewportZoom + m_viewportScroll + screenPos;
-	rect.Max = rect.Max * m_viewportZoom + m_viewportScroll + screenPos;
-
+	ImRect rect = { ViewToScreen(obj->screenRect.Min), ViewToScreen(obj->screenRect.Max) };
 	rect.Expand(4.f);
+
 	outputDl->AddRect(rect.Min, rect.Max, col, 2.f, {}, 2.f);
 }
 
 void MFDEditor::SetSelectedObject(UIObject *obj)
 {
-	GetUndo()->BeginEntry("Change Selection");
-
-	AddUndoSingleValue(GetUndo(), &m_selectedObject);
-	m_selectedObject = obj;
-
-	GetUndo()->EndEntry();
+	// Defer object selection until end of the frame to avoid undo issues
+	m_nextObject = obj;
 }
 
 UIObject *MFDEditor::GetHoveredObject()
@@ -770,4 +794,9 @@ UIObject *MFDEditor::GetHoveredObject()
 	ImVec2 viewPos = (m_viewportMousePos - m_viewportScroll) / m_viewportZoom;
 
 	return m_rootView->GetObjectAtPoint(viewPos);
+}
+
+ImVec2 MFDEditor::ViewToScreen(const ImVec2 &vec)
+{
+	return vec * m_viewportZoom + m_viewportScroll + m_viewportScreenPos;
 }
