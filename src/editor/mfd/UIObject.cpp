@@ -92,7 +92,7 @@ void UIObject::CalcSize(UIObject *parent)
 	if (!(parent->features & UIFeature_OverlayLayout)) {
 		// Expand size along parent primary and secondary axes for fill mode
 		UIAxis axis = parent->primaryAxis;
-		UIAxis axis2 = parent->primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Horizontal;
+		UIAxis axis2 = parent->primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Vertical;
 
 		if (alignment[axis] == UIAlign_Fill) {
 			// TODO: variable widget weights
@@ -200,7 +200,7 @@ void UIObject::Layout()
 		// otherwise, arrange all children inside the container along the primary axis
 		ImVec2 nextPos = style->padding;
 
-		UIAxis secondAxis = primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Horizontal;
+		UIAxis secondAxis = primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Vertical;
 		float maxSize2 = computedSize[secondAxis] - style->padding[secondAxis];
 
 		for (auto &child : children) {
