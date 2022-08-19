@@ -100,10 +100,8 @@ struct UIObject {
 	~UIObject();
 
 	// "Hot" widget data, used during layout/drawing pass (32b)
-	uint32_t            id = 0;
 	UIFeature           features = {};
 
-	ImVec2              computedPos = {};       // computed position of the object relative to parent
 	ImVec2              computedSize = {};      // computed size of the object on axis N (according to sizeMode[N])
 
 	ImVec2              size = {};              // the wanted size of this object or the size of the content
@@ -115,21 +113,26 @@ struct UIObject {
 	ContentType         contentType = {};       // type of content to be displayed in this object
 	UIAlign             contentAlign[2] = {};   // alignment of content within the object bounds
 
+	float               cachedFreeSize = 0.f;   // space available for child widget expansion in UIAlign_Fill mode
+
 	// "Cold" widget data (modified once per frame or less) (96b)
 	std::string         content;                // text string or image path for this object
 	ImVec2              contentSize = {};       // expected size of the content, updated when content or style changes
 
 	UIStyle            *style = nullptr;        // style used to draw this object
 	StringName          label;                  // unique ID / editor label of this object. Passed to Lua for events
+	uint32_t            id = 0;                 // numeric ID used to identify this widget (used in future expansion)
 
 	float               hoveredAnim = 0.f;      // "hot" animation used for hover/focus/etc
 	float               activeAnim = 0.f;       // "active" animation used for click, on/off etc
 
-	uint64_t            _unused1;               // [ padding ]
+	uint32_t            _unused;                // [ padding ]
+	uint64_t            _unused2;               // [ padding ]
 
 	// cached position information for drawing (updated during Layout pass) (24b)
 	ImRect              screenRect = {};        // screen-space rect of this object
 	ImVec2              contentPos = {};        // offset of the content within the object according to alignment
+	ImVec2              computedPos = {};       // computed position of the object relative to parent
 
 	UIObject           *parent = nullptr;
 	std::vector<std::unique_ptr<UIObject>> children;
@@ -148,6 +151,9 @@ struct UIObject {
 
 	// Calculate the size of this object according to the size of its children
 	void CalcSizeFromChildren();
+
+	// Calculate needed parameters for container sizing
+	void CalcContainerWeights();
 
 	// Update wanted size of this object from its content
 	void CalcContentSize(UIObject *parent);

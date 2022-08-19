@@ -107,12 +107,15 @@ void UIView::Update(float deltaTime)
 		return;
 
 	// Update required parameters for layout of child objects
-	m_rootObject->computedPos = {};
 	m_rootObject->computedSize = m_rootObject->size;
-	m_rootObject->screenRect = { m_rootObject->computedPos, m_rootObject->computedSize };
+	m_rootObject->screenRect = { { 0.f, 0.f }, m_rootObject->computedSize };
 
+	// The root object skips CalcSize() as it's fixed to the size of the view.
+	m_rootObject->CalcContentSize(nullptr);
+	m_rootObject->CalcContainerWeights();
+
+	// Quickly layout the content and be done if the root has no children
 	if (m_rootObject->children.empty()) {
-		m_rootObject->CalcContentSize(nullptr);
 		m_rootObject->Layout();
 		return;
 	}
@@ -161,6 +164,9 @@ void UIView::Update(float deltaTime)
 		// Calculate this object's size
 		current->CalcSize(parent);
 
+		// Calculate weights for flex children inside this container
+		current->CalcContainerWeights();
+
 		if (current->sizeMode[0] == SizeMode_FromChildren || current->sizeMode[1] == SizeMode_FromChildren) {
 			postOrderStack.push_back(current);
 		}
@@ -169,7 +175,6 @@ void UIView::Update(float deltaTime)
 			layoutStack.emplace_back(current, 0);
 	}
 	PROFILE_STOP();
-
 
 	// Calculate size of objects which depend on their children's sizes (bottom-up)
 	PROFILE_START_DESC("#CalcSizeFromChildren Pass")
@@ -198,8 +203,8 @@ void UIView::Update(float deltaTime)
 
 		current->Layout();
 
-		ImVec2 screenPos = parent->screenRect.Min + current->computedPos;
-		current->screenRect = { screenPos, screenPos + current->computedSize };
+		current->screenRect.Min = parent->screenRect.Min + current->computedPos;
+		current->screenRect.Max = current->screenRect.Min + current->computedSize;
 
 		if (!current->children.empty())
 			layoutStack.emplace_back(current, 0);

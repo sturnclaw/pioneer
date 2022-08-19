@@ -74,16 +74,60 @@ void UIObject::CalcSize(UIObject *parent)
 	} else if (sizeMode[0] == SizeMode_Fixed) {
 		computedSize.x = size.x;
 	} else if (sizeMode[0] == SizeMode_ParentPct) {
-		computedSize.x = parent->size.x * size.x;
-	} // SizeMode_FromChildren will be handled in a separate layout pass
+		computedSize.x = parent->computedSize.x * size.x;
+	} else if (sizeMode[0] == SizeMode_FromChildren) {
+		computedSize.x = 0.f;
+	}
 
 	if (sizeMode[1] == SizeMode_FromContent) {
 		computedSize.y = contentSize.y + style->padding.y;
 	} else if (sizeMode[1] == SizeMode_Fixed) {
 		computedSize.y = size.y;
 	} else if (sizeMode[1] == SizeMode_ParentPct) {
-		computedSize.y = parent->size.y * size.y;
-	} // SizeMode_FromChildren will be handled in a separate layout pass
+		computedSize.y = parent->computedSize.y * size.y;
+	} else if (sizeMode[1] == SizeMode_FromChildren) {
+		computedSize.y = 0.f;
+	}
+
+	if (!(parent->features & UIFeature_OverlayLayout)) {
+		// Expand size along parent primary and secondary axes for fill mode
+		UIAxis axis = parent->primaryAxis;
+		UIAxis axis2 = parent->primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Horizontal;
+
+		if (alignment[axis] == UIAlign_Fill) {
+			// TODO: variable widget weights
+			computedSize[axis] = std::max(computedSize[axis], parent->cachedFreeSize * 1.f);
+		}
+
+		// TODO: expansion along secondary axis overlaps with SizeMode_ParentPct
+		if (alignment[axis2] == UIAlign_Fill) {
+			computedSize[axis2] = std::max(computedSize[axis2],
+				parent->computedSize[axis2] - parent->style->padding[axis2] * 2.f);
+		}
+	}
+}
+
+void UIObject::CalcContainerWeights()
+{
+	if (features & UIFeature_OverlayLayout || children.empty())
+		return;
+
+	// Gather total weights and available space for expandable children
+	float cachedWeight = 0.f;
+	float fixedSize = style->padding[primaryAxis] +
+		style->containerSpacing * (children.size() - 1);
+
+	// Use the previous frame's computedSize value from children to calculate
+	// reserved size (avoids extremely complex constraint resolution)
+	for (auto &child : children) {
+		if (child->alignment[primaryAxis] == UIAlign_NoExpand)
+			fixedSize += child->computedSize[primaryAxis];
+		else
+			cachedWeight += 1.f;
+	}
+
+	// Store widget free size as a weight-normalized value for minimal per-widget math
+	cachedFreeSize = (computedSize[primaryAxis] - fixedSize) / cachedWeight;
 }
 
 void UIObject::CalcSizeFromChildren()
@@ -98,11 +142,11 @@ void UIObject::CalcSizeFromChildren()
 		float spacing = style->containerSpacing * (children.size() - 1);
 
 		if (primaryAxis == UIAxis_Horizontal) {
-			totalSize.x += spacing;
+			totalSize.x = spacing;
 			for (auto &child : children)
 				totalSize.x += child->computedSize.x;
 		} else {
-			totalSize.y += spacing;
+			totalSize.y = spacing;
 			for (auto &child : children)
 				totalSize.y += child->computedSize.y;
 		}
@@ -111,15 +155,19 @@ void UIObject::CalcSizeFromChildren()
 	// add any padding specified in this object's style
 	totalSize += style->padding * 2;
 
+	// update this widget's sizes
 	if (sizeMode[0] == SizeMode_FromChildren)
-		computedSize.x = totalSize.x;
+		computedSize.x = std::max(computedSize.x, totalSize.x);
 	if (sizeMode[1] == SizeMode_FromChildren)
-		computedSize.y = totalSize.y;
+		computedSize.y = std::max(computedSize.y, totalSize.y);
 }
 
 void UIObject::CalcContentSize(UIObject *parent)
 {
+	// Calculate the wanted size of our content.
+	// TODO: text wrapping
 	ImVec2 maxArea;
+
 	if (parent)
 		maxArea = parent->computedSize - parent->style->padding * 2;
 	else
@@ -150,44 +198,30 @@ void UIObject::Layout()
 		}
 	} else {
 		// otherwise, arrange all children inside the container along the primary axis
-		ImVec2 fixedSize = style->padding * 2.f;
-		float combinedWeight = 0.f;
-
-		// First pass: gather total weight for expandable items and required size
-		for (auto &child : children) {
-			if (child->alignment[primaryAxis] != UIAlign_NoExpand) {
-				// TODO: allow different children different weights
-				combinedWeight += 1.f;
-			} else {
-				if (primaryAxis == UIAxis_Horizontal)
-					fixedSize.x += child->computedSize.x;
-				else
-					fixedSize.y += child->computedSize.y;
-			}
-		}
-
-		// Add container spacing
-		float spacing = style->containerSpacing;
-		fixedSize[primaryAxis] += spacing * (children.size() - 1);
-
-		float allotedSize = (computedSize[primaryAxis] - fixedSize[primaryAxis]) / combinedWeight;
-
 		ImVec2 nextPos = style->padding;
+
+		UIAxis secondAxis = primaryAxis == UIAxis_Vertical ? UIAxis_Horizontal : UIAxis_Horizontal;
+		float maxSize2 = computedSize[secondAxis] - style->padding[secondAxis];
+
 		for (auto &child : children) {
-			child->computedPos = nextPos;
+			ImVec2 computedPos = nextPos;
 
 			UIAlign align = child->alignment[primaryAxis];
+			UIAlign align2 = child->alignment[secondAxis];
 			float size = child->computedSize[primaryAxis];
+			float size2 = child->computedSize[secondAxis];
 
 			// Each widget receives a given amount of space based on its weight
 			// (currently hardcoded to 1.f) and can expand or be positioned
 			// inside that alloted size.
-			float expand = align == UIAlign_NoExpand ? 0.f : allotedSize - size;
+			float expand = align == UIAlign_NoExpand ? 0.f : cachedFreeSize - size;
 
-			if (align == UIAlign_Fill)
-				child->computedSize[primaryAxis] += expand;
-			else if (align != UIAlign_NoExpand)
-				child->computedPos[primaryAxis] += CalcAlignment(align, size, size + expand);
+			if (align != UIAlign_NoExpand)
+				computedPos[primaryAxis] += CalcAlignment(align, size, size + expand);
+			if (align2 != UIAlign_NoExpand)
+				computedPos[secondAxis] += CalcAlignment(align2, size2, maxSize2);
+
+			child->computedPos = computedPos;
 
 			if (primaryAxis == UIAxis_Horizontal)
 				nextPos.x += size + expand + style->containerSpacing;
