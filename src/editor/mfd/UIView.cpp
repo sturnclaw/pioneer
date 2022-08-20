@@ -99,6 +99,15 @@ std::string_view UIView::GetStyleName(UIStyle *style)
 	return {};
 }
 
+std::string_view UIView::GetFontName(ImFont *font)
+{
+	for (auto &pair : m_fonts)
+		if (pair.second == font)
+			return m_fontNameCache[pair.first.name_hash];
+
+	return {};
+}
+
 void UIView::Update(float deltaTime)
 {
 	PROFILE_SCOPED()
@@ -318,6 +327,10 @@ ImFont *UIView::GetOrLoadFont(std::string_view name, float size)
 
 	ImFont *font = m_fontAtlas->AddFontFromMemoryTTF(bytes, fileData->GetSize(), size, nullptr, glyphRanges);
 	m_fonts.emplace(key, font);
+
+	// Store the name behind the font key (for debug/editor purposes)
+	if (!m_fontNameCache.count(key.name_hash))
+		m_fontNameCache.emplace(key.name_hash, std::string(name));
 
 	return font;
 }

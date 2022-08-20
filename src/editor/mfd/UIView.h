@@ -75,6 +75,10 @@ public:
 	// Return a reference to this view's font cache
 	FontCache &GetFontCache() { return m_fonts; }
 
+	// Get the string key for the given font pointer in the font cache
+	// This should be called infrequently as it is O(N) in the length of the font cache
+	std::string_view GetFontName(ImFont *font);
+
 	// Return a reference to the font atlas used for this UIView
 	ImFontAtlas *GetFontAtlas() { return m_fontAtlas.get(); }
 
@@ -120,6 +124,7 @@ private:
 	RefCountedPtr<PropertyMap> m_varMap;
 
 	std::map<std::string, std::string, std::less<>> m_fontFiles;
+	std::map<uint32_t, std::string> m_fontNameCache;
 };
 
 } // namespace Editor
