@@ -3,13 +3,17 @@
 
 #include "MFDEditor.h"
 
+#include "MFDDetailsPane.h"
+#include "MFDEditorHelpers.h"
+#include "MFDEditorUndo.h"
+
 #include "UIObject.h"
 #include "UIView.h"
 
-#include "EditorApp.h"
-#include "EditorDraw.h"
-#include "UndoSystem.h"
-#include "UndoStepType.h"
+#include "editor/EditorApp.h"
+#include "editor/EditorDraw.h"
+#include "editor/UndoSystem.h"
+#include "editor/UndoStepType.h"
 #include "graphics/Graphics.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
@@ -18,204 +22,6 @@ using namespace Editor;
 
 // Copied from imgui_demo.cpp
 namespace ImGui { void ShowFontAtlas(ImFontAtlas* atlas); }
-
-namespace {
-
-	bool LayoutHorizontal(std::string_view label, int N, float reserveSize)
-	{
-		float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
-		float width = ImGui::GetContentRegionAvail().x;
-
-		ImGui::TextUnformatted(label.data());
-
-		ImGui::PushID(label.data());
-		ImGui::PushItemWidth((width / N) - reserveSize - spacing);
-		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Horizontal;
-
-		return true;
-	}
-
-	void EndLayout()
-	{
-		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
-		ImGui::PopItemWidth();
-		ImGui::PopID();
-		ImGui::NewLine();
-	}
-
-	template<typename Closure>
-	bool UndoHelper(std::string_view label, UndoSystem *undo, Closure update)
-	{
-		if (ImGui::IsItemDeactivated()) {
-			undo->EndEntry();
-			// Log::Info("Ending entry {}\n", label);
-			update();
-		}
-
-		if (ImGui::IsItemActivated()) {
-			undo->BeginEntry(label);
-			// Log::Info("Beginning entry {}\n", label);
-			return true;
-		}
-
-		if (ImGui::IsItemEdited())
-			update();
-
-		return false;
-	}
-
-	bool ComboUndoHelper(std::string_view undoName, const char *label, const char *preview, UndoSystem *undo)
-	{
-		ImGuiID id = ImGui::GetID(undoName.data());
-		bool *opened = ImGui::GetStateStorage()->GetBoolRef(id);
-		bool append = ImGui::BeginCombo(label, preview);
-
-		if (ImGui::IsWindowAppearing()) {
-			// Log::Info("Beginning entry {}\n", undoName);
-			undo->BeginEntry(undoName);
-			*opened = true;
-		}
-
-		if (*opened && !append)
-		{
-			*opened = false;
-			undo->EndEntry();
-			// Log::Info("Ending entry {}\n", undoName);
-		}
-
-		return append;
-	}
-
-	bool ComboUndoHelper(std::string_view label, const char *preview, UndoSystem *undo)
-	{
-		return ComboUndoHelper(label, label.data(), preview, undo);
-	}
-
-	template<typename T>
-	struct SpanHelper {
-		template<size_t N>
-		SpanHelper(T (&arr)[N]) :
-			data(arr),
-			size(N)
-		{}
-
-		T *data;
-		size_t size;
-	};
-
-	template<typename T>
-	void EditOptions(std::string_view label, const char *name, SpanHelper<const char * const>options, UndoSystem *undo, T *val)
-	{
-		size_t selected = size_t(*val);
-		const char *preview = selected < options.size ? options.data[selected] : "<invalid>";
-		if (ComboUndoHelper(label, name, preview, undo)) {
-			if (ImGui::IsWindowAppearing())
-				AddUndoSingleValue(undo, val);
-
-			for (size_t idx = 0; idx < options.size; ++idx) {
-				if (ImGui::Selectable(options.data[idx], selected == idx))
-					*val = T(idx);
-			}
-
-			ImGui::EndCombo();
-		}
-	}
-
-	static constexpr const char *AxisModes[] = {
-		"Horizontal",
-		"Vertical"
-	};
-
-	static constexpr const char *SizeModes[] = {
-		"Size to Content",
-		"Fixed Size",
-		"% of Parent Size",
-		"Size to Children",
-	};
-
-	static constexpr const char *ExpandModes[] = {
-		"Align Start",
-		"Align Center",
-		"Align End",
-		"Fill",
-		"Keep Size",
-	};
-
-	static constexpr const char *AlignModes[] = {
-		"Align Start",
-		"Align Center",
-		"Align End",
-	};
-
-	static constexpr const char *ContentTypes[] = {
-		"None",
-		"Text",
-	};
-
-	class UndoAddRemoveChild : public UndoStep {
-	public:
-		UndoAddRemoveChild(UIObject *parent, UIObject *add, size_t idx) :
-			m_parent(parent),
-			m_add(add),
-			m_idx(idx)
-		{
-			Swap();
-		}
-
-		UndoAddRemoveChild(UIObject *parent, UIObject *add) :
-			m_parent(parent),
-			m_add(add),
-			m_idx(parent->children.size())
-		{
-			Swap();
-		}
-
-		UndoAddRemoveChild(UIObject *parent, size_t idx) :
-			m_parent(parent),
-			m_add(nullptr),
-			m_idx(idx)
-		{
-			Swap();
-		}
-
-		void Undo() override { Swap(); }
-		void Redo() override { Swap(); }
-
-	private:
-		void Swap() {
-			if (m_add) {
-				m_parent->AddChild(m_add.release(), m_idx);
-			} else {
-				m_add.reset(m_parent->RemoveChild(m_idx));
-			}
-		}
-
-		UIObject *m_parent;
-		std::unique_ptr<UIObject> m_add;
-		size_t m_idx;
-	};
-
-	class UndoReorderChild : public UndoStep {
-	public:
-		UndoReorderChild(UIObject *parent, size_t oldIdx, size_t newIdx) :
-			m_parent(parent),
-			m_old(oldIdx),
-			m_new(newIdx)
-		{
-			Redo();
-		}
-
-		void Undo() override { m_parent->ReorderChild(m_new, m_old); }
-		void Redo() override { m_parent->ReorderChild(m_old, m_new); }
-
-	private:
-		UIObject *m_parent;
-		size_t m_old;
-		size_t m_new;
-	};
-
-}
-
 
 constexpr float GRID_SPACING = 10.f;
 
@@ -227,6 +33,7 @@ MFDEditor::MFDEditor(EditorApp *app) :
 	m_viewportZoom(1.f),
 	m_selectedObject(nullptr),
 	m_nextObject(nullptr),
+	m_hasNextObject(false),
 	m_rootObject(nullptr),
 	m_viewportHovered(false),
 	m_viewportActive(false),
@@ -235,6 +42,7 @@ MFDEditor::MFDEditor(EditorApp *app) :
 	m_debugWindow(false)
 {
 	m_undoSystem.reset(new UndoSystem());
+	m_detailsPane.reset(new MFDDetailsPane(this));
 }
 
 MFDEditor::~MFDEditor()
@@ -246,6 +54,63 @@ UndoSystem *MFDEditor::GetUndo()
 	return m_undoSystem.get();
 }
 
+UIView *MFDEditor::GetRootView()
+{
+	return m_rootView.get();
+}
+
+void MFDEditor::SetSelectedObject(UIObject *obj)
+{
+	// Defer object selection until end of the frame to avoid undo issues
+	m_nextObject = obj;
+	m_hasNextObject = true;
+
+	if (obj)
+		m_detailsPane->CloseStyleEditor();
+}
+
+UIObject *MFDEditor::GetSelectedObject() const
+{
+	return m_selectedObject;
+}
+
+UIObject *MFDEditor::GetHoveredObject()
+{
+	// convert viewport position into View coordinates
+	ImVec2 viewPos = (m_viewportMousePos - m_viewportScroll) / m_viewportZoom;
+
+	return m_rootView->GetObjectAtPoint(viewPos);
+}
+
+ImVec2 MFDEditor::ViewToScreen(const ImVec2 &vec)
+{
+	return vec * m_viewportZoom + m_viewportScroll + m_viewportScreenPos;
+}
+
+UIObject *MFDEditor::CreateNewObject()
+{
+	UIObject *child = new UIObject();
+	child->Setup(m_lastId++, {}, m_defaultStyle);
+	return child;
+}
+
+UIStyle *MFDEditor::CreateNewStyle()
+{
+	UIStyle *style = new UIStyle();
+	style->fontSize = 16;
+	style->font = m_rootView->GetOrLoadFont("pionillium", 16);
+	return style;
+}
+
+UIStyle *MFDEditor::GetDefaultStyle()
+{
+	return m_defaultStyle;
+}
+
+// ============================================================================
+//  Lifecycle functions
+// ============================================================================
+
 void MFDEditor::Start()
 {
 	m_lastId = 0;
@@ -256,9 +121,7 @@ void MFDEditor::Start()
 	m_rootView->RegisterFontFile("pionillium", "PionilliumText22L-Medium.ttf");
 
 	// Setup the "editor default" style
-	m_defaultStyle = new UIStyle();
-	m_defaultStyle->fontSize = 16;
-	m_defaultStyle->font = m_rootView->GetOrLoadFont("pionillium", 16);
+	m_defaultStyle = CreateNewStyle();
 	m_defaultStyle->borderThickness = 2.f;
 
 	// Register it in the style table
@@ -288,9 +151,9 @@ void MFDEditor::Update(float deltaTime)
 
 	DrawInterface();
 
-	if (m_nextObject) {
+	if (m_hasNextObject) {
 		m_selectedObject = m_nextObject;
-		m_nextObject = nullptr;
+		m_hasNextObject = false;
 	}
 }
 
@@ -301,6 +164,10 @@ void MFDEditor::End()
 	m_defaultStyle = nullptr;
 	m_rootView.reset();
 }
+
+// ============================================================================
+//  Interface drawing functions
+// ============================================================================
 
 void MFDEditor::DrawInterface()
 {
@@ -339,9 +206,8 @@ void MFDEditor::DrawInterface()
 
 	// Draw the right-hand details panel
 	ImRect detailsRect = Draw::RectCut(layout, winSize.x / 4.f, Draw::RectSide_Right);
-	Draw::BeginWindow(detailsRect, "Details");
-	DrawDetailsPanel();
-	ImGui::End();
+	m_detailsPane->SetLayoutArea(detailsRect);
+	m_detailsPane->Draw();
 
 	DrawLayoutView(layout);
 
@@ -361,10 +227,19 @@ void MFDEditor::DrawOutlinePanel()
 {
 	// TODO: draw tools header
 
+	DrawToolbar();
+
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::BeginChild("##ObjectHierarchy", {}, true);
+
 	ImGui::Unindent(); // remove the initial indent level from the root object
 
-	if (!DrawOutlineEntry(m_rootObject))
+	if (!DrawOutlineEntry(m_rootObject)) {
+		ImGui::EndChild();
 		return;
+	}
 
 	std::vector<std::pair<UIObject *, size_t>> objectStack;
 	objectStack.reserve(32);
@@ -385,6 +260,8 @@ void MFDEditor::DrawOutlinePanel()
 		if (DrawOutlineEntry(current))
 			objectStack.emplace_back(current, 0);
 	}
+
+	ImGui::EndChild();
 }
 
 bool MFDEditor::DrawOutlineEntry(UIObject *obj)
@@ -424,131 +301,194 @@ bool MFDEditor::DrawOutlineEntry(UIObject *obj)
 	return open && !obj->children.empty();
 }
 
-void MFDEditor::DrawDetailsPanel()
+void MFDEditor::DrawToolbar()
 {
-	// TODO: tabbed layout containing object details, styles, and vars
+	bool isSelected = m_selectedObject != nullptr;
+	bool isRoot = m_selectedObject == m_rootObject;
+	float fontSize = ImGui::GetFontSize();
 
-	if (m_selectedObject) {
-		DrawObjectDetails(m_selectedObject->parent, m_selectedObject);
+	ImVec2 btnSize = ImVec2{ fontSize, fontSize } + ImGui::GetStyle().FramePadding * 2.0f;
+
+	ImGui::BeginGroup();
+
+	if (isSelected) {
+
+		UIObject *parent = m_selectedObject->parent;
+		size_t childIdx = 0;
+
+		if (parent) {
+			for (size_t idx = 0; idx < parent->children.size(); idx++) {
+				if (parent->children[idx].get() == m_selectedObject) {
+					childIdx = idx;
+					break;
+				}
+			}
+		}
+
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Horizontal;
+
+		if (ImGui::Button("A##AddChild", btnSize)) {
+			UIObject *child = CreateNewObject();
+			child->label = StringName(fmt::format("object_{}", child->id));
+
+			GetUndo()->BeginEntry("Add Child");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(m_selectedObject, child);
+			GetUndo()->EndEntry();
+		}
+
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Add Empty Child");
+
+		if (ImGui::Button("H##AddHBox", btnSize)) {
+			UIObject *child = CreateNewObject();
+			child->label = StringName(fmt::format("hbox_{}", child->id));
+			child->alignment[0] = UIAlign_Fill;
+			child->alignment[1] = UIAlign_Fill;
+
+			GetUndo()->BeginEntry("Add HBox");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(m_selectedObject, child);
+			GetUndo()->EndEntry();
+		}
+
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Add Horizontal Box");
+
+		if (ImGui::Button("V##AddVBox", btnSize)) {
+			UIObject *child = CreateNewObject();
+			child->primaryAxis = UIAxis_Vertical;
+			child->label = StringName(fmt::format("vbox_{}", child->id));
+			child->alignment[0] = UIAlign_Fill;
+			child->alignment[1] = UIAlign_Fill;
+
+			GetUndo()->BeginEntry("Add VBox");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(m_selectedObject, child);
+			GetUndo()->EndEntry();
+		}
+
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Add Vertical Box");
+
+		if (ImGui::Button("T##AddText", btnSize)) {
+			UIObject *child = CreateNewObject();
+			child->primaryAxis = UIAxis_Vertical;
+			child->label = StringName(fmt::format("text_{}", child->id));
+			child->SetContentText("");
+
+			GetUndo()->BeginEntry("Add Text");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(m_selectedObject, child);
+			GetUndo()->EndEntry();
+		}
+
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Add Text");
+
+		if (!isRoot && ImGui::Button("D##Delete", btnSize)) {
+
+			GetUndo()->BeginEntry("Delete Child");
+			GetUndo()->AddUndoStep<UndoAddRemoveChild>(parent, childIdx);
+			GetUndo()->EndEntry();
+
+			// Select the next child, previous child, or parent
+			size_t numChildren = parent->children.size();
+			if (childIdx < numChildren)
+				SetSelectedObject(parent->children[childIdx].get());
+			else if (childIdx > 0 && numChildren > 0)
+				SetSelectedObject(parent->children[childIdx - 1].get());
+			else
+				SetSelectedObject(parent);
+		}
+
+		if (!isRoot && ImGui::IsItemHovered())
+			ImGui::SetTooltip("Delete Selected Object");
+
+		if (parent && childIdx > 0) {
+			if (ImGui::Button("<##MovePrevious", btnSize)) {
+				GetUndo()->BeginEntry("Reorder Child");
+				GetUndo()->AddUndoStep<UndoReorderChild>(parent, childIdx, childIdx - 1);
+				GetUndo()->EndEntry();
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Reorder Previous");
+		}
+
+		if (parent && (childIdx + 1) < parent->children.size()) {
+			if (ImGui::Button(">##MoveNext", btnSize)) {
+				GetUndo()->BeginEntry("Reorder Child");
+				GetUndo()->AddUndoStep<UndoReorderChild>(parent, childIdx, childIdx + 1);
+				GetUndo()->EndEntry();
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Reorder Next");
+		}
+
+		ImGui::GetCurrentWindow()->DC.LayoutType = ImGuiLayoutType_Vertical;
+	}
+
+	ImGui::EndGroup();
+
+}
+
+void MFDEditor::DrawUndoStack()
+{
+	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0))
+		ImGui::End();
+
+	ImGui::Text("Undo Depth: %ld", GetUndo()->GetEntryDepth());
+	ImGui::Separator();
+
+	size_t numEntries = m_undoSystem->GetNumEntries();
+	size_t currentIdx = m_undoSystem->GetCurrentEntry();
+	size_t selectedIdx = currentIdx;
+
+	if (ImGui::Selectable("<Initial State>", currentIdx == 0))
+		selectedIdx = 0;
+
+	for (size_t idx = 0; idx < numEntries; idx++)
+	{
+		const UndoEntry *entry = m_undoSystem->GetEntry(idx);
+
+		bool isSelected = currentIdx == idx + 1;
+		std::string label = fmt::format("{}##{}", entry->GetName(), idx);
+
+		if (ImGui::Selectable(label.c_str(), isSelected))
+			selectedIdx = idx + 1;
+	}
+
+	ImGui::End();
+
+	// If we selected an earlier history entry, undo to that point
+	for (; currentIdx > selectedIdx; --currentIdx)
+		m_undoSystem->Undo();
+
+	// If we selected a later history entry, redo to that point
+	for (; currentIdx < selectedIdx; ++currentIdx)
+		m_undoSystem->Redo();
+}
+
+void MFDEditor::DrawDebugWindow()
+{
+	if (!ImGui::Begin("Debug Window", &m_debugWindow)) {
+		ImGui::End();
 		return;
 	}
 
-	ImVec2 val = m_rootView->GetViewSize();
-	ImGui::InputFloat2("View Size", &val.x, "%.1f");
+	if (m_selectedObject) {
+		ImGui::TextUnformatted("Selected Object");
 
-	if (UndoHelper("Edit View Size", GetUndo(), [=](){ m_rootView->SetViewSize(val); }))
-		AddUndoGetSetValue<&UIView::GetViewSize, &UIView::SetViewSize>(GetUndo(), m_rootView.get(), val);
-
-	UIObject *hovered = GetHoveredObject();
-	ImGui::Text("Hovered: %d", hovered ? hovered->id : -1);
-}
-
-void MFDEditor::DrawObjectDetails(UIObject *parent, UIObject *obj)
-{
-	std::string label = std::string(obj->label.sv());
-	ImGui::InputText("Label", &label);
-
-	if (UndoHelper("Edit Label", GetUndo(), [=](){ obj->label = StringName(label); }))
-		AddUndoSingleValue(GetUndo(), &obj->label, StringName(label));
-
-	uint32_t features = obj->features;
-	bool changed = false;
-	if (ComboUndoHelper("Edit Features", "Features", GetUndo())) {
-		if (ImGui::IsWindowAppearing())
-			AddUndoSingleValue(GetUndo(), &obj->features);
-
-		changed |= ImGui::CheckboxFlags("Draw Border", &features, UIFeature_DrawBorder);
-		changed |= ImGui::CheckboxFlags("Draw Background", &features, UIFeature_DrawBackground);
-		changed |= ImGui::CheckboxFlags("Clickable", &features, UIFeature_Clickable);
-		changed |= ImGui::CheckboxFlags("Scrollable", &features, UIFeature_Scrollable);
-		changed |= ImGui::CheckboxFlags("Hover Animation", &features, UIFeature_HoverAnim);
-		changed |= ImGui::CheckboxFlags("Active Animation", &features, UIFeature_ActiveAnim);
-		changed |= ImGui::CheckboxFlags("Inherit Animations", &features, UIFeature_InheritAnim);
-		changed |= ImGui::CheckboxFlags("Overlay Layout", &features, UIFeature_OverlayLayout);
-
-		if (changed)
-			obj->features = UIFeature(features);
-
-		ImGui::EndCombo();
-	}
-
-	std::string_view styleName = m_rootView->GetStyleName(obj->style);
-	if (ImGui::BeginCombo("Style", styleName.data())) {
-
-		// TODO: maintain list of styles, possibly loaded from a file
-		ImGui::Selectable(styleName.data(), true);
-
-		ImGui::EndCombo();
-	}
-
-	if (parent) {
+		ImGui::InputFloat2("Comp. Pos", &m_selectedObject->computedPos.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat2("Comp. Size", &m_selectedObject->computedSize.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
 
 		ImGui::Separator();
-
-		ImVec2 _size = obj->size;
-		ImGui::InputFloat2("Size", &_size.x);
-		if (UndoHelper("Edit Size", GetUndo(), [=](){ obj->size = _size; }))
-			AddUndoSingleValue(GetUndo(), &obj->size, _size);
-
-		if (LayoutHorizontal("Size Mode:", 2, ImGui::GetFontSize())) {
-			EditOptions("Edit Size Mode X", "X", SizeModes, GetUndo(), &obj->sizeMode[0]);
-			EditOptions("Edit Size Mode Y", "Y", SizeModes, GetUndo(), &obj->sizeMode[1]);
-
-			EndLayout();
-		}
-
-		if (parent->features & UIFeature_OverlayLayout) {
-
-			if (LayoutHorizontal("Alignment Mode:", 2, ImGui::GetFontSize())) {
-				EditOptions("Edit Alignment X", "X", AlignModes, GetUndo(), &obj->alignment[0]);
-				EditOptions("Edit Alignment Y", "Y", AlignModes, GetUndo(), &obj->alignment[1]);
-
-				EndLayout();
-			}
-
-		} else {
-
-			if (LayoutHorizontal("Expansion Mode:", 2, ImGui::GetFontSize())) {
-				EditOptions("Edit Expansion X", "X", ExpandModes, GetUndo(), &obj->alignment[0]);
-				EditOptions("Edit Expansion Y", "Y", ExpandModes, GetUndo(), &obj->alignment[1]);
-
-				EndLayout();
-			}
-
-		}
-
 	}
 
-	if (!(obj->features & UIFeature_OverlayLayout)) {
-		EditOptions("Edit Primary Axis", "PrimaryAxis", AxisModes, GetUndo(), &obj->primaryAxis);
-	}
+	ImGui::ShowFontAtlas(m_rootView->GetFontAtlas());
 
-	ImGui::Separator();
-
-	EditOptions("Edit Content Type", "Content Type", ContentTypes, GetUndo(), &obj->contentType);
-
-	if (obj->contentType == ContentType_Text) {
-		std::string content = obj->content;
-		ImGui::InputText("Content", &content);
-
-		if (UndoHelper("Edit Content", GetUndo(), [=](){ obj->content = content; }))
-			AddUndoSingleValue(GetUndo(), &obj->content);
-	}
-
-	if (obj->contentType != ContentType_None) {
-		if (LayoutHorizontal("Content Alignment:", 2, ImGui::GetFontSize())) {
-			EditOptions("Edit Content Alignment X", "X", AlignModes, GetUndo(), &obj->contentAlign[0]);
-			EditOptions("Edit Content Alignment Y", "Y", AlignModes, GetUndo(), &obj->contentAlign[1]);
-
-			EndLayout();
-		}
-	}
-
-	ImGui::Separator();
-
-	ImGui::InputFloat2("Comp. Pos", &obj->computedPos.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-	ImGui::InputFloat2("Comp. Size", &obj->computedSize.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+	ImGui::End();
 }
+
+// ============================================================================
+//  Layout window drawing functions
+// ============================================================================
 
 void MFDEditor::DrawLayoutView(ImRect layout)
 {
@@ -668,55 +608,6 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 	ImGui::End();
 }
 
-void MFDEditor::DrawUndoStack()
-{
-	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0))
-		ImGui::End();
-
-	ImGui::Text("Undo Depth: %ld", GetUndo()->GetEntryDepth());
-	ImGui::Separator();
-
-	size_t numEntries = m_undoSystem->GetNumEntries();
-	size_t currentIdx = m_undoSystem->GetCurrentEntry();
-	size_t selectedIdx = currentIdx;
-
-	if (ImGui::Selectable("<Initial State>", currentIdx == 0))
-		selectedIdx = 0;
-
-	for (size_t idx = 0; idx < numEntries; idx++)
-	{
-		const UndoEntry *entry = m_undoSystem->GetEntry(idx);
-
-		bool isSelected = currentIdx == idx + 1;
-		std::string label = fmt::format("{}##{}", entry->GetName(), idx);
-
-		if (ImGui::Selectable(label.c_str(), isSelected))
-			selectedIdx = idx + 1;
-	}
-
-	ImGui::End();
-
-	// If we selected an earlier history entry, undo to that point
-	for (; currentIdx > selectedIdx; --currentIdx)
-		m_undoSystem->Undo();
-
-	// If we selected a later history entry, redo to that point
-	for (; currentIdx < selectedIdx; ++currentIdx)
-		m_undoSystem->Redo();
-}
-
-void MFDEditor::DrawDebugWindow()
-{
-	if (!ImGui::Begin("Debug Window", &m_debugWindow)) {
-		ImGui::End();
-		return;
-	}
-
-	ImGui::ShowFontAtlas(m_rootView->GetFontAtlas());
-
-	ImGui::End();
-}
-
 void MFDEditor::HandleViewportInteraction(bool clicked, bool wasPressed)
 {
 	ImGuiMouseButton activeButton = ImGui::GetCurrentContext()->ActiveIdMouseButton;
@@ -747,6 +638,8 @@ void MFDEditor::HandleViewportInteraction(bool clicked, bool wasPressed)
 		// handle click events for selection
 		UIObject *clicked = GetHoveredObject();
 		SetSelectedObject(clicked);
+
+		m_detailsPane->CloseStyleEditor();
 	}
 
 	if (clicked && activeButton == ImGuiMouseButton_Right) {
@@ -780,23 +673,4 @@ void MFDEditor::DrawObjectHighlight(ImDrawList *outputDl, UIObject *obj, ImU32 c
 	rect.Expand(4.f);
 
 	outputDl->AddRect(rect.Min, rect.Max, col, 2.f, {}, 2.f);
-}
-
-void MFDEditor::SetSelectedObject(UIObject *obj)
-{
-	// Defer object selection until end of the frame to avoid undo issues
-	m_nextObject = obj;
-}
-
-UIObject *MFDEditor::GetHoveredObject()
-{
-	// convert viewport position into View coordinates
-	ImVec2 viewPos = (m_viewportMousePos - m_viewportScroll) / m_viewportZoom;
-
-	return m_rootView->GetObjectAtPoint(viewPos);
-}
-
-ImVec2 MFDEditor::ViewToScreen(const ImVec2 &vec)
-{
-	return vec * m_viewportZoom + m_viewportScroll + m_viewportScreenPos;
 }

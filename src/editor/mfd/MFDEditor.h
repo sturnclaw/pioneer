@@ -17,12 +17,34 @@ struct UIStyle;
 
 class UIView;
 
+class MFDDetailsPane;
+
 class MFDEditor : public Application::Lifecycle {
 public:
 	MFDEditor(EditorApp *app);
 	~MFDEditor();
 
 	UndoSystem *GetUndo();
+
+	UIView *GetRootView();
+
+	// convert a coordinate in view-space to a coordinate in editor screen space (for drawlists)
+	ImVec2 ViewToScreen(const ImVec2 &pos);
+
+	void SetSelectedObject(UIObject *obj);
+	UIObject *GetSelectedObject() const;
+
+	// return the bottom-most UIObject the mouse is currently hovering
+	UIObject *GetHoveredObject();
+
+	// Create and return a new UIObject with a valid ID and Style assigned
+	UIObject *CreateNewObject();
+
+	// Create and return a new UIStyle with a valid initial font assigned
+	UIStyle *CreateNewStyle();
+
+	// Return the default style used by the editor
+	UIStyle *GetDefaultStyle();
 
 protected:
 	void Start() override;
@@ -33,16 +55,13 @@ protected:
 
 private:
 
-
 	void DrawInterface();
-
-	void DrawDetailsPanel();
-
-	void DrawObjectDetails(UIObject *parent, UIObject *obj);
 
 	void DrawOutlinePanel();
 
 	bool DrawOutlineEntry(UIObject *obj);
+
+	void DrawToolbar();
 
 	void DrawLayoutView(ImRect area);
 
@@ -56,17 +75,11 @@ private:
 
 	void HandleViewportInteraction(bool clicked, bool wasPressed);
 
-	void SetSelectedObject(UIObject *obj);
-
-	// return the currently hovered UI object, ignoring widget feature flags
-	UIObject *GetHoveredObject();
-
-	// convert a coordinate in view-space to a coordinate in editor screen space (for drawlists)
-	ImVec2 ViewToScreen(const ImVec2 &pos);
-
 private:
 	EditorApp *m_app;
 	std::unique_ptr<UndoSystem> m_undoSystem;
+
+	std::unique_ptr<MFDDetailsPane> m_detailsPane;
 
 	// Position of the viewport origin in screen coordinates
 	ImVec2 m_viewportScreenPos;
@@ -88,6 +101,9 @@ private:
 
 	UIObject *m_selectedObject;
 	UIObject *m_nextObject;
+
+	bool m_hasNextObject;
+
 	UIObject *m_rootObject;
 
 	std::unique_ptr<UIView> m_rootView;
