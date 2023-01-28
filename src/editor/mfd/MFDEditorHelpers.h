@@ -5,6 +5,7 @@
 
 #include "editor/EditorDraw.h"
 #include "editor/UndoSystem.h"
+#include "imgui/imgui.h"
 
 namespace Editor::Draw {
 
@@ -37,6 +38,32 @@ namespace Editor::Draw {
 
 			ImGui::EndCombo();
 		}
+	}
+
+	template<typename T>
+	void EditOptionsButtons(std::string_view label, const char *name, SpanHelper<const char * const>options, UndoSystem *undo, T *val)
+	{
+		size_t selected = size_t(*val);
+
+		ImGui::TextUnformatted(name);
+
+		ImGui::BeginGroup();
+		for (size_t idx = 0; idx < options.size; ++idx) {
+			if (selected == idx)
+				ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+
+			if (ImGui::Button(options.data[idx]))
+				AddUndoSingleValue(undo, val, T(idx));
+			Draw::UndoHelper(label, undo);
+
+			if (selected == idx)
+				ImGui::PopStyleColor();
+
+			ImGui::SameLine();
+		}
+		ImGui::EndGroup();
+
+		ImGui::Spacing();
 	}
 
 }

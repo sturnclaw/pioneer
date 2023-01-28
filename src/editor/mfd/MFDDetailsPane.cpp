@@ -284,12 +284,14 @@ void MFDDetailsPane::DrawObjectDetails(UIObject *obj)
 		Draw::EditOptions("Edit Primary Axis", "PrimaryAxis", AxisModes, undo, &obj->primaryAxis);
 	}
 
+	ImGui::Spacing();
 	ImGui::Separator();
+	ImGui::Spacing();
 
 	// Object Contents
 	// ==========================================
 
-	Draw::EditOptions("Edit Content Type", "Content Type", ContentTypes, undo, &obj->contentType);
+	Draw::EditOptionsButtons("Edit Content Type", "Content Type:", ContentTypes, undo, &obj->contentType);
 
 	if (obj->contentType == ContentType_Text) {
 		ImGui::InputText("Content", &obj->content);
