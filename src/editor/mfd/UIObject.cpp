@@ -70,7 +70,7 @@ void UIObject::SetContentText(std::string_view in_content)
 void UIObject::CalcSize(UIObject *parent)
 {
 	if (sizeMode[0] == SizeMode_FromContent) {
-		computedSize.x = contentSize.x + style->padding.x;
+		computedSize.x = contentSize.x + style->padding.x * 2;
 	} else if (sizeMode[0] == SizeMode_Fixed) {
 		computedSize.x = size.x;
 	} else if (sizeMode[0] == SizeMode_ParentPct) {
@@ -80,7 +80,7 @@ void UIObject::CalcSize(UIObject *parent)
 	}
 
 	if (sizeMode[1] == SizeMode_FromContent) {
-		computedSize.y = contentSize.y + style->padding.y;
+		computedSize.y = contentSize.y + style->padding.y * 2;
 	} else if (sizeMode[1] == SizeMode_Fixed) {
 		computedSize.y = size.y;
 	} else if (sizeMode[1] == SizeMode_ParentPct) {
@@ -231,8 +231,8 @@ void UIObject::Layout()
 	}
 
 	// Calculate text/image content position inside this object
-	contentPos.x = CalcAlignment(contentAlign[0], contentSize.x, computedSize.x);
-	contentPos.y = CalcAlignment(contentAlign[1], contentSize.y, computedSize.y);
+	contentPos.x = CalcAlignment(contentAlign[0], contentSize.x + style->padding.x * 2, computedSize.x) + style->padding.x;
+	contentPos.y = CalcAlignment(contentAlign[1], contentSize.y + style->padding.y * 2, computedSize.y) + style->padding.y;
 }
 
 void UIObject::Draw(UIView *view, ImDrawList *dl)
