@@ -18,6 +18,7 @@ struct UIStyle;
 class UIView;
 
 class MFDDetailsPane;
+class MFDIOManager;
 
 class MFDEditor : public Application::Lifecycle {
 public:
@@ -45,6 +46,18 @@ public:
 
 	// Return the default style used by the editor
 	UIStyle *GetDefaultStyle();
+
+	// Set the runtime style path used by this layout
+	void SetEditedStyles(std::string_view path);
+
+	// Get the runtime style path used by this layout
+	std::string_view GetStylePath();
+
+	// Get the current layout file path
+	std::string_view GetLayoutPath();
+
+	// Reset editor to default-empty state
+	void Reset();
 
 protected:
 	void Start() override;
@@ -79,7 +92,12 @@ private:
 	EditorApp *m_app;
 	std::unique_ptr<UndoSystem> m_undoSystem;
 
+	std::unique_ptr<MFDIOManager> m_ioManager;
 	std::unique_ptr<MFDDetailsPane> m_detailsPane;
+
+	std::string m_layoutFilepath;
+
+	std::string m_styleFilepath;
 
 	// Position of the viewport origin in screen coordinates
 	ImVec2 m_viewportScreenPos;

@@ -6,6 +6,7 @@
 #include "MFDDetailsPane.h"
 #include "MFDEditorHelpers.h"
 #include "MFDEditorUndo.h"
+#include "MFDIOManager.h"
 
 #include "UIObject.h"
 #include "UIView.h"
@@ -43,6 +44,7 @@ MFDEditor::MFDEditor(EditorApp *app) :
 {
 	m_undoSystem.reset(new UndoSystem());
 	m_detailsPane.reset(new MFDDetailsPane(this));
+	m_ioManager.reset(new MFDIOManager(this));
 }
 
 MFDEditor::~MFDEditor()
@@ -107,18 +109,43 @@ UIStyle *MFDEditor::GetDefaultStyle()
 	return m_defaultStyle;
 }
 
+void MFDEditor::SetEditedStyles(std::string_view path)
+{
+	m_styleFilepath = path;
+}
+
+std::string_view MFDEditor::GetStylePath()
+{
+	return m_styleFilepath;
+}
+
+std::string_view MFDEditor::GetLayoutPath()
+{
+	return m_layoutFilepath;
+}
+
 // ============================================================================
 //  Lifecycle functions
 // ============================================================================
 
 void MFDEditor::Start()
 {
-	m_lastId = 0;
-
 	m_rootView.reset(new UIView(m_app->GetRenderer()));
 
 	// Register the default font files
 	m_rootView->RegisterFontFile("pionillium", "PionilliumText22L-Medium.ttf");
+
+	Reset();
+}
+
+void MFDEditor::Reset()
+{
+	m_lastId = 0;
+
+	// Clear any leftover state
+	m_undoSystem->Clear();
+	m_rootView->SetRoot(nullptr);
+	m_rootView->GetStyles().clear();
 
 	// Setup the "editor default" style
 	m_defaultStyle = CreateNewStyle();
@@ -131,11 +158,13 @@ void MFDEditor::Start()
 	m_rootView->SetViewSize(ImVec2(800, 600));
 
 	// Setup the root object for this view
-	m_rootObject = new UIObject();
-	m_rootObject->Setup(m_lastId++, UIFeature_DrawBorder, m_defaultStyle);
+	m_rootObject = CreateNewObject();
+	m_rootObject->features = UIFeature_DrawBorder;
 	m_rootObject->label = "root"_name;
 
 	m_rootView->SetRoot(m_rootObject);
+
+	m_selectedObject = m_rootObject;
 }
 
 void MFDEditor::Update(float deltaTime)
@@ -172,6 +201,29 @@ void MFDEditor::End()
 void MFDEditor::DrawInterface()
 {
 	ImGui::BeginMainMenuBar();
+	if (ImGui::BeginMenu("File")) {
+		ImGui::InputText("Filename", &m_layoutFilepath);
+
+		if (ImGui::Button("Load")) {
+			Reset();
+
+			m_rootObject = m_ioManager->LoadLayout(m_layoutFilepath);
+
+			m_rootView->SetRoot(m_rootObject);
+			m_selectedObject = m_rootObject;
+		}
+
+		if (ImGui::Button("Save")) {
+			m_ioManager->SaveLayout(m_layoutFilepath, m_styleFilepath);
+		}
+
+		if (ImGui::Button("Save Styles")) {
+			m_ioManager->SaveStyles(m_styleFilepath);
+		}
+
+		ImGui::EndMenu();
+	}
+
 	if (ImGui::BeginMenu("Tools")) {
 		if (m_selectedObject && ImGui::Button("Add Child")) {
 			UIObject *child = new UIObject();
@@ -430,8 +482,10 @@ void MFDEditor::DrawToolbar()
 
 void MFDEditor::DrawUndoStack()
 {
-	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0))
+	if (!ImGui::Begin("Undo Stack", &m_undoWindow, 0)) {
 		ImGui::End();
+		return;
+	}
 
 	ImGui::Text("Undo Depth: %ld", GetUndo()->GetEntryDepth());
 	ImGui::Separator();
