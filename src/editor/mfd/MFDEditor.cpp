@@ -169,10 +169,12 @@ void MFDEditor::Reset()
 
 void MFDEditor::Update(float deltaTime)
 {
+	ImGuiID editorID = ImGui::GetID("MFDEditor");
+
 	// Note: this is janky as heck, should try to ensure Input works correctly even while ImGui has keyboard focus
-	if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift && ImGui::IsKeyPressed(SDL_SCANCODE_Z)) {
+	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, editorID, ImGuiInputFlags_RouteGlobal)) {
 		m_undoSystem->Redo();
-	} else if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(SDL_SCANCODE_Z)) {
+	} else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, editorID, ImGuiInputFlags_RouteGlobal)) {
 		m_undoSystem->Undo();
 	}
 
@@ -601,9 +603,12 @@ void MFDEditor::DrawLayoutView(ImRect layout)
 
 	ImRect area = { pos, pos + region };
 
+	ImGuiID viewportID = ImGui::GetID("ViewportContents");
 	bool wasPressed = m_viewportActive;
-	bool clicked = ImGui::ButtonBehavior(area, ImGui::GetID("ViewportContents"),
+	bool clicked = ImGui::ButtonBehavior(area, viewportID,
 		&m_viewportHovered, &m_viewportActive, flags);
+
+	ImGui::KeepAliveID(viewportID);
 
 	// if the viewport is hovered/active or we just released it,
 	// update mouse interactions with it

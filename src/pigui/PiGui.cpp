@@ -516,10 +516,10 @@ void Instance::RenderToTexture(Graphics::RenderTarget *rt, std::vector<ImDrawLis
 {
 	ImDrawData drawData{};
 	drawData.Valid = true;
-	drawData.CmdLists = lists.data();
 	drawData.CmdListsCount = lists.size();
 
-	for (const auto *list : lists) {
+	for (auto *list : lists) {
+		drawData.CmdLists.push_back(list);
 		drawData.TotalVtxCount += list->VtxBuffer.size();
 		drawData.TotalIdxCount += list->IdxBuffer.size();
 	}
