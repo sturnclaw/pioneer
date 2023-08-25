@@ -26,6 +26,7 @@
 #include "pigui/LuaFlags.h"
 #include "pigui/LuaPiGui.h"
 #include "pigui/PiGui.h"
+#include "pigui/Widgets.h"
 #include "ship/PlayerShipController.h"
 #include "sound/Sound.h"
 #include "utils.h"
@@ -1463,6 +1464,17 @@ static int l_pigui_add_text(lua_State *l)
 	ImU32 color = ImGui::GetColorU32(LuaPull<ImColor>(l, 2).Value);
 	std::string text = LuaPull<std::string>(l, 3);
 	draw_list->AddText(center, color, text.c_str());
+	return 0;
+}
+
+static int l_pigui_add_char_rotated(lua_State *l)
+{
+	PROFILE_SCOPED()
+	ImVec2 center = LuaPull<ImVec2>(l, 1);
+	ImColor color = LuaPull<ImColor>(l, 2);
+	uint32_t codepoint = LuaPull<uint32_t>(l, 3);
+	float angle = LuaPull<float>(l, 4);
+	PiGui::AddCharRotated(codepoint, center, angle, color);
 	return 0;
 }
 
@@ -3254,6 +3266,7 @@ void LuaObject<PiGui::Instance>::RegisterClass()
 		{ "AddCircleFilled", l_pigui_add_circle_filled },
 		{ "AddLine", l_pigui_add_line },
 		{ "AddText", l_pigui_add_text },
+		{ "AddCharRotated", l_pigui_add_char_rotated },
 		{ "AddTriangle", l_pigui_add_triangle },
 		{ "AddTriangleFilled", l_pigui_add_triangle_filled },
 		{ "AddQuad", l_pigui_add_quad },

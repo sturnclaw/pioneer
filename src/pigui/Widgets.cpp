@@ -4,8 +4,10 @@
 #include "Input.h"
 #include "Pi.h"
 #include "PiGui.h"
+#include "Widgets.h"
 
 // For ImRect
+#include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
 
 int PiGui::RadialPopupSelectMenu(const ImVec2 center, const char *popup_id, int mouse_button, const std::vector<ImTextureID> &tex_ids, const std::vector<std::pair<ImVec2, ImVec2>> &uvs, const std::vector<ImU32> &colors, const std::vector<const char *> &tooltips, unsigned int size, unsigned int padding)
@@ -427,4 +429,29 @@ PiGui::DragChangeMode PiGui::IncrementDrag(const char *label, double &v, float v
 
 	using DCM = PiGui::DragChangeMode;
 	return changed ? typing ? DCM::CHANGED_BY_TYPING : DCM::CHANGED : DCM::NOT_CHANGED;
+}
+
+void PiGui::AddCharRotated(const uint32_t codepoint, const ImVec2 &center, float angle, ImColor color)
+{
+	float size = ImGui::GetFontSize();
+	vector2d corner = vector2d(-size * 0.5, size * 0.5).Rotate(angle);
+
+	ImVec2 up_left = center + ImVec2(corner.x, corner.y);
+	ImVec2 up_right = center + ImVec2(corner.y, -corner.x);
+	ImVec2 down_left = center + ImVec2(-corner.y, corner.x);
+	ImVec2 down_right = center + ImVec2(-corner.x, -corner.y);
+
+	const ImFontGlyph *glyph = ImGui::GetFont()->FindGlyph(codepoint, true);
+	ImVec2 uv0 = ImVec2(glyph->U0, glyph->V0);
+	ImVec2 uv1 = ImVec2(glyph->U1, glyph->V1);
+
+	ImGui::GetFont()->ContainerAtlas->TexGlyphPadding;
+
+	ImGui::GetWindowDrawList()->AddImageQuad(
+		ImGui::GetFont()->ContainerAtlas->TexID,
+		up_left, up_right, down_right, down_left,
+		uv0, ImVec2(uv1.x, uv0.y),
+		uv1, ImVec2(uv0.x, uv1.y),
+		color
+	);
 }

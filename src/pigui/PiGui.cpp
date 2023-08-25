@@ -410,6 +410,9 @@ void Instance::Init(Graphics::Renderer *renderer)
 	// Apply the base style
 	ImGui::StyleColorsDark();
 
+	// Prevents rendering artifacts when rendering rotated font glyphs
+	ImGui::GetIO().Fonts->TexGlyphPadding = 2;
+
 	// Disable ctrl+tab / ctrl+shift+tab window switching
 	ImGui::SetShortcutRouting(ImGui::GetCurrentContext()->ConfigNavWindowingKeyNext, ImGuiKeyOwner_None);
 	ImGui::SetShortcutRouting(ImGui::GetCurrentContext()->ConfigNavWindowingKeyPrev, ImGuiKeyOwner_None);
