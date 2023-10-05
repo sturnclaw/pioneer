@@ -109,6 +109,26 @@ function ui.textAligned(text, alignment)
 	ui.text(text)
 end
 
+--
+-- Function: ui.textAlignedV
+--
+-- Draw the given text aligned to the specific proportion of the available
+-- vertical content region.
+--
+-- Parameters:
+--   text      - string, the text to draw
+--   alignment - number, controls alignment of the text. 0.5 is centered,
+--               1.0 is aligned to bottom.
+--
+function ui.textAlignedV(text, alignment, height, color)
+	local size = pigui.CalcTextSize(text)
+	height = height or pigui.GetTextLineHeight()
+	color = color or ui.theme.colors.font
+
+	ui.addText(ui.getCursorScreenPos() + Vector2(0, (height - size.y) * alignment), color, text)
+	ui.dummy(Vector2(size.x, height))
+end
+
 local EARTH_MASS = 5.9742e24
 local SOL_MASS = 1.98892e30
 

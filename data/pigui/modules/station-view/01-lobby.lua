@@ -4,6 +4,7 @@
 local ui = require 'pigui'
 local StationView = require 'pigui.views.station-view'
 local AutoSave    = require 'modules.AutoSave.AutoSave'
+local FlightLog   = require 'FlightLog'
 
 local Game = require 'Game'
 local Rand = require 'Rand'
@@ -130,6 +131,8 @@ local refuelInternalTank = function (delta)
 	Game.player:AddMoney(-total)
 	station:AddCommodityStock(Commodities.hydrogen, -math.ceil(mass))
 	Game.player:SetFuelPercent(fuel)
+
+	FlightLog.AddEntry("Fuel", total)
 end
 
 local refuelHyperdrive = function (mass)

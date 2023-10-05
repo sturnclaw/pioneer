@@ -129,6 +129,8 @@ ui.beginTabBar = pigui.BeginTabBar
 ui.beginTabItem = pigui.BeginTabItem
 ui.endTabItem = pigui.EndTabItem
 ui.endTabBar = pigui.EndTabBar
+ui.indent = pigui.Indent
+ui.unindent = pigui.Unindent
 
 ui.beginTable = pigui.BeginTable
 ui.endTable = pigui.EndTable
@@ -139,6 +141,9 @@ ui.tableSetupColumn = pigui.TableSetupColumn
 ui.tableSetupScrollFreeze = pigui.TableSetupScrollFreeze
 ui.tableHeadersRow = pigui.TableHeadersRow
 ui.tableHeader = pigui.TableHeader
+ui.tableSetRowColor = pigui.TableSetRowColor
+ui.tableSetColumnColor = pigui.TableSetColumnColor
+ui.tableSetCellColor = pigui.TableSetCellColor
 
 -- Flag validation functions. Call with a table of string flags as the only argument.
 ui.SelectableFlags = pigui.SelectableFlags

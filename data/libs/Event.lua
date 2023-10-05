@@ -25,9 +25,11 @@
 --
 
 local Engine = require 'Engine'
+local utils = require 'utils'
 
 local pending = {}
-local callbacks = {}
+local priority = utils.automagic()
+local callbacks = utils.automagic()
 local do_callback = {}
 
 local do_callback_normal = function (cb, p)
@@ -77,9 +79,13 @@ Event = {
 	--   stable
 	--
 	Register = function (name, cb)
-		if not callbacks[name] then callbacks[name] = {} end
-		callbacks[name][cb] = cb;
+		callbacks[name][cb] = cb
+
         if not do_callback[name] then do_callback[name] = do_callback_normal end
+	end,
+
+	RegisterPriority = function (name, order, cb)
+		table.insert(priority[name], order, cb)
 	end,
 
 	--
@@ -108,8 +114,13 @@ Event = {
 	--   stable
 	--
 	Deregister = function (name, cb)
-		if not callbacks[name] then return end
-		callbacks[name][cb] = nil
+		if rawget(callbacks, name) then
+			callbacks[name][cb] = nil
+		end
+
+		if rawget(priority, name) then
+			utils.remove_elem(priority[name], cb)
+		end
 	end,
 
 	--
@@ -173,14 +184,21 @@ Event = {
 
 	-- internal method, called from C++
 	_Clear = function ()
-		pending = {}
+		pending = utils.automagic()
 	end,
 
 	-- internal method, called from C++
 	_Emit = function ()
 		while #pending > 0 do
 			local p = table.remove(pending, 1)
-			if callbacks[p.name] then
+
+			if rawget(priority, p.name) then
+				for _, cb in ipairs(priority[p.name]) do
+					do_callback[p.name](cb, p)
+				end
+			end
+
+			if rawget(callbacks, p.name) then
 				for cb,_ in pairs(callbacks[p.name]) do
 					do_callback[p.name](cb, p)
 				end

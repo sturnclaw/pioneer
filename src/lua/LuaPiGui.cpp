@@ -2511,6 +2511,18 @@ static int l_pigui_end_tab_item(lua_State *l)
 	return 0;
 }
 
+static int l_pigui_indent(lua_State *l)
+{
+	ImGui::Indent(LuaPull<float>(l, 1, 0.f));
+	return 0;
+}
+
+static int l_pigui_unindent(lua_State *l)
+{
+	ImGui::Unindent(LuaPull<float>(l, 1, 0.f));
+	return 0;
+}
+
 static int l_pigui_clear_mouse(lua_State *l)
 {
 	PROFILE_SCOPED()
@@ -3114,6 +3126,28 @@ static int l_pigui_table_header(lua_State *l)
 	return 0;
 }
 
+static int l_pigui_table_set_row_color(lua_State *l)
+{
+	ImU32 color = ImGui::GetColorU32(LuaPull<ImColor>(l, 1).Value);
+	bool target = LuaPull<bool>(l, 2, false);
+	ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0 + (target ? 1 : 0), color);
+	return 0;
+}
+
+static int l_pigui_table_set_column_color(lua_State *l)
+{
+	ImU32 color = ImGui::GetColorU32(LuaPull<ImColor>(l, 1).Value);
+	ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, color, LuaPull<int>(l, 2));
+	return 0;
+}
+
+static int l_pigui_table_set_cell_color(lua_State *l)
+{
+	ImU32 color = ImGui::GetColorU32(LuaPull<ImColor>(l, 1).Value);
+	ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, color);
+	return 0;
+}
+
 static Color4ub to_Color4ub(ImVec4 c)
 {
 	return Color4ub(uint8_t(c.x * 255), uint8_t(c.y * 255), uint8_t(c.z * 255), uint8_t(c.w * 255));
@@ -3328,6 +3362,8 @@ void LuaObject<PiGui::Instance>::RegisterClass()
 		{ "BeginTabItem", l_pigui_begin_tab_item },
 		{ "EndTabBar", l_pigui_end_tab_bar },
 		{ "EndTabItem", l_pigui_end_tab_item },
+		{ "Indent", l_pigui_indent },
+		{ "Unindent", l_pigui_unindent },
 
 		// TABLES API
 		{ "BeginTable", l_pigui_begin_table },
@@ -3339,6 +3375,9 @@ void LuaObject<PiGui::Instance>::RegisterClass()
 		{ "TableSetupScrollFreeze", l_pigui_table_setup_scroll_freeze },
 		{ "TableHeadersRow", l_pigui_table_headers_row },
 		{ "TableHeader", l_pigui_table_header },
+		{ "TableSetRowColor", l_pigui_table_set_row_color },
+		{ "TableSetColumnColor", l_pigui_table_set_column_color },
+		{ "TableSetCellColor", l_pigui_table_set_cell_color },
 		// TODO: finish exposing Tables API
 
 		{ "WantTextInput", l_pigui_want_text_input },

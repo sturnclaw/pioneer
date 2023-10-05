@@ -12,6 +12,7 @@ local Game = require 'Game'
 local Event = require 'Event'
 local Format = require 'Format'
 local Serializer = require 'Serializer'
+local utils = require 'utils'
 
 -- default values (private)
 local FlightLogSystemQueueLength = 1000
@@ -21,6 +22,61 @@ local FlightLogStationQueueLength = 1000
 local FlightLogSystem = {}
 local FlightLogStation = {}
 local FlightLogCustom = {}
+
+local PendingFrame = nil
+local FlightLogFrames = {}
+local FlightLogPending = {}
+
+local function GetLocation()
+	local state = Game.player:GetFlightState()
+	local station = Game.player:GetDockedWith()
+
+	local location
+	local path
+
+	if state == "DOCKED" then
+		local parent_body = station.path:GetSystemBody().parent.name
+		location = {station.type, station.label, parent_body}
+		path = station.path
+	elseif state == "DOCKING" or state == "UNDOCKING" then
+		station = Game.player:FindNearestTo("SPACESTATION")
+		location = {state, station.label}
+		path = station.path
+	elseif state == "FLYING" then
+		if Game.player.frameBody then
+			location = {state, Game.player.frameBody.label}
+		else
+			location = {state, Game.system.name} -- if orbiting a system barycenter, there will be no frame object
+		end
+		path = Game.system.path
+	elseif state == "LANDED" then
+		local planet = Game.player:FindNearestTo("PLANET")
+		local alt, vspd, lat, long = Game.player:GetGPS()
+		if not (lat and long) then
+			lat, long = "nil", "nil"
+		end
+		location = {state, planet.label, lat, long}
+		path = planet.path
+	elseif state == "JUMPING" or state == "HYPERSPACE" then
+		--if in hyperspace, there's no Game.system
+		local spath, sysname = Game.player:GetHyperspaceDestination()
+		path = spath
+		location = {state, sysname}
+	end
+
+	return location, path
+end
+
+local function GetShortLocation()
+	local state = Game.player:GetFlightState()
+	local station = Game.player:GetDockedWith()
+
+	if state == "DOCKED" then
+		return station:GetLabel()
+	else
+		return Game.system.name
+	end
+end
 
 local FlightLog
 FlightLog = {
@@ -339,44 +395,76 @@ FlightLog = {
 
 	MakeCustomEntry = function (text)
 		text = text or ""
-		local location = ""
-		local state = Game.player:GetFlightState()
-		local path = ""
+		local location, path = GetLocation()
 
-		if state == "DOCKED" then
-			local station = Game.player:GetDockedWith()
-			local parent_body = station.path:GetSystemBody().parent.name
-			location = {station.type, station.label, parent_body}
-			path = Game.system.path
-		elseif state == "DOCKING" or state == "UNDOCKING" then
-			location = {state, Game.player:FindNearestTo("SPACESTATION").label}
-			path = Game.system.path
-		elseif state == "FLYING" then
-			if Game.player.frameBody then
-				location = {state, Game.player.frameBody.label}
-			else
-				location = {state, Game.system.name} -- if orbiting a system barycenter, there will be no frame object
-			end
-			path = Game.system.path
-		elseif state == "LANDED" then
-			path = Game.system.path
-			local alt, vspd, lat, long = Game.player:GetGPS()
-			if not (lat and long) then
-				lat, long = "nil", "nil"
-			end
-			location = {state, Game.player:FindNearestTo("PLANET").label, lat, long}
-		elseif state == "JUMPING" or state == "HYPERSPACE" then
-			--if in hyperspace, there's no Game.system
-			local spath, sysname = Game.player:GetHyperspaceDestination()
-			path = spath
-			location = {state, sysname}
-		end
-
-		table.insert(FlightLogCustom,1,
-			{path, Game.time, Game.player:GetMoney(), location, text})
+		table.insert(FlightLogCustom, 1, {
+			path, Game.time, Game.player:GetMoney(), location, text or ""
+		})
 	end,
 
 }
+
+function FlightLog.GetFrames()
+	return FlightLogFrames
+end
+
+function FlightLog.GetPendingFrame()
+	return PendingFrame
+end
+
+function FlightLog.GetOpenEntries()
+	return FlightLogPending
+end
+
+function FlightLog.OpenLogFrame()
+	print("opening frame")
+	local frame = {}
+
+	frame.location, frame.path = GetLocation()
+	frame.entries = {}
+
+	frame.arrival = Game.time
+	frame.cash = Game.player:GetMoney()
+
+	PendingFrame = frame
+end
+
+function FlightLog.CloseLogFrame()
+	print("closing frame")
+	local frame = assert(PendingFrame)
+
+	frame.departure = Game.time
+
+	table.insert(FlightLogFrames, frame)
+	PendingFrame = nil
+end
+
+function FlightLog.AddLogFrame()
+	local frame = {}
+
+	frame.location, frame.path = GetLocation()
+	frame.entries = {}
+
+	frame.timestamp = Game.time
+	frame.cash = Game.player:GetMoney()
+
+	table.insert(FlightLogFrames, frame)
+	return frame
+end
+
+function FlightLog.AddEntry(items, cost, income, frame)
+	local entry = {}
+
+	entry.timestamp = Game.time
+	entry.location = GetShortLocation()
+	entry.items = items
+	entry.cost = cost
+	entry.income = income
+	entry.cash = Game.player:GetMoney()
+
+	frame = frame or assert(PendingFrame)
+	table.insert(frame.entries, entry)
+end
 
 -- LOGGING
 
@@ -405,6 +493,16 @@ local AddStationToLog = function (ship, station)
 	while #FlightLogStation > FlightLogStationQueueLength do
 		table.remove(FlightLogStation,FlightLogStationQueueLength + 1)
 	end
+
+	if not ship:hasprop("is_first_spawn") then
+		FlightLog.OpenLogFrame()
+	end
+end
+
+local onShipUndocked = function(ship, station)
+	if not ship:IsPlayer() then return end
+
+	FlightLog.CloseLogFrame()
 end
 
 -- LOADING AND SAVING
@@ -440,9 +538,11 @@ local unserialize = function (data)
 	loaded_data = data
 end
 
+Event.RegisterPriority("onShipDocked", 1, AddStationToLog)
+Event.RegisterPriority("onShipUndocked", 1, onShipUndocked)
+
 Event.Register("onEnterSystem", AddSystemArrivalToLog)
 Event.Register("onLeaveSystem", AddSystemDepartureToLog)
-Event.Register("onShipDocked", AddStationToLog)
 Event.Register("onGameStart", onGameStart)
 Event.Register("onGameEnd", onGameEnd)
 Serializer:Register("FlightLog", serialize, unserialize)

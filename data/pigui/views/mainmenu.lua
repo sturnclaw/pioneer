@@ -13,6 +13,7 @@ local Lang = require 'Lang'
 local FlightLog = require 'FlightLog'
 local Commodities = require 'Commodities'
 local Character = require 'Character'
+local Event     = require 'Event'
 local Vector2 = _G.Vector2
 
 local lc = Lang.GetResource("core")
@@ -211,6 +212,13 @@ local function startAtLocation(location)
 	-- XXX horrible hack here to avoid paying a spawn-in docking fee
 	Game.player:setprop("is_first_spawn", true)
 	FlightLog.MakeCustomEntry(location.logmsg)
+
+	FlightLog.OpenLogFrame()
+	FlightLog.AddEntry("Starting Balance", nil, location.money)
+
+	require 'Timer':CallAt(Game.time + 0.01, function()
+		Game.player:unsetprop("is_first_spawn")
+	end)
 end
 
 local function callModules(mode)

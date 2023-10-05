@@ -6,13 +6,15 @@ local InfoView = require 'pigui.views.info-view'
 local Lang = require 'Lang'
 local FlightLog = require 'FlightLog'
 local Format = require 'Format'
+local Game = require 'Game'
+local utils = require 'utils'
 local Color = _G.Color
 local Vector2 = _G.Vector2
 
 local pionillium = ui.fonts.pionillium
 local icons = ui.theme.icons
 
-local gray = Color(145, 145, 145)
+local gray = ui.theme.styleColors.gray_400
 
 local l = Lang.GetResource("ui-core")
 
@@ -180,6 +182,172 @@ local function displayLog(logFn)
 	ui.columns(1)
 end
 
+local expanded = {}
+
+local function expandBtn(i)
+	local spacing = ui.theme.styles.ItemSpacing.x
+	ui.addCursorPos(Vector2(ui.getContentRegion().x - buttonSpaceSize.x - spacing, 0))
+
+	local open = expanded[i]
+	if ui.iconButton(open and icons.time_center or icons.time_forward_1x, buttonSpaceSize, l.EXPAND .. "##" .. i) then
+		expanded[i] = not open
+	end
+
+	ui.sameLine(spacing)
+end
+
+local function formatPath(path)
+	local name = path:GetStarSystem().name
+	if path:IsBodyPath() then
+		name = name .. " - " .. path:GetSystemBody().name
+	end
+
+	return name
+end
+
+local function renderFlightLogSummary(frame)
+	local cost = 0
+	local income = 0
+
+	for i, entry in ipairs(frame.entries) do
+		cost = cost + (entry.cost or 0)
+		income = income + (entry.income or 0)
+	end
+
+	ui.tableSetColumnIndex(0)
+	ui.dummy(ui.calcTextSize(formatDate(frame.arrival)))
+	-- ui.textColored(ui.theme.styleColors.gray_300, formatDate(frame.arrival))
+
+	local lineHeight = ui.getTextLineHeight()
+
+	ui.tableSetColumnIndex(2)
+	ui.withFont(pionillium.details, function()
+		ui.textAlignedV("SUM", 1.0, lineHeight, ui.theme.styleColors.gray_300)
+	end)
+	ui.sameLine(0, ui.theme.styles.ItemInnerSpacing.x)
+	ui.text(ui.Format.Money(cost))
+
+	ui.tableSetColumnIndex(3)
+	ui.withFont(pionillium.details, function()
+		ui.textAlignedV("SUM", 1.0, lineHeight, ui.theme.styleColors.gray_300)
+	end)
+	ui.sameLine(0, ui.theme.styles.ItemInnerSpacing.x)
+	ui.text(ui.Format.Money(income))
+
+	ui.tableSetColumnIndex(4)
+	ui.withFont(pionillium.details, function()
+		ui.textAlignedV("START", 1.0, lineHeight, ui.theme.styleColors.gray_300)
+	end)
+	ui.sameLine(0, ui.theme.styles.ItemInnerSpacing.x)
+	ui.text(ui.Format.Money(frame.cash))
+end
+
+local function renderFlightLogEntry(i, entry)
+	ui.tableSetColumnIndex(0)
+	ui.textColored(ui.theme.styleColors.gray_300, formatDate(entry.timestamp))
+
+	ui.tableSetColumnIndex(1)
+	ui.text(entry.items or "")
+
+	if entry.cost then
+		ui.tableSetColumnIndex(2)
+		ui.text(ui.Format.Money(entry.cost))
+	end
+
+	if entry.income then
+		ui.tableSetColumnIndex(3)
+		ui.text(ui.Format.Money(entry.income))
+	end
+
+	ui.tableSetColumnIndex(4)
+	ui.text(ui.Format.Money(entry.cash))
+
+	ui.tableSetColumnIndex(5)
+	ui.text("")
+end
+
+local function renderFlightLog(i, frame)
+
+	ui.beginGroup()
+
+	ui.separator()
+
+	expandBtn(i)
+
+	ui.withFont(pionillium.heading, function()
+		ui.alignTextToLineHeight()
+		ui.text(formatPath(frame.path))
+		ui.separator()
+		ui.spacing()
+	end)
+
+	headerText(l.LOCATION, composeLocationString(frame.location))
+	headerText(l.ARRIVAL_DATE, formatDate(frame.arrival))
+	headerText(l.IN_SYSTEM, ui.Format.SystemPath(frame.path))
+
+	ui.endGroup()
+
+	ui.spacing()
+
+	ui.beginTable("##Events", 6, { "BordersInnerH" })
+	ui.tableSetupColumn(l.DATE, { "WidthFixed" })
+	ui.tableSetupColumn(l.DESCRIPTION)
+	ui.tableSetupColumn(l.EXPENSE, { "WidthFixed" })
+	ui.tableSetupColumn(l.INCOME, { "WidthFixed" })
+	ui.tableSetupColumn(l.CASH, { "WidthFixed" })
+	ui.tableSetupColumn(l.NOTES)
+
+	ui.indent()
+
+	ui.withStyleColors({ Text = ui.theme.styleColors.gray_300 }, function()
+		ui.tableHeadersRow()
+	end)
+
+	if expanded[i] or true then
+
+		if i == "PENDING" then
+			ui.tableNextRow()
+			ui.tableSetRowColor(ui.theme.styleColors.gray_800)
+			ui.tableSetColumnIndex(0)
+			ui.textColored(ui.theme.styleColors.gray_400, l.LOG_NEW)
+		end
+
+		for n, entry in utils.reverse(frame.entries) do
+			ui.tableNextRow()
+			ui.tableSetRowColor(ui.theme.styleColors.gray_800)
+			renderFlightLogEntry(n, entry)
+		end
+
+	end
+
+	ui.tableNextRow()
+	ui.tableSetRowColor(ui.theme.styleColors.gray_800)
+
+	renderFlightLogSummary(frame)
+
+	ui.unindent()
+
+	ui.endTable()
+
+end
+
+local function displayFlightLog(logFn)
+	ui.spacing()
+
+	ui.withStyleVars({ CellPadding = Vector2(4, 10) }, function()
+		logFn("PENDING", FlightLog:GetPendingFrame())
+	end)
+
+	for i, frame in ipairs(FlightLog:GetFrames()) do
+		ui.spacing()
+
+		ui.withStyleVars({ CellPadding = Vector2(4, 10) }, function()
+			logFn(i, frame)
+		end)
+	end
+
+end
+
 local function drawFlightHistory()
 	ui.tabBarFont("#flightlog", {
 
@@ -205,7 +373,13 @@ local function drawFlightHistory()
 		{	name = l.LOG_SYSTEM,
 			draw = function()
 				displayLog(renderSystemLog)
-			end }
+			end
+		},
+
+		{
+			name = l.LOG_UNIFIED,
+			draw = function() displayFlightLog(renderFlightLog) end
+		}
 
 	}, pionillium.heading)
 end

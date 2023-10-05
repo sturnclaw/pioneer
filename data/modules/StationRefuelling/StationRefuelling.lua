@@ -26,7 +26,6 @@ local onShipDocked = function (ship, station)
 	-- On spawning, we shouldn't deduct a fee.
 	-- This is a horrible hack but fixing in C++ side would be far more complicated.
 	if ship:hasprop("is_first_spawn") then
-		ship:unsetprop("is_first_spawn")
 		return
 	end
 

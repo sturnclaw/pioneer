@@ -6,6 +6,7 @@ local Lang = require 'Lang'
 local Format = require 'Format'
 local Commodities = require 'Commodities'
 local Economy     = require 'Economy'
+local FlightLog   = require 'FlightLog'
 
 local ui = require 'pigui'
 local pionillium = ui.fonts.pionillium
@@ -147,11 +148,15 @@ function CommodityMarketWidget.New(id, title, config)
 	config.bought = function (self, commodity, tradeamount)
 		local count = tradeamount or 1
         self.station:AddCommodityStock(commodity, -count)
+
+		FlightLog.AddEntry("Bought: " .. commodity:GetName(), config.getBuyPrice(self, commodity) * count)
     end
 
     config.sold = function (self, commodity, tradeamount)
 		local count = tradeamount or 1
         self.station:AddCommodityStock(commodity, count)
+
+		FlightLog.AddEntry("Sold: " .. commodity:GetName(), nil, config.getSellPrice(self, commodity) * count)
     end
 
 	config.onClickItem = config.onClickItem or function(s,e,_)
