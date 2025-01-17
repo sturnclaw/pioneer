@@ -25,10 +25,6 @@ local buttonSpaceSize = iconSize
 -- Need a style-var query system for best effect
 local itemSpacing = ui.rescaleUI(Vector2(6, 12), Vector2(1600, 900))
 
-local shipDef
-local hyperdrive
-local hyperdrive_fuel
-
 local jettison = function (item)
 	local enabled = Game.player.flightState == "FLYING"
 	local variant = enabled and ui.theme.buttonColors.default or ui.theme.buttonColors.disabled
@@ -146,21 +142,21 @@ end
 -- Gauge bar for internal, interplanetary, fuel tank
 local function gauge_fuel()
 	local player = Game.player
+	local tankSize = ShipDef[player.shipId].fuelTankMass
 	local text = string.format(l.FUEL .. ": %dt \t" .. l.DELTA_V .. ": %d km/s",
-		shipDef.fuelTankMass/100 * player.fuel, player:GetRemainingDeltaV()/1000)
+		tankSize/100 * player.fuel, player:GetRemainingDeltaV()/1000)
 
 	gauge_bar(player.fuel, text, 0, 100, icons.fuel)
 end
 
 -- Gauge bar for hyperdrive fuel / range
 local function gauge_hyperdrive()
-	---@type CargoManager
-	local cargoMgr = Game.player:GetComponent('CargoManager')
-	local fuel = cargoMgr:CountCommodity(hyperdrive_fuel)
+	local hyperdrive = Game.player:GetInstalledHyperdrive()
+	if not hyperdrive then return end
 
-	local text = string.format(l.FUEL .. ": %%dt \t" .. l.HYPERSPACE_RANGE .. ": %d " .. l.LY, Game.player:GetHyperspaceRange())
+	local text = string.format(l.FUEL .. ": %%0.1ft \t" .. l.HYPERSPACE_RANGE .. ": %0.1f " .. l.LY, Game.player:GetHyperspaceRange())
 
-	gauge_bar(fuel, text, 0, cargoMgr:GetFreeSpace() + fuel, icons.hyperspace)
+	gauge_bar(hyperdrive.storedFuel, text, 0, hyperdrive:GetMaxFuel(), icons.hyperspace)
 end
 
 -- Gauge bar for used/free cargo space
@@ -181,6 +177,55 @@ local function gauge_cabins()
 
 	gauge_bar(berths_used, string.format('%%i %s / %i %s', l.USED, berths_free, l.FREE),
 		0, berths_total, icons.personal)
+end
+
+---@param hyperdrive Equipment.HyperdriveType
+local function hyperdrivePumpButton(hyperdrive, amt)
+	local clicked = false
+	local icon = amt > 0 and icons.chevron_down or icons.chevron_up
+
+	if ui.button(ui.get_icon_glyph(icon) .. tostring(math.abs(amt))) then
+
+		local fuelTankSize = ShipDef[Game.player.shipId].fuelTankMass
+		local fuelMassLeft = Game.player.fuelMassLeft
+
+		local delta = math.clamp(amt, -hyperdrive.storedFuel, hyperdrive:GetMaxFuel() - hyperdrive.storedFuel)
+		delta = math.clamp(delta, fuelMassLeft - fuelTankSize, fuelMassLeft)
+
+		if math.abs(delta) > 0.0001 then
+			Game.player:SetFuelPercent((fuelMassLeft - delta) * 100 / fuelTankSize)
+			hyperdrive:SetFuel(Game.player, hyperdrive.storedFuel + delta)
+		end
+	end
+end
+
+local function drawHyperdriveFuelTransfer()
+	local hyperdrive = Game.player:GetInstalledHyperdrive()
+	if not hyperdrive then return end
+
+	-- Don't allow transferring fuel while the hyperdrive is doing its thing
+	if Game.player:IsHyperspaceActive() then return end
+
+	if not ui.beginTable("Pumping", 3) then return end
+
+	ui.tableSetupColumn("#leftPadding")
+	ui.tableSetupColumn("#center", { "WidthFixed" })
+	ui.tableSetupColumn("#rightPadding")
+
+	ui.tableNextRow()
+	ui.tableSetColumnIndex(1)
+
+	ui.horizontalGroup(function()
+		hyperdrivePumpButton(hyperdrive, -10)
+		hyperdrivePumpButton(hyperdrive, -1)
+
+		ui.text(l.TRANSFER_FUEL)
+
+		hyperdrivePumpButton(hyperdrive, 1)
+		hyperdrivePumpButton(hyperdrive, 10)
+	end)
+
+	ui.endTable()
 end
 
 local function drawPumpDialog()
@@ -228,6 +273,7 @@ local function drawEconTrade()
 	ui.withFont(orbiteer.heading, function() ui.text(l.FUEL) end)
 
 	gauge_fuel()
+	drawHyperdriveFuelTransfer()
 	gauge_hyperdrive()
 
 	drawPumpDialog()
@@ -287,10 +333,6 @@ InfoView:registerView({
 		Game.player:GetComponent('CargoManager'):AddListener('econ-trade', function (type, count)
 			if type:Class() == CommodityType then cachedCargoList = nil end
 		end)
-
-		shipDef = ShipDef[Game.player.shipId]
-		hyperdrive = Game.player:GetInstalledHyperdrive()
-		hyperdrive_fuel = hyperdrive and hyperdrive.fuel or Commodities.hydrogen
 	end,
 
 	debugReload = function()
