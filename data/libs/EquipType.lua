@@ -460,7 +460,7 @@ function HyperdriveType:CheckJump(ship, source, destination)
 		return nil
 	end
 	local distance = source:DistanceTo(destination)
-	local max_range = self:GetMaximumRange(ship) -- takes fuel into account
+	local max_range = self:GetRange(ship) -- takes fuel into account
 	if distance > max_range then
 		return distance
 	end
