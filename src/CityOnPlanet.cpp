@@ -107,6 +107,7 @@ void CityOnPlanet::PrecalcInstanceTransforms(const matrix4x4d &stationOrient)
 	// Cache building instance transforms
 	// TODO: this could easily be represented as a 4x3 matrix or dual quaternion for significantly less bandwidth
 	// That requires an "instance buffer" that isn't a 4x4 matrix per instance though... :(
+	// Update: now technically feasible, but still has to be plumbed through the entirety of SceneGraph
 	for (const auto &building : m_enabledBuildings) {
 		m_instanceTransforms.emplace_back(rot[building.rotation], building.pos);
 	}
