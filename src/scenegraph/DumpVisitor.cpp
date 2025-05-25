@@ -3,7 +3,6 @@
 
 #include "DumpVisitor.h"
 #include "Group.h"
-#include "LOD.h"
 #include "Model.h"
 #include "Node.h"
 #include "StaticGeometry.h"
@@ -47,6 +46,21 @@ namespace SceneGraph {
 		return ss.str();
 	}
 
+	void DumpVisitor::Visit(Model *m)
+	{
+		Group *root = m->GetRoot().Get();
+
+		for (unsigned int idx = 0; idx < root->GetNumChildren(); idx++) {
+			root->GetChildAt(idx)->Accept(*this);
+
+			// This is an LOD node, so accumulate the LOD statistics
+			if (idx < m->GetNumLods()) {
+				m_lodStats.push_back(m_stats);
+				memset(&m_stats, 0, sizeof(LodStatistics));
+			}
+		}
+	}
+
 	void DumpVisitor::ApplyNode(Node &n)
 	{
 		PutNodeName(n);
@@ -63,19 +77,6 @@ namespace SceneGraph {
 		m_level--;
 
 		m_stats.nodeCount++;
-	}
-
-	void DumpVisitor::ApplyLOD(LOD &l)
-	{
-		ApplyNode(l);
-
-		m_level++;
-		for (unsigned int i = 0; i < l.GetNumChildren(); i++) {
-			l.GetChildAt(i)->Accept(*this);
-			m_lodStats.push_back(m_stats);
-			memset(&m_stats, 0, sizeof(LodStatistics));
-		}
-		m_level--;
 	}
 
 	void DumpVisitor::ApplyStaticGeometry(StaticGeometry &g)

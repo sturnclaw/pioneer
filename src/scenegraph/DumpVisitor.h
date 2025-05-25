@@ -31,11 +31,14 @@ namespace SceneGraph {
 
 		DumpVisitor(const Model *m);
 
+		// DumpVisitor is a little different; instead of calling model->GetRoot()->Accept(visitor),
+		// you call Visit(model).
+		void Visit(Model *m);
+
 		std::string GetModelStatistics();
 
 		virtual void ApplyNode(Node &);
 		virtual void ApplyGroup(Group &);
-		virtual void ApplyLOD(LOD &);
 		virtual void ApplyStaticGeometry(StaticGeometry &);
 
 	private:

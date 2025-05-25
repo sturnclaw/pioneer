@@ -5,7 +5,6 @@
 #include "Billboard.h"
 #include "CollisionGeometry.h"
 #include "Group.h"
-#include "LOD.h"
 #include "Label3D.h"
 #include "MatrixTransform.h"
 #include "Node.h"
@@ -53,11 +52,6 @@ namespace SceneGraph {
 	void NodeVisitor::ApplyThruster(Thruster &t)
 	{
 		ApplyNode(static_cast<Node &>(t));
-	}
-
-	void NodeVisitor::ApplyLOD(LOD &l)
-	{
-		ApplyGroup(static_cast<Group &>(l));
 	}
 
 	void NodeVisitor::ApplyCollisionGeometry(CollisionGeometry &g)

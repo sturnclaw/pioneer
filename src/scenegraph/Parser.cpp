@@ -14,7 +14,7 @@ namespace SceneGraph {
 
 	bool LodSortPredicate(const LodDefinition &a, const LodDefinition &b)
 	{
-		return a.pixelSize < b.pixelSize;
+		return a.pixelSize > b.pixelSize;
 	}
 
 	Parser::Parser(FileSystem::FileSource &fs, const std::string &filename, const std::string &path) :

@@ -59,7 +59,6 @@ BinaryConverter::BinaryConverter(Graphics::Renderer *r) :
 	//register core loaders
 	RegisterLoader("Group", &Group::Load);
 	RegisterLoader("MatrixTransform", &MatrixTransform::Load);
-	RegisterLoader("LOD", &LOD::Load);
 	RegisterLoader("StaticGeometry", &StaticGeometry::Load);
 	RegisterLoader("CollisionGeometry", &CollisionGeometry::Load);
 	RegisterLoader("Thruster", &Thruster::Load);
@@ -117,6 +116,11 @@ void BinaryConverter::Save(const std::string &filename, const std::string &savep
 	wr.String(m->GetName().c_str());
 
 	SaveMaterials(wr, m);
+
+	wr.Int32(m->m_numLods);
+	for (size_t idx = 0; idx < m->m_numLods; idx++) {
+		wr.Float(m->m_lodSizes[idx]);
+	}
 
 	SaveHelperVisitor sv(&wr, m);
 	m->GetRoot()->Accept(sv);
@@ -253,6 +257,11 @@ Model *BinaryConverter::CreateModel(const std::string &filename, Serializer::Rea
 
 	m_patternsUsed = false;
 	LoadMaterials(rd);
+
+	m_model->m_numLods = rd.Int32();
+	for (size_t idx = 0; idx < m_model->m_numLods; idx++) {
+		m_model->m_lodSizes[idx] = rd.Float();
+	}
 
 	Group *root = dynamic_cast<Group *>(LoadNode(rd));
 	if (!root) throw LoadingError("Expected root");

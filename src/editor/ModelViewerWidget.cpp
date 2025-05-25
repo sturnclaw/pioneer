@@ -20,7 +20,6 @@
 #include "graphics/VertexBuffer.h"
 #include "scenegraph/Animation.h"
 #include "scenegraph/BinaryConverter.h"
-#include "scenegraph/DumpVisitor.h"
 #include "scenegraph/Loader.h"
 #include "scenegraph/Model.h"
 #include "scenegraph/ModelSkin.h"

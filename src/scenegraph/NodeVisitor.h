@@ -15,7 +15,6 @@ namespace SceneGraph {
 	class CollisionGeometry;
 	class Group;
 	class Label3D;
-	class LOD;
 	class MatrixTransform;
 	class Node;
 	class StaticGeometry;
@@ -33,7 +32,6 @@ namespace SceneGraph {
 		virtual void ApplyTag(Tag &);
 		virtual void ApplyBillboard(Billboard &);
 		virtual void ApplyThruster(Thruster &);
-		virtual void ApplyLOD(LOD &);
 		virtual void ApplyCollisionGeometry(CollisionGeometry &);
 	};
 

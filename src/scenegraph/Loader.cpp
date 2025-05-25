@@ -6,7 +6,6 @@
 #include "Animation.h"
 #include "BinaryConverter.h"
 #include "CollisionGeometry.h"
-#include "LOD.h"
 #include "Parser.h"
 #include "SceneGraph.h"
 #include "Tag.h"
@@ -237,47 +236,37 @@ namespace SceneGraph {
 		//load meshes
 		//"mesh" here refers to a "mesh xxx.yyy"
 		//defined in the .model
-		std::map<std::string, RefCountedPtr<Node>> meshCache;
-		LOD *lodNode = 0;
-		if (def.lodDefs.size() > 1) { //don't bother with a lod node if only one level
-			lodNode = new LOD(m_renderer);
-			model->GetRoot()->AddChild(lodNode);
-		}
-		for (std::vector<LodDefinition>::const_iterator lod = def.lodDefs.begin();
-			 lod != def.lodDefs.end(); ++lod) {
-			m_mostDetailedLod = (lod == def.lodDefs.end() - 1);
+		for (size_t lodIdx = 0; lodIdx < def.lodDefs.size(); lodIdx++) {
+			m_mostDetailedLod = lodIdx == def.lodDefs.size() - 1;
 
-			//does a detail level have multiple meshes? If so, we need a Group.
-			Group *group = 0;
-			if (lodNode && (*lod).meshNames.size() > 1) {
-				group = new Group(m_renderer);
-				lodNode->AddLevel((*lod).pixelSize, group);
+			const LodDefinition &lod = def.lodDefs[lodIdx];
+
+			// Does a detail level have multiple meshes? If so, we need a Group.
+			// If not, just append the mesh root directly as the LOD level
+			if (lod.meshNames.size() == 1) {
+				try {
+					RefCountedPtr<Node> mesh = FindOrLoadMesh(lod.meshNames[0], def);
+					mesh->SetName(fmt::format("LOD {:.1f}", lod.pixelSize));
+					model->AddLODLevel(mesh.Get(), lod.pixelSize);
+				} catch (LoadingError &err) {
+					delete model;
+					Output("%s\n", err.what());
+					throw err;
+				}
+
+				continue;
 			}
-			for (std::vector<std::string>::const_iterator it = (*lod).meshNames.begin();
-				 it != (*lod).meshNames.end(); ++it) {
+
+			for (const std::string &filename : lod.meshNames) {
+				Group *group = new Group(m_renderer);
+				group->SetName(fmt::format("LOD {:.1f}", lod.pixelSize));
+				model->AddLODLevel(group, lod.pixelSize);
+
 				try {
 					//multiple lods might use the same mesh
-					RefCountedPtr<Node> mesh;
-					std::map<std::string, RefCountedPtr<Node>>::iterator cacheIt = meshCache.find((*it));
-					if (cacheIt != meshCache.end())
-						mesh = (*cacheIt).second;
-					else {
-						try {
-							mesh = LoadMesh(*it, def.animDefs);
-						} catch (LoadingError &err) {
-							//append filename - easiest to do here
-							throw(LoadingError(stringf("%0:\n%1", *it, err.what())));
-						}
-						meshCache[*(it)] = mesh;
-					}
-					assert(mesh.Valid());
-
-					if (group)
-						group->AddChild(mesh.Get());
-					else if (lodNode) {
-						lodNode->AddLevel((*lod).pixelSize, mesh.Get());
-					} else
-						model->GetRoot()->AddChild(mesh.Get());
+					RefCountedPtr<Node> mesh = FindOrLoadMesh(filename, def);
+					mesh->SetName(filename);
+					group->AddChild(mesh.Get());
 				} catch (LoadingError &err) {
 					delete model;
 					Output("%s\n", err.what());
@@ -329,8 +318,29 @@ namespace SceneGraph {
 
 		// Don't clear the vertex format cache; it is model-agnostic
 		m_materialLookup.clear();
+		m_meshCache.clear();
 
 		return model;
+	}
+
+	RefCountedPtr<Node> Loader::FindOrLoadMesh(const std::string &filename, const ModelDefinition &def)
+	{
+		//multiple lods might use the same mesh
+		RefCountedPtr<Node> mesh;
+		auto iter = m_meshCache.find(filename);
+		if (iter != m_meshCache.end()) {
+			return iter->second;
+		} else {
+			try {
+				mesh = LoadMesh(filename, def.animDefs);
+			} catch (LoadingError &err) {
+				//append filename - easiest to do here
+				throw(LoadingError(stringf("%0:\n%1", filename, err.what())));
+			}
+
+			m_meshCache.emplace(filename, mesh);
+			return mesh;
+		}
 	}
 
 	RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const std::vector<AnimDefinition> &animDefs)

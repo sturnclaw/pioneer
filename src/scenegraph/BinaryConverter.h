@@ -15,7 +15,6 @@
 #include "Billboard.h"
 #include "CollisionGeometry.h"
 #include "FileSystem.h"
-#include "LOD.h"
 #include "StaticGeometry.h"
 #include "Thruster.h"
 #include <functional>
@@ -40,6 +39,7 @@ namespace SceneGraph {
 	// 6.2: ignored StaticGeometry::m_blendMode in files. Still write blank value.
 	// 7:   Added discrete Tag node, tags are registered in the model hierarchy instead of at the root.
 	// 8:	Save model bound metadata
+	// 9:	Move LOD node responsibility into Model
 	constexpr Uint32 SGM_VERSION = 8;
 
 	class BinaryConverter : public BaseLoader {

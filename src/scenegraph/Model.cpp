@@ -11,6 +11,7 @@
 #include "NodeCopyCache.h"
 #include "StringF.h"
 #include "Thruster.h"
+#include "core/macros.h"
 #include "graphics/Material.h"
 #include "graphics/RenderState.h"
 #include "graphics/Renderer.h"
@@ -52,6 +53,7 @@ namespace SceneGraph {
 		m_boundingRadius(10.f),
 		m_renderer(r),
 		m_name(name),
+		m_numLods(0),
 		m_activeAnimations(0),
 		m_curPatternIndex(0),
 		m_curPattern(0),
@@ -59,6 +61,7 @@ namespace SceneGraph {
 	{
 		m_root.Reset(new Group(m_renderer));
 		m_root->SetName(name);
+		std::fill(m_lodSizes, m_lodSizes + COUNTOF(m_lodSizes), 0.f);
 		ClearDecals();
 	}
 
@@ -70,6 +73,7 @@ namespace SceneGraph {
 		m_collMesh(model.m_collMesh), //might have to make this per-instance at some point
 		m_renderer(model.m_renderer),
 		m_name(model.m_name),
+		m_numLods(model.m_numLods),
 		m_activeAnimations(0),
 		m_curPatternIndex(model.m_curPatternIndex),
 		m_curPattern(model.m_curPattern),
@@ -78,6 +82,8 @@ namespace SceneGraph {
 		//selective copying of node structure
 		NodeCopyCache cache;
 		m_root.Reset(dynamic_cast<Group *>(model.m_root->Clone(&cache)));
+
+		std::copy(model.m_lodSizes, model.m_lodSizes + COUNTOF(m_lodSizes), m_lodSizes);
 
 		//materials are shared by meshes
 		for (unsigned int i = 0; i < MAX_DECAL_MATERIALS; i++)
@@ -160,13 +166,27 @@ namespace SceneGraph {
 		if (m_debugFlags & DEBUG_WIREFRAME)
 			m_renderer->SetWireFrameMode(true);
 
-		if (params.nodemask & MASK_IGNORE) {
-			m_root->Render(trans, &params);
-		} else {
-			params.nodemask = NODE_SOLID;
-			m_root->Render(trans, &params);
-			params.nodemask = NODE_TRANSPARENT;
-			m_root->Render(trans, &params);
+		//figure out approximate pixel size of object's bounding radius
+		//on screen and pick a child to render
+		const vector3f cameraPos(-trans[12], -trans[13], -trans[14]);
+		//fov is vertical, so using screen height
+		// FIXME: this should reference a camera object instead of querying the render height
+		const float pixrad = m_renderer->GetWindowHeight() * m_boundingRadius / (cameraPos.Length() * Graphics::GetFovFactor());
+
+		// Find the smallest valid LOD node and render it
+		for (size_t lod = m_root->GetNumChildren(); lod-- > 0;) {
+			if (pixrad < m_lodSizes[lod] || lod == 0) {
+				Node *lodNode = m_root->GetChildAt(lod);
+
+				if (params.nodemask & MASK_IGNORE) {
+					lodNode->Render(trans, &params);
+				} else {
+					params.nodemask = NODE_SOLID;
+					lodNode->Render(trans, &params);
+					params.nodemask = NODE_TRANSPARENT;
+					lodNode->Render(trans, &params);
+				}
+			}
 		}
 
 		if (!m_debugFlags)
@@ -222,17 +242,101 @@ namespace SceneGraph {
 		if (m_debugFlags & DEBUG_WIREFRAME)
 			m_renderer->SetWireFrameMode(true);
 
-		if (params.nodemask & MASK_IGNORE) {
-			m_root->RenderInstanced(inst, &params);
+		if (m_numLods <= 1) {
+
+			if (params.nodemask & MASK_IGNORE) {
+				m_root->RenderInstanced(inst, &params);
+			} else {
+				params.nodemask = NODE_SOLID;
+				m_root->RenderInstanced(inst, &params);
+				params.nodemask = NODE_TRANSPARENT;
+				m_root->RenderInstanced(inst, &params);
+			}
+
 		} else {
-			params.nodemask = NODE_SOLID;
-			m_root->RenderInstanced(inst, &params);
-			params.nodemask = NODE_TRANSPARENT;
-			m_root->RenderInstanced(inst, &params);
+
+			// TODO: sort into instance buffers directly
+			std::vector<std::vector<matrix4x4f>> transforms;
+			transforms.resize(m_numLods);
+
+			SortInstanceTransforms(transforms.data(), inst);
+			// now render each of the lod buffers
+			for (size_t lodIdx = 0; lodIdx < m_numLods; lodIdx++) {
+				if (!transforms[lodIdx].empty()) {
+					Node *lod = m_root->GetChildAt(lodIdx);
+
+					if (params.nodemask & MASK_IGNORE) {
+						lod->RenderInstanced(transforms[lodIdx], &params);
+					} else {
+						params.nodemask = NODE_SOLID;
+						lod->RenderInstanced(transforms[lodIdx], &params);
+						params.nodemask = NODE_TRANSPARENT;
+						lod->RenderInstanced(transforms[lodIdx], &params);
+					}
+				}
+			}
+
 		}
 
 		if (m_debugFlags & DEBUG_WIREFRAME)
 			m_renderer->SetWireFrameMode(false);
+	}
+
+	void Model::SortInstanceTransforms(std::vector<matrix4x4f> *outTrans, const std::vector<matrix4x4f> &insts)
+	{
+		PROFILE_SCOPED()
+		// Split the incoming list of instances into a separate list of instances for each LOD level we will render
+		// We do this by binning instances into buckets by index in one pass, then copying into the buckets in a second pass
+
+		size_t *numInsts = stackalloc(size_t, m_numLods);
+		std::fill(numInsts, numInsts + m_numLods, 0);
+
+		// Store the bin index for each instance
+		std::vector<uint8_t> destIndices;
+		destIndices.resize(insts.size());
+
+		for (size_t idx = 0; idx < insts.size(); idx++) {
+			const matrix4x4f &mt = insts[idx];
+			//figure out approximate pixel size of object's bounding radius
+			//on screen and pick a child to render
+			const vector3f cameraPos(-mt[12], -mt[13], -mt[14]);
+			//fov is vertical, so using screen height
+			// FIXME: this should reference a camera object instead of querying the window height
+			const float pixrad = m_renderer->GetWindowHeight() * m_boundingRadius / (cameraPos.Length() * Graphics::GetFovFactor());
+
+			for (size_t lod = m_numLods; lod-- > 0;) {
+				if (pixrad < m_lodSizes[lod] || lod == 0) {
+					destIndices[idx] = lod;
+					numInsts[lod]++;
+				}
+			}
+		}
+
+		// TODO: generate instance buffers here
+		for (size_t lod = 0; lod < m_numLods; lod++) {
+			outTrans[lod].reserve(numInsts[lod]);
+		}
+
+		// Copy all instances into their respective buffers
+		for (size_t idx = 0; idx < insts.size(); idx++) {
+			outTrans[destIndices[idx]].push_back(insts[idx]);
+		}
+	}
+
+	void Model::AddLODLevel(Node *node, float pixelSize)
+	{
+		size_t lodLevel = m_root->GetNumChildren();
+		assert(lodLevel < MAX_LOD_LEVELS);
+		// Ensure the first N nodes correspond to the N lods of this model
+		assert(lodLevel == m_numLods);
+
+		// Enforce a strict ordering of LOD nodes by pixel size
+		if (lodLevel > 0)
+			assert(m_lodSizes[lodLevel - 1] >= pixelSize);
+
+		m_numLods = lodLevel + 1;
+		m_lodSizes[lodLevel] = pixelSize;
+		m_root->AddChild(node);
 	}
 
 	RefCountedPtr<CollMesh> Model::CreateCollisionMesh()

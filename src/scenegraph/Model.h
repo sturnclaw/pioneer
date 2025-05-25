@@ -122,6 +122,9 @@ namespace SceneGraph {
 
 		RefCountedPtr<Group> GetRoot() { return m_root; }
 
+		// Each LOD level is stored as the Nth child of the root node.
+		size_t GetNumLods() const { return m_numLods; }
+
 		//materials used in the nodes should be accessible from here for convenience
 		RefCountedPtr<Graphics::Material> GetMaterialByIndex(const int) const;
 		unsigned int GetNumMaterials() const { return static_cast<Uint32>(m_materials.size()); }
@@ -200,7 +203,11 @@ namespace SceneGraph {
 	private:
 		Model(const Model &);
 
+		void AddLODLevel(Node *node, float pixSize);
+		void SortInstanceTransforms(std::vector<matrix4x4f>* outTrans, const std::vector<matrix4x4f> &trans);
+
 		static const unsigned int MAX_DECAL_MATERIALS = 4;
+		static constexpr size_t MAX_LOD_LEVELS = 7;
 		ColorMap m_colorMap;
 		float m_boundingRadius;
 		MaterialContainer m_materials; //materials are shared throughout the model graph
@@ -210,6 +217,9 @@ namespace SceneGraph {
 		RefCountedPtr<Group> m_root;
 		Graphics::Renderer *m_renderer;
 		std::string m_name;
+
+		float m_lodSizes[MAX_LOD_LEVELS];
+		uint32_t m_numLods;
 
 		AnimationContainer m_animations;
 		uint64_t m_activeAnimations; // bitmask of actively ticking animations

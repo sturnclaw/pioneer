@@ -56,6 +56,8 @@ namespace SceneGraph {
 		std::vector<std::string> m_logMessages;
 		std::string m_curMeshDef; //for logging
 
+		std::map<std::string, RefCountedPtr<Node>> m_meshCache;
+
 		RefCountedPtr<Group> m_thrustersRoot;
 		RefCountedPtr<Group> m_billboardsRoot;
 
@@ -75,6 +77,7 @@ namespace SceneGraph {
 		void CreateNavlight(const std::string &name, const matrix4x4f &nodeTrans);
 		RefCountedPtr<CollisionGeometry> CreateCollisionGeometry(aiMesh *mesh, unsigned int collFlag);
 		void LoadCollision(const std::string &filename);
+		RefCountedPtr<Node> FindOrLoadMesh(const std::string &filename, const ModelDefinition &def);
 
 		unsigned int GetGeomFlagForNodeName(const std::string &);
 	};

@@ -402,7 +402,7 @@ void ModelViewer::OnModelLoaded()
 	ResetThrusters();
 
 	SceneGraph::DumpVisitor d(model);
-	model->GetRoot()->Accept(d);
+	d.Visit(model);
 	Log::Verbose("{}", d.GetModelStatistics());
 
 	// Find a shipdef that uses this model to determine if this is a ship model
@@ -613,11 +613,6 @@ struct NodeHierarchyVisitor : SceneGraph::NodeVisitor {
 	void ApplyMatrixTransform(SceneGraph::MatrixTransform &m) override
 	{
 		DisplayGroup(m, "MT");
-	}
-
-	void ApplyLOD(SceneGraph::LOD &l) override
-	{
-		DisplayGroup(l, "LOD");
 	}
 
 	void ApplyCollisionGeometry(SceneGraph::CollisionGeometry &cg) override
