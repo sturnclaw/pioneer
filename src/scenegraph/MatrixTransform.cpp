@@ -52,13 +52,8 @@ namespace SceneGraph {
 			RenderChildren(trans, rd);
 		} else {
 			// m_transform is valid, modify all positions by it
-			const size_t transSize = trans.size();
-			std::vector<matrix4x4f> t;
-			t.resize(transSize);
-			for (size_t tIdx = 0; tIdx < transSize; tIdx++) {
-				t[tIdx] = trans[tIdx] * m_transform;
-			}
-			RenderChildren(t, rd);
+			m_renderer->SetTransform(m_renderer->GetTransform() * m_transform);
+			RenderChildren(trans, rd);
 		}
 	}
 
