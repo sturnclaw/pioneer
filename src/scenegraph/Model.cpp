@@ -244,13 +244,16 @@ namespace SceneGraph {
 
 		if (m_numLods <= 1) {
 
+			SetupInstanceBuffer(m_instanceBuffers[0], inst);
+			Graphics::VertexBuffer *ib = m_instanceBuffers[0].Get();
+
 			if (params.nodemask & MASK_IGNORE) {
-				m_root->RenderInstanced(inst, &params);
+				m_root->RenderInstanced(inst, ib, &params);
 			} else {
 				params.nodemask = NODE_SOLID;
-				m_root->RenderInstanced(inst, &params);
+				m_root->RenderInstanced(inst, ib, &params);
 				params.nodemask = NODE_TRANSPARENT;
-				m_root->RenderInstanced(inst, &params);
+				m_root->RenderInstanced(inst, ib, &params);
 			}
 
 		} else {
@@ -259,19 +262,31 @@ namespace SceneGraph {
 			std::vector<std::vector<matrix4x4f>> transforms;
 			transforms.resize(m_numLods);
 
+			// TODO: this should blit straight to an instance buffer rather than round-tripping into an intermediate array.
+			// The only reason it's done this way is because ModelNode needs to render the sub-model using the instance
+			// data from the LOD the model is attached to.
 			SortInstanceTransforms(transforms.data(), inst);
+
+			// Copy all buffers to the GPU for rendering
+			// TODO: support binding offsets into the instance buffer and upload all instances into a single buffer
+			// to be sub-bound at draw time.
+			for (size_t lod = 0; lod < m_numLods; lod++) {
+				SetupInstanceBuffer(m_instanceBuffers[lod], transforms[lod]);
+			}
+
 			// now render each of the lod buffers
 			for (size_t lodIdx = 0; lodIdx < m_numLods; lodIdx++) {
 				if (!transforms[lodIdx].empty()) {
 					Node *lod = m_root->GetChildAt(lodIdx);
+					Graphics::VertexBuffer *ib = m_instanceBuffers[lodIdx].Get();
 
 					if (params.nodemask & MASK_IGNORE) {
-						lod->RenderInstanced(transforms[lodIdx], &params);
+						lod->RenderInstanced(transforms[lodIdx], ib, &params);
 					} else {
 						params.nodemask = NODE_SOLID;
-						lod->RenderInstanced(transforms[lodIdx], &params);
+						lod->RenderInstanced(transforms[lodIdx], ib, &params);
 						params.nodemask = NODE_TRANSPARENT;
-						lod->RenderInstanced(transforms[lodIdx], &params);
+						lod->RenderInstanced(transforms[lodIdx], ib, &params);
 					}
 				}
 			}
@@ -312,7 +327,6 @@ namespace SceneGraph {
 			}
 		}
 
-		// TODO: generate instance buffers here
 		for (size_t lod = 0; lod < m_numLods; lod++) {
 			outTrans[lod].reserve(numInsts[lod]);
 		}
@@ -321,6 +335,22 @@ namespace SceneGraph {
 		for (size_t idx = 0; idx < insts.size(); idx++) {
 			outTrans[destIndices[idx]].push_back(insts[idx]);
 		}
+	}
+
+	void Model::SetupInstanceBuffer(RefCountedPtr<Graphics::VertexBuffer> &buffer, const std::vector<matrix4x4f> &insts)
+	{
+		PROFILE_SCOPED()
+
+		if (!buffer || buffer->GetCapacity() < insts.size()) {
+			buffer.Reset(m_renderer->CreateVertexBuffer(Graphics::BUFFER_USAGE_DYNAMIC, insts.size(), sizeof(matrix4x4f)));
+		}
+
+		buffer->SetVertexCount(insts.size());
+
+		// Update the InstanceBuffer data
+		matrix4x4f *pBuffer = buffer->Map<matrix4x4f>(Graphics::BUFFER_MAP_WRITE);
+		std::memcpy(pBuffer, insts.data(), insts.size() * sizeof(matrix4x4f));
+		buffer->Unmap();
 	}
 
 	void Model::AddLODLevel(Node *node, float pixelSize)

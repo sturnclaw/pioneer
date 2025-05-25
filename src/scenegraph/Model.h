@@ -205,6 +205,7 @@ namespace SceneGraph {
 
 		void AddLODLevel(Node *node, float pixSize);
 		void SortInstanceTransforms(std::vector<matrix4x4f>* outTrans, const std::vector<matrix4x4f> &trans);
+		void SetupInstanceBuffer(RefCountedPtr<Graphics::VertexBuffer> &buffer, const std::vector<matrix4x4f> &insts);
 
 		static const unsigned int MAX_DECAL_MATERIALS = 4;
 		static constexpr size_t MAX_LOD_LEVELS = 7;
@@ -227,6 +228,8 @@ namespace SceneGraph {
 		std::vector<Tag *> m_tags;		 //named attachment points
 
 		RenderData m_renderData;
+
+		RefCountedPtr<Graphics::VertexBuffer> m_instanceBuffers[MAX_LOD_LEVELS];
 
 		//per-instance flavour data
 		unsigned int m_curPatternIndex;

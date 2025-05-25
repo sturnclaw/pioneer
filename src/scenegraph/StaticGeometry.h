@@ -32,7 +32,7 @@ namespace SceneGraph {
 		const char *GetTypeName() const override { return "StaticGeometry"; }
 		void Accept(NodeVisitor &nv) override;
 		void Render(const matrix4x4f &trans, const RenderData *rd) override;
-		void RenderInstanced(const std::vector<matrix4x4f> &trans, const RenderData *rd) override;
+		void RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd) override;
 
 		void Save(NodeDatabase &) override;
 		static StaticGeometry *Load(NodeDatabase &);
@@ -50,7 +50,6 @@ namespace SceneGraph {
 		~StaticGeometry();
 		std::vector<Mesh> m_meshes;
 		std::vector<RefCountedPtr<Graphics::Material>> m_instanceMaterials;
-		RefCountedPtr<Graphics::VertexBuffer> m_instBuffer;
 	};
 
 } // namespace SceneGraph

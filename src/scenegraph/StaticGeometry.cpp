@@ -59,30 +59,10 @@ namespace SceneGraph {
 		//DrawBoundingBox(m_boundingBox);
 	}
 
-	void StaticGeometry::RenderInstanced(const std::vector<matrix4x4f> &trans, const RenderData *rd)
+	void StaticGeometry::RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd)
 	{
 		PROFILE_SCOPED()
 		Graphics::Renderer *r = GetRenderer();
-
-		const size_t numTrans = trans.size();
-		if (!m_instBuffer.Valid() || (numTrans > m_instBuffer->GetSize())) {
-			// create the instance buffer with the maximum number of transformations we might use within it.
-			m_instBuffer.Reset(r->CreateVertexBuffer(Graphics::BUFFER_USAGE_DYNAMIC, numTrans, sizeof(matrix4x4f)));
-		}
-
-		// Update the InstanceBuffer data
-		Graphics::VertexBuffer *ib = m_instBuffer.Get();
-		matrix4x4f *pBuffer = ib->Map<matrix4x4f>(Graphics::BUFFER_MAP_WRITE);
-		if (pBuffer) {
-			PROFILE_SCOPED_DESC("Copy Instance Data")
-
-			// Copy the transforms into the buffer
-			for (const matrix4x4f &mt : trans) {
-				(*pBuffer) = mt;
-				++pBuffer;
-			}
-			ib->Unmap();
-		}
 
 		if (m_instanceMaterials.empty()) {
 			// process each mesh
@@ -111,10 +91,10 @@ namespace SceneGraph {
 			// finally render using the instance material
 			uint32_t numElems = it.meshObject->GetIndexBuffer()->GetIndexCount();
 			r->Draw(
-				{ it.meshObject->GetVertexBuffer(), m_instBuffer.Get() },
+				{ it.meshObject->GetVertexBuffer(), ib },
 				it.meshObject->GetIndexBuffer(),
 				m_instanceMaterials[i].Get(),
-				numElems, numTrans
+				numElems, ib->GetSize()
 			);
 			++i;
 		}

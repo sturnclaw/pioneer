@@ -45,15 +45,15 @@ namespace SceneGraph {
 	}
 
 	static const matrix4x4f s_ident(matrix4x4f::Identity());
-	void MatrixTransform::RenderInstanced(const std::vector<matrix4x4f> &trans, const RenderData *rd)
+	void MatrixTransform::RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd)
 	{
 		if (0 == memcmp(&m_transform, &s_ident, sizeof(matrix4x4f))) {
 			// m_transform is identity so avoid performing all multiplications
-			RenderChildren(trans, rd);
+			RenderChildren(trans, ib, rd);
 		} else {
 			// m_transform is valid, modify all positions by it
 			m_renderer->SetTransform(m_renderer->GetTransform() * m_transform);
-			RenderChildren(trans, rd);
+			RenderChildren(trans, ib, rd);
 		}
 	}
 
