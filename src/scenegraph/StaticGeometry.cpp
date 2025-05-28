@@ -59,10 +59,12 @@ namespace SceneGraph {
 		//DrawBoundingBox(m_boundingBox);
 	}
 
-	void StaticGeometry::RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd)
+	void StaticGeometry::RenderInstanced(const matrix4x4f &trans, const std::vector<matrix4x4f> &insts, Graphics::VertexBuffer *ib, const RenderData *rd)
 	{
 		PROFILE_SCOPED()
 		Graphics::Renderer *r = GetRenderer();
+
+		r->SetTransform(trans);
 
 		if (m_instanceMaterials.empty()) {
 			// process each mesh

@@ -133,17 +133,17 @@ namespace SceneGraph {
 		}
 	}
 
-	void Group::RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd)
+	void Group::RenderInstanced(const matrix4x4f &trans, const std::vector<matrix4x4f> &insts, Graphics::VertexBuffer *ib, const RenderData *rd)
 	{
-		RenderChildren(trans, ib, rd);
+		RenderChildren(trans, insts, ib, rd);
 	}
 
-	void Group::RenderChildren(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd)
+	void Group::RenderChildren(const matrix4x4f &trans, const std::vector<matrix4x4f> &insts, Graphics::VertexBuffer *ib, const RenderData *rd)
 	{
 		PROFILE_SCOPED()
 		for (std::vector<Node *>::iterator itr = m_children.begin(), itEnd = m_children.end(); itr != itEnd; ++itr) {
 			if ((*itr)->GetNodeMask() & rd->nodemask)
-				(*itr)->RenderInstanced(trans, ib, rd);
+				(*itr)->RenderInstanced(trans, insts, ib, rd);
 		}
 	}
 

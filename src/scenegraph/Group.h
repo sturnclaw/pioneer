@@ -27,7 +27,7 @@ namespace SceneGraph {
 		void Accept(NodeVisitor &v) override;
 		void Traverse(NodeVisitor &v) override;
 		void Render(const matrix4x4f &trans, const RenderData *rd) override;
-		void RenderInstanced(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd) override;
+		void RenderInstanced(const matrix4x4f &trans, const std::vector<matrix4x4f> &insts, Graphics::VertexBuffer *ib, const RenderData *rd) override;
 		Node *FindNode(const std::string &) override;
 
 		// Walk the node hierarchy to the root of the model and compute the global transform of this node.
@@ -37,7 +37,7 @@ namespace SceneGraph {
 	protected:
 		virtual ~Group();
 		virtual void RenderChildren(const matrix4x4f &trans, const RenderData *rd);
-		virtual void RenderChildren(const std::vector<matrix4x4f> &trans, Graphics::VertexBuffer *ib, const RenderData *rd);
+		virtual void RenderChildren(const matrix4x4f &transss, const std::vector<matrix4x4f> &insts, Graphics::VertexBuffer *ib, const RenderData *rd);
 		std::vector<Node *> m_children;
 	};
 

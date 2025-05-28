@@ -248,12 +248,12 @@ namespace SceneGraph {
 			Graphics::VertexBuffer *ib = m_instanceBuffers[0].Get();
 
 			if (params.nodemask & MASK_IGNORE) {
-				m_root->RenderInstanced(inst, ib, &params);
+				m_root->RenderInstanced(trans, inst, ib, &params);
 			} else {
 				params.nodemask = NODE_SOLID;
-				m_root->RenderInstanced(inst, ib, &params);
+				m_root->RenderInstanced(trans, inst, ib, &params);
 				params.nodemask = NODE_TRANSPARENT;
-				m_root->RenderInstanced(inst, ib, &params);
+				m_root->RenderInstanced(trans, inst, ib, &params);
 			}
 
 		} else {
@@ -281,12 +281,12 @@ namespace SceneGraph {
 					Graphics::VertexBuffer *ib = m_instanceBuffers[lodIdx].Get();
 
 					if (params.nodemask & MASK_IGNORE) {
-						lod->RenderInstanced(transforms[lodIdx], ib, &params);
+						lod->RenderInstanced(trans, transforms[lodIdx], ib, &params);
 					} else {
 						params.nodemask = NODE_SOLID;
-						lod->RenderInstanced(transforms[lodIdx], ib, &params);
+						lod->RenderInstanced(trans, transforms[lodIdx], ib, &params);
 						params.nodemask = NODE_TRANSPARENT;
-						lod->RenderInstanced(transforms[lodIdx], ib, &params);
+						lod->RenderInstanced(trans, transforms[lodIdx], ib, &params);
 					}
 				}
 			}
