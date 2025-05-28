@@ -107,8 +107,6 @@ namespace SceneGraph {
 	{
 		PROFILE_SCOPED()
 		Node::Save(db);
-		// write obsolete m_blendMode value
-		if (SGM_VERSION == 6) db.wr->Int32(Graphics::BLEND_SOLID);
 		db.wr->Vector3d(m_boundingBox.min);
 		db.wr->Vector3d(m_boundingBox.max);
 
@@ -149,7 +147,6 @@ namespace SceneGraph {
 		StaticGeometry *sg = new StaticGeometry(db.loader->GetRenderer());
 		Serializer::Reader &rd = *db.rd;
 
-		if (SGM_VERSION == 6) rd.Int32(); // read obsolete m_blendMode value
 		sg->m_boundingBox.min = rd.Vector3d();
 		sg->m_boundingBox.max = rd.Vector3d();
 
