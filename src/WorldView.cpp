@@ -235,7 +235,9 @@ void WorldView::Update()
 
 	if (Pi::AreHudTrailsDisplayed()) {
 		matrix4x4d trans;
-		Frame::GetFrameTransform(playerFrameId, camFrameId, trans);
+		// HudTrail stores its points in the non-rotating frame, so the display transform must be built from that same frame.
+		FrameId nonRotFrameId = Frame::GetFrame(playerFrameId)->GetNonRotFrame();
+		Frame::GetFrameTransform(nonRotFrameId, camFrameId, trans);
 
 		for (auto it = Pi::player->GetSensors()->GetContacts().begin(); it != Pi::player->GetSensors()->GetContacts().end(); ++it)
 			it->trail->SetTransform(trans);
