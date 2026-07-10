@@ -21,10 +21,11 @@ local thrustWidgetDiameter = mainButtonSize.y * 1.5
 
 local thrustStyle = ui.Style:clone({
 	colors = {
-		FrameBg        = ui.theme.styleColors.primary_1000:opacity(0.6),
-		FrameBgHovered = ui.theme.styleColors.primary_1000:opacity(0.6),
-		FrameBgActive  = ui.theme.styleColors.primary_700,
-		SliderGrab     = ui.theme.styleColors.primary_300
+		FrameBg          = ui.theme.styleColors.primary_1000:opacity(0.6),
+		FrameBgHovered   = ui.theme.styleColors.primary_1000:opacity(0.6),
+		FrameBgActive    = ui.theme.styleColors.primary_700,
+		SliderGrab       = ui.theme.styleColors.primary_300,
+		SliderGrabActive = ui.theme.styleColors.primary_900,
 	},
 	vars = {
 		FrameBorderSize = ui.rescaleUI(4)
@@ -80,6 +81,46 @@ local function button_thrustIndicator(thrust_widget_size)
 	end
 end
 
+local function gravity_indicator(diameter)
+
+	local parentBody = Game.player.frameBody
+	local gravity = 0.0
+	local maxG = Game.player:GetAcceleration("up")
+
+	if parentBody then
+		local sbody = assert(parentBody:GetSystemBody())
+
+		while sbody.superType == "STARPORT" and sbody.parent do
+			sbody = sbody.parent
+			parentBody = assert(sbody).body
+		end
+	end
+
+	if parentBody then
+		gravity = 6.67428e-11 * (parentBody:GetSystemBody().mass / Game.player:GetPositionRelTo(parentBody):lengthSqr())
+	end
+
+	thrustStyle:withStyle(function()
+		local gEarth = gravity / 9.8066
+		local label = ui.Format.Number(gEarth, gEarth < 1 and 2 or 1)
+		local unit = lc.UNIT_EARTH_GRAVITY:upper()
+
+		if gravity > maxG then
+			-- Cannot take off!
+			ui.withStyleColors({ SliderGrabActive = ui.theme.styleColors.danger_700 }, function()
+				local g1 = maxG / gravity
+				local g2 = (gravity - maxG) / gravity
+				ui.circleIndicator("gravity", diameter, g1, g2, math.pi * 0.667, label, unit)
+			end)
+		else
+			-- TWR > 1
+			local g1 = gravity / maxG
+			ui.circleIndicator("gravity", diameter, g1, 0, math.pi * 0.667, label, unit)
+
+		end
+	end)
+end
+
 local function button_wheelstate()
 	local wheelstate = player:GetWheelState() -- 0.0 is up, 1.0 is down
 	local locked = player:GetFlightControlState() == "CONTROL_AUTOPILOT"
@@ -116,7 +157,7 @@ local function displayShipFunctionWindow()
 	if ui.optionsWindow.isOpen then return end
 	player = Game.player
 	local current_view = Game.CurrentView()
-	local buttons = 3
+	local buttons = 3 + 1.5 -- HACK: gravity circle
 	local thrust_widget_size = Vector2(thrustWidgetDiameter * 1.2, thrustWidgetDiameter)
 	assert(thrust_widget_size.y >= mainButtonSize.y)
 	local window_width = ui.getWindowPadding().x * 2 + (mainButtonSize.x + ui.getItemSpacing().x) * buttons + thrust_widget_size.x
@@ -136,6 +177,9 @@ local function displayShipFunctionWindow()
 			ui.sameLine()
 			ui.addCursorPos(-shift)
 			button_thrustIndicator(thrust_widget_size)
+			ui.sameLine()
+			ui.addCursorPos(Vector2(0, -mainButtonSize.y * 0.5))
+			gravity_indicator(mainButtonSize.y * 1.5)
 			if ui.noModifierHeld() and ui.isKeyReleased(ui.keys.f8) then
 				show_thrust_slider = not show_thrust_slider
 			end
