@@ -69,7 +69,7 @@
   },
   "AUDIO_BACKEND": {
     "description": "Audio backend label in settings menu",
-    "message": "Audio Backend"
+    "message": "Infrastructure Audio"
   },
   "AUTOMATED_MESSAGE": {
     "description": "For comm messages from bots",
@@ -97,11 +97,11 @@
   },
   "BINAURAL_RENDERING": {
     "description": "Label of the binaural rendering checkbox in the audio settings menu",
-    "message": "Binaural Rendering"
+    "message": "Rendu binaural"
   },
   "BINAURAL_RENDERING_DESC": {
     "description": "Tooltip of the binaural rendering checkbox in the audio settings menu",
-    "message": "When enabled, HRTF filters are applied to the audio output. Works best with headphones."
+    "message": "Si activé, les filters HRTF (fonction de transfert relative à la tête) sont appliqués à la sortie audio. Fonctionne mieux avec des écouteurs."
   },
   "BODY_IN_ROUTE": {
     "description": "Label indicating a star is part of a planned hyperjump route",

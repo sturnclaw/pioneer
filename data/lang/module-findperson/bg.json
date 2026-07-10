@@ -249,15 +249,15 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_1": {
     "description": "",
-    "message": "Hi, my name is {client}. I'm looking for {relative}, {wanted}. She left the family in anger a few years ago. A friend of mine has seen her recently in the {system} ({sectorx}, {sectory}, {sectorz}) system. I would like to see if she is ready for a reconciliation. I pay you {cash} if you can deliver a message to her and return to {domicile} with an answer. Please do it! Will you?"
+    "message": "Здравейте, казвам се {client}. Търся моята {relative}, {wanted}. Тя напусна семейството ни ядосана преди няколко години. Един приятел я видя наскоро в системата {system} ({sectorx}, {sectory}, {sectorz}). Искам да видя дали е готова за помирение. Ще платя {cash}, ако може да предадете моето съобщение и да се върнете в {domicile} с отговор. Моля, направете го! Ще го направите ли?"
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_2": {
     "description": "",
-    "message": "Hello. I'm {client}. I'm looking for {friend}. Her name is {wanted}. I know she resides in the {system} ({sectorx}, {sectory}, {sectorz}) system, but I don't know her exact location. I will pay you {cash} if you can deliver a message to her."
+    "message": "Здравейте. Аз съм {client}. Търся една {friend}. Казва се {wanted}. Знам, че живее в системата {system} ({sectorx}, {sectory}, {sectorz}), но не знам точното местоположение. Ще платя {cash}, ако може да предадете моето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_3": {
     "description": "",
-    "message": "Hello. My name is {client}. I need to get in contact with {friend}, {wanted}. The last time I heard from her she was living in the {system} ({sectorx}, {sectory}, {sectorz}) system, and I've heard she's still there but don't know precisely where. I will pay you {cash} if you can deliver a message to her."
+    "message": "Здравейте. Казвам се {client}. Трябва да се свържа с една {friend}, {wanted}. Тя живее в системата {system} ({sectorx}, {sectory}, {sectorz}), но не знам точно къде. Ще платя {cash}, ако може да предадете моето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_4": {
     "description": "",
@@ -269,15 +269,15 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_1": {
     "description": "",
-    "message": "Hi, my name is {client}. I'm looking for {relative}, {wanted}. He left the family in anger a few years ago. A friend of mine has seen him recently in the {system} ({sectorx}, {sectory}, {sectorz}) system. I would like to see if he is ready for a reconciliation. I pay you {cash} if you can deliver a message to him and return to {domicile} with an answer. Please do it! Will you?"
+    "message": "Здравейте, казвам се {client}. Търся моя {relative}, {wanted}. Той напусна семейството ни ядосан преди няколко години. Един приятел го видя наскоро в системата {system} ({sectorx}, {sectory}, {sectorz}). Искам да видя дали е готов за помирение. Ще платя {cash}, ако може да предадете моето съобщение и да се върнете в {domicile} с отговор. Моля, направете го! Ще го направите ли?"
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_2": {
     "description": "",
-    "message": "Hello. I'm {client}. I'm looking for {friend}. His name is {wanted}. I know he resides in the {system} ({sectorx}, {sectory}, {sectorz}) system, but I don't know his exact location. I will pay you {cash} if you can deliver a message to him."
+    "message": "Здравейте. Аз съм {client}. Търся един {friend}. Казва се {wanted}. Знам, че живее в системата {system} ({sectorx}, {sectory}, {sectorz}), но не знам точното местоположение. Ще платя {cash}, ако може да предадете моето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_3": {
     "description": "",
-    "message": "Hello. My name is {client}. I need to get in contact with {friend}, {wanted}. The last time I heard from him he was living in the {system} ({sectorx}, {sectory}, {sectorz}) system, and I've heard he's still there but don't know precisely where. I will pay you {cash} if you can deliver a message to him."
+    "message": "Здравейте. Казвам се {client}. Трябва да се свържа с един {friend}, {wanted}. Той живее в системата {system} ({sectorx}, {sectory}, {sectorz}), но не знам точно къде. Ще платя {cash}, ако може да предадете моето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_4": {
     "description": "",
@@ -289,11 +289,11 @@
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",
-    "message": "Hi. The {company} is in big trouble. Negotiations with an aggressive market competitor in the {system} ({sectorx}, {sectory}, {sectorz}) system, a distance of {dist} ly, went very badly. Our envoy, {wanted}, must be evacuated. Communication with her is very limited, so we don't know her exact location. We pay {cash} for this run."
+    "message": "Здрасти. {company} е в големи неприятности. Преговорите с агресивната ни конкуренция в системата {system} ({sectorx}, {sectory}, {sectorz}), на разстояние от {dist} сг, преминаха много зле. Нашата пратеничка, {wanted}, трябва да бъде евакуирана. Комуникацията с нея е много ограничена, затова не знаем точното местоположение. Ще платим {cash} за това пътуване."
   },
   "INTROTEXT_EVACUATION_FEMALE_2": {
     "description": "",
-    "message": "Hello. Call me {client}. I'm employed by the {company}. Our sales representative, {wanted}, in the {system} ({sectorx}, {sectory}, {sectorz}) system, distance {dist} ly, has come into conflict with some dangerous crooks. She doesn't trust the local authorities, so she's gone into hiding. We pay {cash} if you can find her and bring her back to {domicile} safely."
+    "message": "Здравейте. Наричайте ме {client}. Работя в {company}. Нашата търговска представителка, {wanted}, в системата {system} ({sectorx}, {sectory}, {sectorz}), на разстояние {dist} сг, е влязла в конфликт с опасни мошеници. Тя не вярва на местните власти, затова се е скрила. Ще платим {cash}, ако може да я намерите и да я върнете безопасно в {domicile}."
   },
   "INTROTEXT_EVACUATION_FEMALE_3": {
     "description": "",
@@ -305,11 +305,11 @@
   },
   "INTROTEXT_EVACUATION_MALE_1": {
     "description": "",
-    "message": "Hi. The {company} is in big trouble. Negotiations with an aggressive market competitor in the {system} ({sectorx}, {sectory}, {sectorz}) system, a distance of {dist} ly, went very badly. Our envoy, {wanted}, must be evacuated. Communication with him is very limited, so we don't know his exact location. We pay {cash} for this run."
+    "message": "Здрасти. {company} е в големи неприятности. Преговорите с агресивната ни конкуренция в системата {system} ({sectorx}, {sectory}, {sectorz}), на разстояние от {dist} сг, преминаха много зле. Нашият пратеник, {wanted}, трябва да бъде евакуиран. Комуникацията с него е много ограничена, затова не знаем точното местоположение. Ще платим {cash} за това пътуване."
   },
   "INTROTEXT_EVACUATION_MALE_2": {
     "description": "",
-    "message": "Hello. Call me {client}. I'm employed by the {company}. Our sales representative, {wanted}, in the {system} ({sectorx}, {sectory}, {sectorz}) system, distance {dist} ly, has come into conflict with some dangerous crooks. He doesn't trust the local authorities, so he's gone into hiding. We pay {cash} if you can find him and bring him back to {domicile} safely."
+    "message": "Здравейте. Наричайте ме {client}. Работя в {company}. Нашият търговски представител, {wanted}, в системата {system} ({sectorx}, {sectory}, {sectorz}), на разстояние {dist} сг, е влязъл в конфликт с опасни мошеници. Той не вярва на местните власти, затова се е скрил. Ще платим {cash}, ако може да го намерите и да го върнете безопасно в {domicile}."
   },
   "INTROTEXT_EVACUATION_MALE_3": {
     "description": "",
