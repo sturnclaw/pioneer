@@ -1385,6 +1385,20 @@ static int l_pigui_thrust_indicator(lua_State *l)
 	return 0;
 }
 
+static int l_pigui_circle_indicator(lua_State *l)
+{
+	std::string id_str = LuaPull<std::string>(l, 1);
+	float diameter = LuaPull<float>(l, 2);
+	float value = LuaPull<float>(l, 3);
+	float value_inv = LuaPull<float>(l, 4);
+	float phase = LuaPull<float>(l, 5);
+	std::string label = LuaPull<std::string>(l, 6);
+	std::string unit = LuaPull<std::string>(l, 7, "");
+
+	PiGui::Draw::CircleIndicator(ImGui::GetID(id_str.c_str()), diameter, label.c_str(), unit.empty() ? nullptr : unit.c_str(), value, value_inv, phase);
+	return 0;
+}
+
 static int l_pigui_low_thrust_button(lua_State *l)
 {
 	PROFILE_SCOPED()
@@ -3895,6 +3909,7 @@ void LuaObject<PiGui::Instance>::RegisterClass()
 		{ "ShouldShowLabels", l_pigui_should_show_labels },
 		{ "LowThrustButton", l_pigui_low_thrust_button },
 		{ "ThrustIndicator", l_pigui_thrust_indicator },
+		{ "CircleIndicator", l_pigui_circle_indicator },
 		{ "PlaySfx", l_pigui_play_sfx },
 		{ "DisableMouseFacing", l_pigui_disable_mouse_facing },
 		{ "SetMouseButtonState", l_pigui_set_mouse_button_state },

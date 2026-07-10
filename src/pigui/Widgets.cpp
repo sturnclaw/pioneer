@@ -207,6 +207,88 @@ void Draw::ThrustIndicator(ImGuiID id, float diameter, const vector3d &thrust)
 
 }
 
+void Draw::CircleIndicator(ImGuiID id, float diameter, const char *label, const char *unit, float value, float value_inv, float phase)
+{
+	constexpr float M_TAU = 2.0 * M_PI;
+
+	ImGuiWindow *window = ImGui::GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	const ImGuiStyle &style = ImGui::GetStyle();
+
+	const float radius = diameter * 0.5f;
+	const float thickness = style.FrameBorderSize;
+	const float offset = 0.5f * thickness;
+	const float outer_radius = radius - offset;
+	const float inner_radius = radius - thickness * 1.5;
+
+	const ImVec2 pos = ImGui::GetCursorScreenPos();
+	const ImVec2 center = pos + ImVec2(radius, radius);
+	const ImRect bb (pos, pos + ImVec2(diameter, diameter));
+
+	ImGui::ItemSize(bb, 0.f);
+	if (!ImGui::ItemAdd(bb, id))
+		return;
+
+	bool hovered = ImGui::IsItemHovered() && ImLengthSqr(ImGui::GetIO().MousePos - center) <= radius * radius;
+	if (!hovered) {
+		ImGui::GetCurrentContext()->LastItemData.StatusFlags &= ~ImGuiItemStatusFlags_HoveredRect;
+	}
+
+	ImFont *font = ImGui::GetFont();
+
+	const ImU32 col_text = ImGui::GetColorU32(ImGuiCol_Text);
+	const ImU32 col_bg = ImGui::GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+	const ImU32 col_ring = ImGui::GetColorU32(ImGuiCol_FrameBgActive);
+	const ImU32 col_val1 = ImGui::GetColorU32(ImGuiCol_SliderGrab);
+	const ImU32 col_val2 = ImGui::GetColorU32(ImGuiCol_SliderGrabActive);
+
+	ImDrawList *dl = ImGui::GetWindowDrawList();
+
+	// Draw the center circle and outer ring
+	dl->AddCircleFilled(center, outer_radius, col_bg);
+	dl->AddCircle(center, outer_radius, col_ring, 0.f, thickness);
+
+	if (value_inv >= 0.01) {
+		// Draw the "limiter" dial under the "active" dial
+		dl->PathArcTo(center, outer_radius, phase, phase + value_inv * M_TAU, 32);
+		dl->PathStroke(col_val2, thickness);
+	}
+
+	if (value >= 0.01) {
+		// Draw the "active" dial
+		dl->PathArcTo(center, outer_radius, phase - value * M_TAU, phase, 32);
+		dl->PathStroke(col_val1, thickness);
+	}
+
+	const auto computeTextScaleFactor = [&](ImVec2 size, float rad) -> float {
+		return sqrt(size.x * size.x + size.y * size.y) / rad;
+	};
+
+	ImVec2 label_size = ImGui::CalcTextSize(label);
+	float descent = ImGui::GetFontBaked()->Descent; // descent is negative
+
+	if (unit) {
+		// Draw the value and unit text, sizing both to fit within the upper and lower halves of the circle
+		float scale_factor_inv = computeTextScaleFactor(ImVec2(label_size.x * 0.5f, label_size.y + descent), inner_radius);
+		label_size /= scale_factor_inv;
+		descent /= scale_factor_inv;
+		dl->AddText(font, label_size.y, center - ImVec2(label_size.x * 0.5f, label_size.y + descent), col_text, label);
+
+		float unit_voffset = descent - 2.f;
+
+		ImVec2 unit_size = ImGui::CalcTextSize(unit);
+		unit_size /= computeTextScaleFactor(ImVec2(unit_size.x * 0.5f, unit_size.y), fmin(inner_radius * 0.8, inner_radius + unit_voffset));
+		dl->AddText(font, unit_size.y, center - ImVec2(unit_size.x * 0.5f, unit_voffset), col_text, unit);
+	} else {
+		// Draw only the value text centered in the indicator
+		label_size /= computeTextScaleFactor(label_size * 0.5f, inner_radius);
+		dl->AddText(font, label_size.y, center - label_size * 0.5f, col_text, label);
+	}
+
+}
+
 bool Draw::LowThrustButton(const char *id_string, const ImVec2 &size_arg, int thrust_level, const ImVec4 &bg_col, int frame_padding, ImColor gauge_fg, ImColor gauge_bg)
 {
 	PROFILE_SCOPED()

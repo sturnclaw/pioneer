@@ -18,6 +18,10 @@ namespace PiGui::Draw {
 
 	void ThrustIndicator(ImGuiID id, float diameter, const vector3d &thrust);
 
+	// Draw a generic counter-clockwise circular indicator with a value dial going from 0..1 and a limit dial going from 1..0.
+	// The phase parameter controls where on the circle value and value_inv start at.
+	void CircleIndicator(ImGuiID id, float diameter, const char *label, const char *unit, float value, float value_inv, float phase);
+
 	bool GlyphButton(const char *id_str, const char *glyph, const ImVec2 &size, ImGuiButtonFlags flags);
 
 	// we need to know if the change was made by direct input or the change was
