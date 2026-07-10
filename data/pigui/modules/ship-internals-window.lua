@@ -17,7 +17,7 @@ local icons = ui.theme.icons
 
 local mainButtonSize = ui.theme.styles.MainButtonSize
 local mainButtonFramePadding = ui.theme.styles.MainButtonPadding
-local thrustWidgetDiameter = mainButtonSize.y * 1.5
+local thrustWidgetDiameter = mainButtonSize.y * 1.2
 
 local thrustStyle = ui.Style:clone({
 	colors = {
@@ -68,11 +68,8 @@ local function button_lowThrustPower()
 	end
 end
 
-local function button_thrustIndicator(thrust_widget_size)
-	local vel = Engine.WorldSpaceToShipSpace(player:GetVelocity())
-	vel = vel / math.max(vel:length(), 10) -- minimum of 10m/s
+local function button_thrustIndicator()
 	local thrust = player:GetThrusterState()
-	thrust_widget_size = thrust_widget_size - Vector2(mainButtonFramePadding * 2)
 	thrustStyle:withStyle(function()
 		ui.thrustIndicator("thrustIndicator", thrustWidgetDiameter, thrust)
 	end)
@@ -119,6 +116,10 @@ local function gravity_indicator(diameter)
 
 		end
 	end)
+
+	if ui.isItemHovered() then
+		ui.setTooltip(lui.HUD_GRAVITY_INDICATOR)
+	end
 end
 
 local function button_wheelstate()
@@ -157,8 +158,8 @@ local function displayShipFunctionWindow()
 	if ui.optionsWindow.isOpen then return end
 	player = Game.player
 	local current_view = Game.CurrentView()
-	local buttons = 3 + 1.5 -- HACK: gravity circle
-	local thrust_widget_size = Vector2(thrustWidgetDiameter * 1.2, thrustWidgetDiameter)
+	local buttons = 3
+	local thrust_widget_size = Vector2(thrustWidgetDiameter * 1.2 + thrustWidgetDiameter, thrustWidgetDiameter)
 	assert(thrust_widget_size.y >= mainButtonSize.y)
 	local window_width = ui.getWindowPadding().x * 2 + (mainButtonSize.x + ui.getItemSpacing().x) * buttons + thrust_widget_size.x
 	local window_height = thrust_widget_size.y + ui.getWindowPadding().y * 2
@@ -167,7 +168,7 @@ local function displayShipFunctionWindow()
 	ui.setNextWindowPos(Vector2(window_posx, window_posy), "Always")
 	ui.window("ShipFunctions", windowFlags, function()
 		if current_view == "WorldView" then
-			local shift = Vector2(thrustWidgetDiameter - thrust_widget_size.x, thrust_widget_size.y - mainButtonSize.y)
+			local shift = Vector2(thrustWidgetDiameter * 2 - thrust_widget_size.x, thrust_widget_size.y - mainButtonSize.y)
 			ui.addCursorPos(shift)
 			button_wheelstate()
 			ui.sameLine()
@@ -176,10 +177,10 @@ local function displayShipFunctionWindow()
 			button_lowThrustPower()
 			ui.sameLine()
 			ui.addCursorPos(-shift)
-			button_thrustIndicator(thrust_widget_size)
+			button_thrustIndicator()
 			ui.sameLine()
-			ui.addCursorPos(Vector2(0, -mainButtonSize.y * 0.5))
-			gravity_indicator(mainButtonSize.y * 1.5)
+			ui.addCursorPos(Vector2(0, mainButtonSize.y - thrustWidgetDiameter))
+			gravity_indicator(thrustWidgetDiameter)
 			if ui.noModifierHeld() and ui.isKeyReleased(ui.keys.f8) then
 				show_thrust_slider = not show_thrust_slider
 			end
