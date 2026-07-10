@@ -1377,21 +1377,11 @@ static int l_pigui_invisible_button(lua_State *l)
 
 static int l_pigui_thrust_indicator(lua_State *l)
 {
-	PROFILE_SCOPED()
-	std::string text = LuaPull<std::string>(l, 1);
-	ImVec2 size = LuaPull<ImVec2>(l, 2);
+	std::string id_str = LuaPull<std::string>(l, 1);
+	float diameter = LuaPull<float>(l, 2);
 	vector3d thr = LuaPull<vector3d>(l, 3);
-	vector3d vel = LuaPull<vector3d>(l, 4);
-	ImColor color = LuaPull<ImColor>(l, 5);
-	int frame_padding = LuaPull<int>(l, 6);
-	ImColor vel_fg = LuaPull<ImColor>(l, 7);
-	ImColor vel_bg = LuaPull<ImColor>(l, 8);
-	ImColor thrust_fg = LuaPull<ImColor>(l, 9);
-	ImColor thrust_bg = LuaPull<ImColor>(l, 10);
-	ImVec4 thrust(thr.x, thr.y, thr.z, 0);
-	ImVec4 velocity(vel.x, vel.y, vel.z, 0);
-	PiGui::Draw::ThrustIndicator(text.c_str(), size, thrust, velocity, color,
-		frame_padding, vel_fg, vel_bg, thrust_fg, thrust_bg);
+
+	PiGui::Draw::ThrustIndicator(ImGui::GetID(id_str.c_str()), diameter, thr);
 	return 0;
 }
 

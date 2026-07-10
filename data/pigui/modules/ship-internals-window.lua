@@ -17,6 +17,19 @@ local icons = ui.theme.icons
 
 local mainButtonSize = ui.theme.styles.MainButtonSize
 local mainButtonFramePadding = ui.theme.styles.MainButtonPadding
+local thrustWidgetDiameter = mainButtonSize.y * 1.5
+
+local thrustStyle = ui.Style:clone({
+	colors = {
+		FrameBg        = ui.theme.styleColors.primary_1000:opacity(0.6),
+		FrameBgHovered = ui.theme.styleColors.primary_1000:opacity(0.6),
+		FrameBgActive  = ui.theme.styleColors.primary_700,
+		SliderGrab     = ui.theme.styleColors.primary_300
+	},
+	vars = {
+		FrameBorderSize = ui.rescaleUI(4)
+	}
+})
 
 local show_thrust_slider = false
 
@@ -59,7 +72,9 @@ local function button_thrustIndicator(thrust_widget_size)
 	vel = vel / math.max(vel:length(), 10) -- minimum of 10m/s
 	local thrust = player:GetThrusterState()
 	thrust_widget_size = thrust_widget_size - Vector2(mainButtonFramePadding * 2)
-	ui.thrustIndicator("foo", thrust_widget_size, thrust, vel, colors.transparent, mainButtonFramePadding, colors.gaugeVelocityLight, colors.gaugeVelocityDark, colors.gaugeThrustLight, colors.gaugeThrustDark)
+	thrustStyle:withStyle(function()
+		ui.thrustIndicator("thrustIndicator", thrustWidgetDiameter, thrust)
+	end)
 	if ui.isItemHovered() then
 		ui.setTooltip(lui.HUD_THRUST_INDICATOR)
 	end
@@ -102,7 +117,7 @@ local function displayShipFunctionWindow()
 	player = Game.player
 	local current_view = Game.CurrentView()
 	local buttons = 3
-	local thrust_widget_size = Vector2(mainButtonSize.x * 3, mainButtonSize.y * 2)
+	local thrust_widget_size = Vector2(thrustWidgetDiameter * 1.2, thrustWidgetDiameter)
 	assert(thrust_widget_size.y >= mainButtonSize.y)
 	local window_width = ui.getWindowPadding().x * 2 + (mainButtonSize.x + ui.getItemSpacing().x) * buttons + thrust_widget_size.x
 	local window_height = thrust_widget_size.y + ui.getWindowPadding().y * 2
@@ -111,7 +126,7 @@ local function displayShipFunctionWindow()
 	ui.setNextWindowPos(Vector2(window_posx, window_posy), "Always")
 	ui.window("ShipFunctions", windowFlags, function()
 		if current_view == "WorldView" then
-			local shift = Vector2(0.0, thrust_widget_size.y - mainButtonSize.y)
+			local shift = Vector2(thrustWidgetDiameter - thrust_widget_size.x, thrust_widget_size.y - mainButtonSize.y)
 			ui.addCursorPos(shift)
 			button_wheelstate()
 			ui.sameLine()
