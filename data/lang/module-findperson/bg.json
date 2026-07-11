@@ -225,11 +225,11 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought her company last year but she is still in possession of some vital documents and has since relocated. Please track her down and have her hand over the documents. Her name is {wanted}, and she is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Добър ден! Аз съм {client}. Представлявам {company} и се нуждаем от помощ, за да открием един човек в {system}. Купихме нейната компания миналата година, но тя все още притежава някои важни документи и оттогава се е преместила. Моля, намерете този човек и го помолете да предаде документите. Нейното име е {wanted} и е някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_4": {
     "description": "",
-    "message": "Good day! I'm {client} and I represent {company}. We need to have a document delivered to {wanted} in {system}. We also need to see it signed and returned to us at this location. We don't know her precise location but she is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Добър ден! Аз съм {client} и представлявам {company}. {wanted} трябва да получи документ в {system}. Тя трябва да го подпише и документът да бъде върнат при нас. Не знаем нейното точно местоположение, но е някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_1": {
     "description": "",
@@ -241,11 +241,11 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought his company last year but he is still in possession of some vital documents and has since relocated. Please track him down and have him hand over the documents. His name is {wanted}, and he is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Добър ден! Аз съм {client}. Представлявам {company} и се нуждаем от помощ, за да открием един човек в {system}. Купихме неговата компания миналата година, но той все още притежава някои важни документи и оттогава се е преместил. Моля, намерете този човек и го помолете да предаде документите. Неговото име е {wanted} и е някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_4": {
     "description": "",
-    "message": "Good day! I'm {client} and I represent {company}. We need to have a document delivered to {wanted} in {system}. We also need to see it signed and returned to us at this location. We don't know his precise location but he is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Добър ден! Аз съм {client} и представлявам {company}. {wanted} трябва да получи документ в {system}. Той трябва да го подпише и документът да бъде върнат при нас. Не знаем неговото точно местоположение, но е някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_1": {
     "description": "",
@@ -285,7 +285,7 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_5": {
     "description": "",
-    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from her in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
+    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from him in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",
@@ -329,7 +329,7 @@
   },
   "INTROTEXT_PRIVATEER_FEMALE_3": {
     "description": "",
-    "message": "Hi there! My name is {client} and I need help to get a message through to {wanted} in the {system} ({sectorx}, {sectory}, {sectorz}) system. She flies missions there and her ship is registered as {shipid}. I will pay you {cash} upon returning to {domicile} with an answer."
+    "message": "Здравейте! Казвам се {client} и имам нужда от помощ, за да изпратя съобщение до {wanted} в системата {system} ({sectorx}, {sectory}, {sectorz}). Тя изпълнява мисии там и нейният кораб е регистриран като {shipid}. Ще платя {cash} след като се върнете в {domicile} с нейния отговор."
   },
   "INTROTEXT_PRIVATEER_MALE_1": {
     "description": "",
@@ -341,7 +341,7 @@
   },
   "INTROTEXT_PRIVATEER_MALE_3": {
     "description": "",
-    "message": "Hi there! My name is {client} and I need help to get a message through to {wanted} in the {system} ({sectorx}, {sectory}, {sectorz}) system. He flies missions there and his ship is registered as {shipid}. I will pay you {cash} upon returning to {domicile} with an answer."
+    "message": "Здравейте! Казвам се {client} и имам нужда от помощ, за да изпратя съобщение до {wanted} в системата {system} ({sectorx}, {sectory}, {sectorz}). Той изпълнява мисии там и неговият кораб е регистриран като {shipid}. Ще платя {cash} след като се върнете в {domicile} с неговия отговор."
   },
   "INTROTEXT_TAXI_FEMALE_1": {
     "description": "",

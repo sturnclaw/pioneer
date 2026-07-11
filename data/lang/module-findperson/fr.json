@@ -225,7 +225,7 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought her company last year but she is still in possession of some vital documents and has since relocated. Please track her down and have her hand over the documents. Her name is {wanted}, and she is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Bonjour ! Je suis {client}. Je représente {company} et nous avons besoin d'aide afin de retrouver une personne dans le système {system}. Nous avons acheté son entreprise l'année dernière mais elle est encore en possession de certains documents vitaux. Malheureusement elle a déménagé et nous n'avons pas sa nouvelle adresse. Son nom est {wanted} et elle réside quelque part dans le système {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_4": {
     "description": "",
@@ -241,7 +241,7 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought his company last year but he is still in possession of some vital documents and has since relocated. Please track him down and have him hand over the documents. His name is {wanted}, and he is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Bonjour ! Je suis {client}. Je représente {company} et nous avons besoin d'aide afin de retrouver une personne dans le système {system}. Nous avons acheté son entreprise l'année dernière mais il est encore en possession de certains documents vitaux. Malheureusement il a déménagé et nous n'avons pas sa nouvelle adresse. Veuillez rechercher cette personne et demandez-lui de vous donner les documents demandés. Son nom est {wanted} et il réside quelque part dans le système {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_4": {
     "description": "",
@@ -285,7 +285,7 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_5": {
     "description": "",
-    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from her in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
+    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from him in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",

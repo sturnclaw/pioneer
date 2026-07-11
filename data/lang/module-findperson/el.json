@@ -285,7 +285,7 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_5": {
     "description": "",
-    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from her in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
+    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from him in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",
@@ -377,7 +377,7 @@
   },
   "INTROTEXT_TRAITOR_FEMALE_3": {
     "description": "",
-    "message": "Good day. I'm {client} of {company}. We're trying to find a former employee, {employee}, who worked on one of our latest projects. Her name is {wanted}. We pay {cash} if you can find her in the {system} ({sectorx}, {sectory}, {sectorz}) system, {dist} ly distance, and deliver a message. Please be aware that she will not like this message."
+    "message": "Καλημέρα σας. Λέγομαι {client} και εργάζομαι στην {company}. Προσπαθούμε να εντοπίσουμε μια πρώην υπάλληλό μας, που ονομάζεται {employee}, και εργαζόταν σε ένα από τα πιο πρόσφατα έργα μας. Ονομάζεται {wanted}. Θα πληρώσουμε {cash} αν μπορέσεις να την βρεις στο {system} ({sectorx}, {sectory}, {sectorz}), που βρίσκεται σε απόσταση {dist} ly, και της παραδώσεις ένα μήνυμα. Να έχεις υπόψη ότι δεν θα της αρέσει το μήνυμα. "
   },
   "INTROTEXT_TRAITOR_MALE_1": {
     "description": "",
