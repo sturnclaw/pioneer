@@ -1,0 +1,60 @@
+From 994a3b5681a0a390dd2bf1f16363c692b98c0ac0 Mon Sep 17 00:00:00 2001
+From: Axtel Sturnclaw <sturnclaw@protonmail.com>
+Date: Sat, 11 Jul 2026 00:50:09 -0400
+Subject: [PATCH] Patch: add ImGuiWindowFlags_NoCaptureMouse
+
+- Allows mouse inputs to pass through hovered windows to the host application.
+- Windows using this should be at the BOTTOM of the window stack if they are transparent.
+- This is ultimately a sledgehammer solution.
+---
+ contrib/imgui/imgui.cpp | 5 +++--
+ contrib/imgui/imgui.h   | 3 ++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/contrib/imgui/imgui.cpp b/contrib/imgui/imgui.cpp
+index 09971db0e..7e8fcc454 100644
+--- a/contrib/imgui/imgui.cpp
++++ b/contrib/imgui/imgui.cpp
+@@ -5664,7 +5664,8 @@ void ImGui::UpdateHoveredWindowAndCaptureFlags(const ImVec2& mouse_pos)
+     }
+     else
+     {
+-        io.WantCaptureMouse = (mouse_avail && (g.HoveredWindow != NULL || mouse_any_down)) || has_open_popup;
++		const bool hovered_skip_capture = (g.HoveredWindow != NULL && (g.HoveredWindow->Flags & ImGuiWindowFlags_NoCaptureMouse));
++        io.WantCaptureMouse = (mouse_avail && (g.HoveredWindow != NULL && !hovered_skip_capture || mouse_any_down && (!hovered_skip_capture || g.ActiveId != g.HoveredWindow->MoveId))) || has_open_popup;
+         io.WantCaptureMouseUnlessPopupClose = (mouse_avail_unless_popup_close && (g.HoveredWindow != NULL || mouse_any_down)) || has_open_modal;
+     }
+ 
+@@ -8664,7 +8665,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+         // Set default BgClickFlags
+         // This is set at the end of this function, so UpdateWindowManualResize()/ClampWindowPos() may use last-frame value if overridden by user code.
+         // FIXME: The general intent is that we will later expose config options to default to enable scrolling + select scrolling mouse button.
+-        window->BgClickFlags = (flags & ImGuiWindowFlags_ChildWindow) ? parent_window->BgClickFlags : (g.IO.ConfigWindowsMoveFromTitleBarOnly ? ImGuiWindowBgClickFlags_None : ImGuiWindowBgClickFlags_Move);
++        window->BgClickFlags = (flags & ImGuiWindowFlags_ChildWindow) ? parent_window->BgClickFlags : (g.IO.ConfigWindowsMoveFromTitleBarOnly || flags & ImGuiWindowFlags_NoCaptureMouse ? ImGuiWindowBgClickFlags_None : ImGuiWindowBgClickFlags_Move);
+ 
+         // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
+         // This is useful to allow creating context menus on title bar only, etc.
+diff --git a/contrib/imgui/imgui.h b/contrib/imgui/imgui.h
+index bc598a38d..d94a37a54 100644
+--- a/contrib/imgui/imgui.h
++++ b/contrib/imgui/imgui.h
+@@ -1132,7 +1132,7 @@ namespace ImGui
+     // - Reminder ImGuiKey enum include access to mouse buttons and gamepad, so key ownership can apply to them.
+     // - The return value of SetItemKeyOwner() says if ownership has been requested for the item, which is a shortcut to calling yet non-public TestKeyOwner() function.
+     // - Many related features are still in imgui_internal.h. For instance, most IsKeyXXX()/IsMouseXXX() functions have an owner-id-aware version.
+-    IMGUI_API bool          SetItemKeyOwner(ImGuiKey key);                                      // Set key owner to last item ID if it is hovered or active. Return true when ownership has been set. Roughly equivalent to 'if (TestKeyOwner(key, GetItemID()) && (IsItemHovered() || IsItemActive())) { SetKeyOwner(key, GetItemID());'. 
++    IMGUI_API bool          SetItemKeyOwner(ImGuiKey key);                                      // Set key owner to last item ID if it is hovered or active. Return true when ownership has been set. Roughly equivalent to 'if (TestKeyOwner(key, GetItemID()) && (IsItemHovered() || IsItemActive())) { SetKeyOwner(key, GetItemID());'.
+ 
+     // Inputs Utilities: Mouse
+     // - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
+@@ -1232,6 +1232,7 @@ enum ImGuiWindowFlags_
+     ImGuiWindowFlags_NoNavFocus             = 1 << 17,  // No focusing toward this window with keyboard/gamepad navigation (e.g. skipped by Ctrl+Tab)
+     ImGuiWindowFlags_UnsavedDocument        = 1 << 18,  // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
+     ImGuiWindowFlags_NoDocking              = 1 << 19,  // Disable docking of this window
++    ImGuiWindowFlags_NoCaptureMouse         = 1 << 20,  // [PIONEER] Disable hovering this window capturing the mouse for ImGui's use.
+     ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
+     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
+     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
+-- 
+2.54.0
+
