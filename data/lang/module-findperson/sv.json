@@ -217,7 +217,7 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_1": {
     "description": "",
-    "message": "Hälsningar! Jag är {client} och jag företräder {company}. Ett av våra skepp kolliderade med ett annat fartyg bara några sekunder innan det gick in i hyperrymden. Det fanns inte tillräckligt med tid för att stoppa hoppsekvensen. Nu behöver vi någon som kan lokalisera skeppet med ID-nummer {shipid} i {system}-systemet ({sectorx}, {sectory}, {sectorz}) och överlämna ett förslag till en utomrättslig förlikning till befälhavare {wanted}. Vänligen återvänd till {domicile} för din betalning av {cash}. Du kommer behöva resa {dist}."
+    "message": "Hälsningar! Jag är {client} och jag företräder {company}. Ett av våra skepp kolliderade med ett annat fartyg bara några sekunder innan det gick in i hyperrymden. Det fanns inte tillräckligt med tid för att stoppa hoppsekvensen. Nu behöver vi någon som kan lokalisera skeppet med ID-nummer {shipid} i {system}-systemet ({sectorx}, {sectory}, {sectorz}) och överlämna ett förslag till en utomrättslig förlikning till befälhavare {wanted}. Vänligen återvänd till {domicile} för din betalning av {cash}. Du kommer behöva resa {dist} ly."
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_2": {
     "description": "",
@@ -233,7 +233,7 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_1": {
     "description": "",
-    "message": "God dag! Jag är {client} och jag företräder {company}. Ett av våra skepp kolliderade med ett annat fartyg bara några sekunder innan det gick in i hyperrymden. Det fanns inte tillräckligt med tid för att stoppa hoppsekvensen. Nu behöver vi någon som kan lokalisera skeppet med ID-nummer {shipid} i {system}-systemet ({sectorx}, {sectory}, {sectorz}) och överlämna ett förslag till en utomrättslig förlikning till befälhavare {wanted}. Vänligen återvänd till {domicile} för din betalning av {cash}. Du kommer behöva resa {dist}."
+    "message": "God dag! Jag är {client} och jag företräder {company}. Ett av våra skepp kolliderade med ett annat fartyg bara några sekunder innan det gick in i hyperrymden. Det fanns inte tillräckligt med tid för att stoppa hoppsekvensen. Nu behöver vi någon som kan lokalisera skeppet med ID-nummer {shipid} i {system}-systemet ({sectorx}, {sectory}, {sectorz}) och överlämna ett förslag till en utomrättslig förlikning till befälhavare {wanted}. Vänligen återvänd till {domicile} för din betalning av {cash}. Du kommer behöva resa {dist} ly."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_2": {
     "description": "",
@@ -289,7 +289,7 @@
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",
-    "message": "Hej. {company} har stora problem. Förhandlingar med en aggressiv marknadskonkurrent i {system}-systemet ({sectorx}, {sectory}, {sectorz}), ett avstånd på {dist}, gick mycket dåligt. Vårt sändebud, {wanted}, måste evakueras. Kommunikationen med henne är mycket begränsad så vi vet inte hennes exakta plats. Vi betalar {cash} för den här körningen."
+    "message": "Hej. {company} har stora problem. Förhandlingar med en aggressiv marknadskonkurrent i {system}-systemet ({sectorx}, {sectory}, {sectorz}), ett avstånd på {dist} ly, gick mycket dåligt. Vårt sändebud, {wanted}, måste evakueras. Kommunikationen med henne är mycket begränsad så vi vet inte hennes exakta plats. Vi betalar {cash} för den här körningen."
   },
   "INTROTEXT_EVACUATION_FEMALE_2": {
     "description": "",
@@ -297,15 +297,15 @@
   },
   "INTROTEXT_EVACUATION_FEMALE_3": {
     "description": "",
-    "message": "Hello, I'm {client}. I represent {company}. We need to get one of our employees out of the {system} system immediately. I can't go into greater details due to security concerns, but there is a credible threat to her safety. She has gone into hiding at one of the spaceports in the system, but she was unable to safely tell us which one. Her name is {wanted}, and she's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Hej, jag heter {client}. Jag representerar {company}. Vi behöver få ut en av våra anställda ur {system} omedelbart. Jag kan inte gå in på mer detaljer, men det finns ett trovärdigt hot mot hennes säkerhet. Hon har gömt sig vid en av hamnarna i systemet, men hon kunde inte säkert säga oss vilken. Hennes namn är {wanted}, och hon finns någonstans i {system}-systemet ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_EVACUATION_FEMALE_4": {
     "description": "",
-    "message": "Hello! My name is {client}. I have been reached by the news that {relative}, {wanted}, have been targeted by criminals and had to leave her home in a hurry. She is hiding somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system, distance {dist} ly. The family wants to solve this discretely. We will pay {cash} if you can find her and bring her back to {domicile}."
+    "message": "Hej! Mitt namn är {client}. Jag har nåtts av nyheten att {relative}, {wanted}, har blivit en måltavla för brottslingar och tvingats lämna sitt hem i all hast. Hon gömmer sig någonstans i {system} ({sectorx}, {sectory}, {sectorz})-systemet, avstånd {dist} ly. Familjen vill lösa detta diskret. Vi betalar {cash} om ni kan hitta henne och föra tillbaka henne till {domicile}."
   },
   "INTROTEXT_EVACUATION_MALE_1": {
     "description": "",
-    "message": "Hej. {company} har stora problem. Förhandlingar med en aggressiv marknadskonkurrent i {system}-systemet ({sectorx}, {sectory}, {sectorz}), ett avstånd på {dist}, gick mycket dåligt. Vårt sändebud, {wanted}, måste evakueras. Kommunikationen med honom är mycket begränsad så vi vet inte hans exakta plats. Vi betalar {cash} för den här körningen."
+    "message": "Hej. {company} har stora problem. Förhandlingar med en aggressiv marknadskonkurrent i {system}-systemet ({sectorx}, {sectory}, {sectorz}), ett avstånd på {dist} ly, gick mycket dåligt. Vårt sändebud, {wanted}, måste evakueras. Kommunikationen med honom är mycket begränsad så vi vet inte hans exakta plats. Vi betalar {cash} för den här körningen."
   },
   "INTROTEXT_EVACUATION_MALE_2": {
     "description": "",
@@ -313,11 +313,11 @@
   },
   "INTROTEXT_EVACUATION_MALE_3": {
     "description": "",
-    "message": "Hello, I'm {client}. I represent {company}. We need to get one of our employees out of the {system} system immediately. I can't go into greater details due to security concerns, but there is a credible threat to his safety. He has gone into hiding at one of the spaceports in the system, but he was unable to safely tell us which one. His name is {wanted}, and he's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Hej, jag heter {client}. Jag representerar {company}. Vi behöver få ut en av våra anställda ur {system} omedelbart. Jag kan inte gå in på mer detaljer, men det finns ett trovärdigt hot mot hans säkerhet. Han har gömt sig vid en av hamnarna i systemet, men han kunde inte säkert säga oss vilken. Hans namn är {wanted}, och han finns någonstans i {system}-systemet ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_EVACUATION_MALE_4": {
     "description": "",
-    "message": "Hello! My name is {client}. I have been reached by the news that {relative}, {wanted}, have been targeted by criminals and had to leave his home in a hurry. He is hiding somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system, distance {dist} ly. The family wants to solve this discretely. We will pay {cash} if you can find him and bring him back to {domicile}."
+    "message": "Hej! Mitt namn är {client}. Jag har nåtts av nyheten att {relative}, {wanted}, har blivit en måltavla för brottslingar och tvingats lämna sitt hem i all hast. Han gömmer sig någonstans i {system} ({sectorx}, {sectory}, {sectorz})-systemet, avstånd {dist} ly. Familjen vill lösa detta diskret. Vi betalar {cash} om ni kan hitta honom och föra tillbaka honom till {domicile}."
   },
   "INTROTEXT_PRIVATEER_FEMALE_1": {
     "description": "",
@@ -329,7 +329,7 @@
   },
   "INTROTEXT_PRIVATEER_FEMALE_3": {
     "description": "",
-    "message": "Hi there! My name is {client} and I need help to get a message through to {wanted} in the {system} ({sectorx}, {sectory}, {sectorz}) system. She flies missions there and her ship is registered as {shipid}. I will pay you {cash} upon returning to {domicile} with an answer."
+    "message": "Hej! Jag heter {client} och jag behöver hjälp med att skicka ett meddelande till {wanted} i {system}-systemet ({sectorx}, {sectory}, {sectorz}). Hon flyger uppdrag där och hennes fartyg är registrerat som {shipid}. Jag betalar dig {cash} när du återvänder till {domicile} med ett svar."
   },
   "INTROTEXT_PRIVATEER_MALE_1": {
     "description": "",
@@ -341,7 +341,7 @@
   },
   "INTROTEXT_PRIVATEER_MALE_3": {
     "description": "",
-    "message": "Hi there! My name is {client} and I need help to get a message through to {wanted} in the {system} ({sectorx}, {sectory}, {sectorz}) system. He flies missions there and his ship is registered as {shipid}. I will pay you {cash} upon returning to {domicile} with an answer."
+    "message": "Hej! Jag heter {client} och jag behöver hjälp med att skicka ett meddelande till {wanted} i {system}-systemet ({sectorx}, {sectory}, {sectorz}). Han flyger uppdrag där och hans fartyg är registrerat som {shipid}. Jag betalar dig {cash} när du återvänder till {domicile} med ett svar."
   },
   "INTROTEXT_TAXI_FEMALE_1": {
     "description": "",
@@ -353,7 +353,7 @@
   },
   "INTROTEXT_TAXI_FEMALE_3": {
     "description": "",
-    "message": "Hi. I'm {client}. I need help finding {relative}, {wanted}. I need you to bring her here as she's needed in the family company. We will pay you {cash} for the service. She's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system. Thank you!"
+    "message": "Hej. Jag heter {client}. Jag behöver hjälp med att hitta {relative}, {wanted}. Jag behöver att du tar hit henne eftersom hon behövs i familjeföretaget. Vi betalar dig {cash} för tjänsten. Hon finns någonstans i {system}-systemet ({sectorx}, {sectory}, {sectorz}). Tack!"
   },
   "INTROTEXT_TAXI_MALE_1": {
     "description": "",
@@ -365,7 +365,7 @@
   },
   "INTROTEXT_TAXI_MALE_3": {
     "description": "",
-    "message": "Hi. I'm {client}. I need help finding {relative}, {wanted}. I need you to bring him here as he's needed in the family company. We will pay you {cash} for the service. He's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system. Thank you!"
+    "message": "Hej. Jag heter {client}. Jag behöver hjälp med att hitta {relative}, {wanted}. Jag behöver att du tar hit honom eftersom han behövs i familjeföretaget. Vi betalar dig {cash} för tjänsten. Han finns någonstans i {system}-systemet ({sectorx}, {sectory}, {sectorz}). Tack!"
   },
   "INTROTEXT_TRAITOR_FEMALE_1": {
     "description": "",
@@ -377,7 +377,7 @@
   },
   "INTROTEXT_TRAITOR_FEMALE_3": {
     "description": "",
-    "message": "Good day. I'm {client} of {company}. We're trying to find a former employee, {employee}, who worked on one of our latest projects. Her name is {wanted}. We pay {cash} if you can find her in the {system} ({sectorx}, {sectory}, {sectorz}) system, {dist} ly distance, and deliver a message. Please be aware that she will not like this message."
+    "message": "God dag. Jag är {client} på {company}. Vi försöker hitta en tidigare anställd, {employee}, som arbetade på ett av våra senaste projekt. Hennes namn är {wanted}. Vi betalar {cash} om du kan hitta henne i {system}-systemet ({sectorx}, {sectory}, {sectorz}), {dist} ly bort, och framföra ett meddelande. Observera att hon inte kommer att gilla det här meddelandet."
   },
   "INTROTEXT_TRAITOR_MALE_1": {
     "description": "",
@@ -389,7 +389,7 @@
   },
   "INTROTEXT_TRAITOR_MALE_3": {
     "description": "",
-    "message": "Good day. I'm {client} of {company}. We're trying to find a former employee, {employee}, who worked on one of our latest projects. His name is {wanted}. We pay {cash} if you can find him in the {system} ({sectorx}, {sectory}, {sectorz}) system, {dist} ly distance, and deliver a message. Please be aware that he will not like this message."
+    "message": "God dag. Jag är {client} på {company}. Vi försöker hitta en tidigare anställd, {employee}, som arbetade på ett av våra senaste projekt. Hans namn är {wanted}. Vi betalar {cash} om du kan hitta honom i {system}-systemet ({sectorx}, {sectory}, {sectorz}), {dist} ly bort, och framföra ett meddelande. Observera att han inte kommer att gilla det här meddelandet."
   },
   "IS_THERE_A_RISK": {
     "description": "",

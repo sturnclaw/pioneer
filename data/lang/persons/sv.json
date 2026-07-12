@@ -197,11 +197,11 @@
   },
   "RELATION_RELATIVE_FEMALE_12": {
     "description": "Sisters daughter. In some languages different from brothers daughter. Substitutes {relative}. Always starts with 'my' (e.g. 'my aunt', 'my cousin').",
-    "message": "my niece"
+    "message": "min systerdotter"
   },
   "RELATION_RELATIVE_FEMALE_13": {
     "description": "Brothers daughter. In some languages different from sisters daughter. Substitutes {relative}. Always starts with 'my' (e.g. 'my aunt', 'my cousin').",
-    "message": "my niece"
+    "message": "min brorsdotter"
   },
   "RELATION_RELATIVE_FEMALE_2": {
     "description": "Female family member / relative. Substitutes {relative}. Always starts with 'my' (e.g. 'my aunt', 'my cousin').",
@@ -249,11 +249,11 @@
   },
   "RELATION_RELATIVE_MALE_12": {
     "description": "Sisters son. In some languages different from brothers son.Substitutes {relative}. Always starts with 'my' (e.g. 'my uncle', 'my cousin').",
-    "message": "my nephew"
+    "message": "min systerson"
   },
   "RELATION_RELATIVE_MALE_13": {
     "description": "Brothers son. In some languages different from sisters son. Substitutes {relative}. Always starts with 'my' (e.g. 'my uncle', 'my cousin').",
-    "message": "my nephew"
+    "message": "min brorson"
   },
   "RELATION_RELATIVE_MALE_2": {
     "description": "Male family member / relative. Substitutes {relative}. Always starts with 'my' (e.g. 'my uncle', 'my cousin').",

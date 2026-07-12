@@ -261,7 +261,7 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_4": {
     "description": "",
-    "message": "Hello. My name is {client}. {relative}, {wanted}, accepted a position in the {system} ({sectorx}, {sectory}, {sectorz}) system some years ago. After a year we stopped hearing from her and now the mail is being returned so something must have happened. My family will pay {cash} if you can track her down and deliver a message."
+    "message": "Ciao. Mi chiamo {client}. {relative}, {wanted}, ha accettato un lavoro nel sistema {system} ({sectorx}, {sectory}, {sectorz}) qualche anno fa. Dopo un anno non abbiamo più ricevuto comunicazioni da lei ed ora le mail tornano indietro. Pensiamo che sia successo qualcosa. La mia famiglia ti pagherà {cash} se riuscirai a trovarla e consegnarle un messaggio."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_5": {
     "description": "",
