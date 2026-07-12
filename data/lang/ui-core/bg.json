@@ -67,6 +67,10 @@
     "description": "",
     "message": "Поправете корпуса"
   },
+  "AUDIO_BACKEND": {
+    "description": "Audio backend label in settings menu",
+    "message": "Аудио бекенд"
+  },
   "AUTOMATED_MESSAGE": {
     "description": "For comm messages from bots",
     "message": "АВТОМАТИЧНО СЪОБЩЕНИЕ"
@@ -90,6 +94,14 @@
   "BACKWARD_ACCEL": {
     "description": "",
     "message": "Ускорение назад"
+  },
+  "BINAURAL_RENDERING": {
+    "description": "Label of the binaural rendering checkbox in the audio settings menu",
+    "message": "Бинаурално генериране"
+  },
+  "BINAURAL_RENDERING_DESC": {
+    "description": "Tooltip of the binaural rendering checkbox in the audio settings menu",
+    "message": "Прилага HRTF филтри към аудио изхода. Препоръчва се използването на слушалки."
   },
   "BODY_IN_ROUTE": {
     "description": "Label indicating a star is part of a planned hyperjump route",
@@ -2137,7 +2149,7 @@
   },
   "REALISTIC_SCATTERING_DESC": {
     "description": "",
-    "message": "Изберете разсейването при визуализиране на атмосферата. (Рейли/Мие понижава производителността)"
+    "message": "Изберете разсейването при генериране на атмосферата. (Рейли/Мие понижава производителността)"
   },
   "REAR_WEAPON": {
     "description": "",
