@@ -283,7 +283,7 @@ void WorldView::UpdateProjectedObjects()
 	matrix3x3d cam_rot = cam_frame->GetOrient().Inverse() * Pi::player->GetOrient();
 
 	// later we might want non-ship enemies (e.g., for assaults on military bases)
-	assert(!Pi::player->GetCombatTarget() || Pi::player->GetCombatTarget()->IsType(ObjectType::SHIP));
+	assert(!Pi::player->GetCombatTarget() || Pi::player->GetCombatTarget()->IsType(ObjectType::SHIP) || Pi::player->GetCombatTarget()->IsType(ObjectType::MISSILE));
 
 	// update combat HUD
 	Ship *enemy = static_cast<Ship *>(Pi::player->GetCombatTarget());
