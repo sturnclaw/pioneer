@@ -529,7 +529,7 @@
   },
   "GRID_DISPLAY_MODE_TOGGLE": {
     "description": "Tooltip for toggle grid display button.",
-    "message": "Toggle visibility of the grid."
+    "message": "Visa rutnät"
   },
   "HAND_WEAPONS": {
     "description": "",
@@ -625,7 +625,7 @@
   },
   "HYPERSPACE_CLOUDS_DISPLAY_MODE_TOGGLE": {
     "description": "Tooltip for the button which toggles the display mode of hyperspace clouds.",
-    "message": "Toggle visibility of Hyperspace Clouds."
+    "message": "Visa hypermoln"
   },
   "HYPERSPACE_DEPARTURE_CLOUD": {
     "description": "",
@@ -721,7 +721,7 @@
   },
   "L4L5_DISPLAY_MODE": {
     "description": "Label for the lagrange point display modes.",
-    "message": "Lagrange Point Display Mode"
+    "message": "Visningsläge för Lagrangepunker."
   },
   "L4L5_DISPLAY_MODE_ICONS_AND_TEXT": {
     "description": "Combobox option for lagrange point display as icons only.",
@@ -737,7 +737,7 @@
   },
   "L4L5_DISPLAY_MODE_TOGGLE": {
     "description": "Tooltip for the L4/L5 Lagrange points toggle button.",
-    "message": "Toggle visibility of the L4/L5 lagrange points."
+    "message": "Växla visning av Lagrangepunkterna L4 och L5."
   },
   "LANDED": {
     "description": "",
@@ -1449,15 +1449,15 @@
   },
   "SHIPS_DISPLAY_MODE_SHIPS_ONLY": {
     "description": "Combobox option for ships only.",
-    "message": "Ships Only"
+    "message": "Endast skepp"
   },
   "SHIPS_DISPLAY_MODE_SHIPS_ORBITS": {
     "description": "Combobox option for ships with orbits.",
-    "message": "Ships with Orbits"
+    "message": "Skepp med omloppsbanor"
   },
   "SHIPS_DISPLAY_MODE_TOGGLE": {
     "description": "Tooltip for ship display toggle button.",
-    "message": "Visa skepp."
+    "message": "Visa skepp"
   },
   "SHIP_DETECTED_NEARBY": {
     "description": "",
