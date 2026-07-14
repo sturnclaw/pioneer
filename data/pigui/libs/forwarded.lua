@@ -82,6 +82,7 @@ ui.getCursorScreenPos = pigui.GetCursorScreenPos ---@type fun(): Vector2
 ui.addCursorScreenPos = pigui.AddCursorScreenPos ---@type fun(add: Vector2)
 ui.lowThrustButton = pigui.LowThrustButton
 ui.thrustIndicator = pigui.ThrustIndicator
+ui.circleIndicator = pigui.CircleIndicator ---@type fun(id: string, diameter: number, value: number, value_inv: number, phase: number, label: string, unit: string?)
 ui.isMouseClicked = pigui.IsMouseClicked
 ui.isMouseDoubleClicked = pigui.IsMouseDoubleClicked
 ui.isMouseDown = pigui.IsMouseDown

@@ -1377,21 +1377,25 @@ static int l_pigui_invisible_button(lua_State *l)
 
 static int l_pigui_thrust_indicator(lua_State *l)
 {
-	PROFILE_SCOPED()
-	std::string text = LuaPull<std::string>(l, 1);
-	ImVec2 size = LuaPull<ImVec2>(l, 2);
+	std::string id_str = LuaPull<std::string>(l, 1);
+	float diameter = LuaPull<float>(l, 2);
 	vector3d thr = LuaPull<vector3d>(l, 3);
-	vector3d vel = LuaPull<vector3d>(l, 4);
-	ImColor color = LuaPull<ImColor>(l, 5);
-	int frame_padding = LuaPull<int>(l, 6);
-	ImColor vel_fg = LuaPull<ImColor>(l, 7);
-	ImColor vel_bg = LuaPull<ImColor>(l, 8);
-	ImColor thrust_fg = LuaPull<ImColor>(l, 9);
-	ImColor thrust_bg = LuaPull<ImColor>(l, 10);
-	ImVec4 thrust(thr.x, thr.y, thr.z, 0);
-	ImVec4 velocity(vel.x, vel.y, vel.z, 0);
-	PiGui::Draw::ThrustIndicator(text.c_str(), size, thrust, velocity, color,
-		frame_padding, vel_fg, vel_bg, thrust_fg, thrust_bg);
+
+	PiGui::Draw::ThrustIndicator(ImGui::GetID(id_str.c_str()), diameter, thr);
+	return 0;
+}
+
+static int l_pigui_circle_indicator(lua_State *l)
+{
+	std::string id_str = LuaPull<std::string>(l, 1);
+	float diameter = LuaPull<float>(l, 2);
+	float value = LuaPull<float>(l, 3);
+	float value_inv = LuaPull<float>(l, 4);
+	float phase = LuaPull<float>(l, 5);
+	std::string label = LuaPull<std::string>(l, 6);
+	std::string unit = LuaPull<std::string>(l, 7, "");
+
+	PiGui::Draw::CircleIndicator(ImGui::GetID(id_str.c_str()), diameter, label.c_str(), unit.empty() ? nullptr : unit.c_str(), value, value_inv, phase);
 	return 0;
 }
 
@@ -3905,6 +3909,7 @@ void LuaObject<PiGui::Instance>::RegisterClass()
 		{ "ShouldShowLabels", l_pigui_should_show_labels },
 		{ "LowThrustButton", l_pigui_low_thrust_button },
 		{ "ThrustIndicator", l_pigui_thrust_indicator },
+		{ "CircleIndicator", l_pigui_circle_indicator },
 		{ "PlaySfx", l_pigui_play_sfx },
 		{ "DisableMouseFacing", l_pigui_disable_mouse_facing },
 		{ "SetMouseButtonState", l_pigui_set_mouse_button_state },
