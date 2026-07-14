@@ -405,7 +405,7 @@
   },
   "LOAD_CARGO": {
     "description": "UI button label",
-    "message": "Load cargo"
+    "message": "Φόρτωση."
   },
   "MACHINE_TOOLS": {
     "description": "custom cargo",

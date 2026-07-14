@@ -97,7 +97,7 @@
   },
   "BINAURAL_RENDERING": {
     "description": "Label of the binaural rendering checkbox in the audio settings menu",
-    "message": "Binaural Rendering"
+    "message": "Binauralt ljud"
   },
   "BINAURAL_RENDERING_DESC": {
     "description": "Tooltip of the binaural rendering checkbox in the audio settings menu",
@@ -2557,7 +2557,7 @@
   },
   "SYSTEM_FACTION": {
     "description": "Tooltip indicating the faction controlling this system",
-    "message": "Controlling faction jurisdiction"
+    "message": "Kontrollerande fraktions jurisdiktion"
   },
   "SYSTEM_INFORMATION": {
     "description": "Tooltip / label indicating information about a selected star system",

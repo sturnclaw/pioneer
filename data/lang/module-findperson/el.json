@@ -225,11 +225,11 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought her company last year but she is still in possession of some vital documents and has since relocated. Please track her down and have her hand over the documents. Her name is {wanted}, and she is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Καλημέρα σας! Είμαι ο {client}, από την εταιρεία {company}. Χρειαζόμαστε βοήθεια στον εντοπισμό ενός ατόμου στο {system}. Αγοράσαμε την εταιρεία της πέρσυ αλλά ακόμα έχει στην κατοχή της ορισμένα σημαντικότατα έγγραφα. Σε παρακαλούμε να την εντοπίσεις και να σου παραδώσει τα έγγραφα. Λέγεται {wanted}, και βρίσκεται κάπου στο σύστημα {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_FEMALE_4": {
     "description": "",
-    "message": "Good day! I'm {client} and I represent {company}. We need to have a document delivered to {wanted} in {system}. We also need to see it signed and returned to us at this location. We don't know her precise location but she is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Καλημέρα σας! Είμαι ο {client}, από την εταιρεία {company}. Θέλουμε να στείλουμε ένα έγγραφο στην {wanted} στο σύστημα {system}. Επιπλἐον, θα πρέπει να το υπογράψει και να μας το επιστρέψει εδώ. Δε γνωρίζουμε που ακριβώς βρίσκεται αλλά πάντως στο σύστημα {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_1": {
     "description": "",
@@ -241,15 +241,15 @@
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_3": {
     "description": "",
-    "message": "Good day! I'm {client}. I represent {company} and we need help to track down a person in {system}. We bought his company last year but he is still in possession of some vital documents and has since relocated. Please track him down and have him hand over the documents. His name is {wanted}, and he is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Καλημέρα σας! Είμαι ο {client}, από την εταιρεία {company}. Χρειαζόμαστε βοήθεια στον εντοπισμό ενός ατόμου στο {system}. Αγοράσαμε την εταιρεία του πέρσυ αλλά ακόμα έχει στην κατοχή του ορισμένα σημαντικότατα έγγραφα. Σε παρακαλούμε να τον εντοπίσεις και να σου παραδώσει τα έγγραφα. Λέγεται {wanted}, και βρίσκεται κάπου στο σύστημα {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_DOCUMENT_MALE_4": {
     "description": "",
-    "message": "Good day! I'm {client} and I represent {company}. We need to have a document delivered to {wanted} in {system}. We also need to see it signed and returned to us at this location. We don't know his precise location but he is somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Καλημέρα σας! Είμαι ο {client}, από την εταιρεία {company}. Θέλουμε να στείλουμε ένα έγγραφο στον {wanted} στο σύστημα {system}. Επιπλἐον, θα πρέπει να το υπογράψει και να μας το επιστρέψει εδώ. Δε γνωρίζουμε που ακριβώς βρίσκεται αλλά πάντως στο σύστημα {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_1": {
     "description": "",
-    "message": "Hi, my name is {client}. I'm looking for {relative}, {wanted}. She left the family in anger a few years ago. A friend of mine has seen her recently in the {system} ({sectorx}, {sectory}, {sectorz}) system. I would like to see if she is ready for a reconciliation. I pay you {cash} if you can deliver a message to her and return to {domicile} with an answer. Please do it! Will you?"
+    "message": "Γεια! Ονομάζομαι {client} και ψάχνω για μια {relative}, την {wanted}. Μας εγκατέλειψε σε μια στιγμή οργής πριν μερικά χρόνια. Ένας φίλος μου την είδε πρόσφατα στο σύστημα {system} ({sectorx}, {sectory}, {sectorz}). Θέλω να δω αν είναι έτοιμη να τα ξαναβρούμε. Θα πληρώσω {cash} αν μπορέσεις να της μεταφέρεις ένα μήνυμα και να επιστρέψεις εδώ στο {domicile} με την απάντησή της. Θα το κάνεις σε παρακαλώ;"
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_2": {
     "description": "",

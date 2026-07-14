@@ -593,7 +593,7 @@
   },
   "NO_SUITABLE_SLOTS": {
     "description": "Message in the start menu when editing equipment",
-    "message": "No suitable slots"
+    "message": "Inga lämpliga platser"
   },
   "OCCUPIED_BERTHS": {
     "description": "Label for the number of passenger berths currently occupied in a cabin equipment item",

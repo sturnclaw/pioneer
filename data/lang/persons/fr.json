@@ -281,10 +281,10 @@
   },
   "RELATION_RELATIVE_MALE_8": {
     "description": "Male family member / relative. Substitutes {relative}. Always starts with 'my' (e.g. 'my uncle', 'my cousin').",
-    "message": "my father-in-law"
+    "message": "mon beau-père"
   },
   "RELATION_RELATIVE_MALE_9": {
     "description": "Male family member / relative. Substitutes {relative}. Always starts with 'my' (e.g. 'my uncle', 'my cousin').",
-    "message": "my stepbrother"
+    "message": "mon beau-frère"
   }
 }

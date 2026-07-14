@@ -261,11 +261,11 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_4": {
     "description": "",
-    "message": "Hello. My name is {client}. {relative}, {wanted}, accepted a position in the {system} ({sectorx}, {sectory}, {sectorz}) system some years ago. After a year we stopped hearing from her and now the mail is being returned so something must have happened. My family will pay {cash} if you can track her down and deliver a message."
+    "message": "Здравейте. Казвам се {client}. {wanted}, {relative}, прие позиция в системата {system} ({sectorx}, {sectory}, {sectorz}) преди няколко години. След година спряхме да получаваме вести от нея и писмата ни се връщат, така че нещо сигурно се е случило. Семейството ми ще плати {cash}, ако може да я намерите и да предадете нашето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_FEMALE_5": {
     "description": "",
-    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from her in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
+    "message": "Добър ден, аз съм {client}! Трябва да изпратя съобщение на моята професорка, {wanted}, която прави изследване в системата {system} ({sectorx}, {sectory}, {sectorz}). Не сме се чували с нея от шест месеца и нейната информация за контакт вече не е валидна. Мога да платя {cash} за услугата."
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_1": {
     "description": "",
@@ -281,11 +281,11 @@
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_4": {
     "description": "",
-    "message": "Hello. My name is {client}. {relative}, {wanted}, accepted a position in the {system} ({sectorx}, {sectory}, {sectorz}) system some years ago. After a year we stopped hearing from him and now the mail is being returned so something must have happened. My family will pay {cash} if you can track him down and deliver a message."
+    "message": "Здравейте. Казвам се {client}. {wanted}, {relative}, прие позиция в системата {system} ({sectorx}, {sectory}, {sectorz}) преди няколко години. След година спряхме да получаваме вести от него и писмата ни се връщат, така че нещо сигурно се е случило. Семейството ми ще плати {cash}, ако може да го намерите и да предадете нашето съобщение."
   },
   "INTROTEXT_DELIVER_MESSAGE_MALE_5": {
     "description": "",
-    "message": "Good day, I'm {client}! I need to get a message delivered to my professor, {wanted}, who is doing research in the {system} ({sectorx}, {sectory}, {sectorz}) system. I haven't heard from him in six months, and the contact information I have is no longer valid. I'm prepared to pay {cash} for the service."
+    "message": "Добър ден, аз съм {client}! Трябва да изпратя съобщение на моя професор, {wanted}, който прави изследване в системата {system} ({sectorx}, {sectory}, {sectorz}). Не сме се чували с него от шест месеца и неговата информация за контакт вече не е валидна. Мога да платя {cash} за услугата."
   },
   "INTROTEXT_EVACUATION_FEMALE_1": {
     "description": "",
@@ -297,7 +297,7 @@
   },
   "INTROTEXT_EVACUATION_FEMALE_3": {
     "description": "",
-    "message": "Hello, I'm {client}. I represent {company}. We need to get one of our employees out of the {system} system immediately. I can't go into greater details due to security concerns, but there is a credible threat to her safety. She has gone into hiding at one of the spaceports in the system, but she was unable to safely tell us which one. Her name is {wanted}, and she's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Здравейте, аз съм {client}. Представлявам {company}. Трябва веднага да изведем една наша служтелка от системата {system}. Не мога да влизам в повече подробности поради съображения за сигурност, но има реална заплаха за нейната безопасност. Тя се е скрила на някой от космодрумите в системата, но не успя да ни каже кой. Нейното име е {wanted} и тя се намира някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_EVACUATION_FEMALE_4": {
     "description": "",
@@ -313,7 +313,7 @@
   },
   "INTROTEXT_EVACUATION_MALE_3": {
     "description": "",
-    "message": "Hello, I'm {client}. I represent {company}. We need to get one of our employees out of the {system} system immediately. I can't go into greater details due to security concerns, but there is a credible threat to his safety. He has gone into hiding at one of the spaceports in the system, but he was unable to safely tell us which one. His name is {wanted}, and he's somewhere in the {system} ({sectorx}, {sectory}, {sectorz}) system."
+    "message": "Здравейте, аз съм {client}. Представлявам {company}. Трябва веднага да изведем един наш служител от системата {system}. Не мога да влизам в повече подробности поради съображения за сигурност, но има реална заплаха за неговата безопасност. Той се е скрил на някой от космодрумите в системата, но не успя да ни каже кой. Неговото име е {wanted} и той се намира някъде в системата {system} ({sectorx}, {sectory}, {sectorz})."
   },
   "INTROTEXT_EVACUATION_MALE_4": {
     "description": "",

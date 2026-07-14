@@ -2317,7 +2317,7 @@
   },
   "SELECTED_SAVE_IS_NOT_A_VALID_SAVE": {
     "description": "",
-    "message": "Избраният запис е невалиден"
+    "message": "Избраният запис не е валиден"
   },
   "SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME": {
     "description": "",
