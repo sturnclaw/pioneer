@@ -1203,6 +1203,10 @@
     "description": "Tooltip: Forward Gun Temperature.",
     "message": "Främre kanon-temperatur"
   },
+  "HUD_GRAVITY_INDICATOR": {
+    "description": "Tooltip: describe what the gravity indicator shows",
+    "message": "Local gravity acceleration (scale: ship maximum acceleration)"
+  },
   "HUD_HULL_STRENGTH": {
     "description": "Tooltip: Hull Strength.",
     "message": "Skrovstyrka"
@@ -1320,8 +1324,8 @@
     "message": "Hastighet relativt målet"
   },
   "HUD_THRUST_INDICATOR": {
-    "description": "Tooltip: describe what the thrust/velocity indicator shows",
-    "message": "Visa nuvarande hastighet för varje riktning (tunna linjer) och motorer (tjock bakgrund)"
+    "description": "Tooltip: describe what the thrust indicator shows",
+    "message": "Show current thrust levels for maneuvering (outer ring) and primary or retro engines (center circle)"
   },
   "HUD_WARNING_DESCENT_RATE": {
     "description": "Shown on HUD as a warning flasher",

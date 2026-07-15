@@ -1203,6 +1203,10 @@
     "description": "Tooltip: Forward Gun Temperature.",
     "message": "Temperatura prednjeg oružja"
   },
+  "HUD_GRAVITY_INDICATOR": {
+    "description": "Tooltip: describe what the gravity indicator shows",
+    "message": "Local gravity acceleration (scale: ship maximum acceleration)"
+  },
   "HUD_HULL_STRENGTH": {
     "description": "Tooltip: Hull Strength.",
     "message": "Čvrstoća trupa"
@@ -1320,8 +1324,8 @@
     "message": "Brzina u odnosu na cilj"
   },
   "HUD_THRUST_INDICATOR": {
-    "description": "Tooltip: describe what the thrust/velocity indicator shows",
-    "message": "Prikažite trenutnu brzinu za svaki smjer (tanke linije) i potisak (debela pozadina)"
+    "description": "Tooltip: describe what the thrust indicator shows",
+    "message": "Show current thrust levels for maneuvering (outer ring) and primary or retro engines (center circle)"
   },
   "HUD_WARNING_DESCENT_RATE": {
     "description": "Shown on HUD as a warning flasher",

@@ -1203,6 +1203,10 @@
     "description": "Tooltip: Forward Gun Temperature.",
     "message": "Teothachd a’ ghunna-bheòil"
   },
+  "HUD_GRAVITY_INDICATOR": {
+    "description": "Tooltip: describe what the gravity indicator shows",
+    "message": "Local gravity acceleration (scale: ship maximum acceleration)"
+  },
   "HUD_HULL_STRENGTH": {
     "description": "Tooltip: Hull Strength.",
     "message": "Neart na slige"
@@ -1320,8 +1324,8 @@
     "message": "An luaths dàimheil ris an amas"
   },
   "HUD_THRUST_INDICATOR": {
-    "description": "Tooltip: describe what the thrust/velocity indicator shows",
-    "message": "Seall an luaths làithreach air gach comhair (loidhnichean tana) ’s am putadh (cùlaibh tiugh)"
+    "description": "Tooltip: describe what the thrust indicator shows",
+    "message": "Show current thrust levels for maneuvering (outer ring) and primary or retro engines (center circle)"
   },
   "HUD_WARNING_DESCENT_RATE": {
     "description": "Shown on HUD as a warning flasher",
